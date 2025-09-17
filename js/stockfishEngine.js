@@ -191,6 +191,7 @@
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = StockfishEngine;
+    module.exports.default = StockfishEngine;
   } else {
     global.StockfishEngine = StockfishEngine;
   }

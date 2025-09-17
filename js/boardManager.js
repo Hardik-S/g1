@@ -179,10 +179,15 @@
         callback(payload);
       });
     }
-  }
 
-  if (typeof module !== 'undefined' && module.exports) {
-    module.exports = BoardManager;
+    dispose() {
+      if (this.board && typeof this.board.destroy === 'function') {
+        this.board.destroy();
+      }
+      this.board = null;
+      this.afterMoveCallbacks = [];
+    }
+
   } else {
     global.BoardManager = BoardManager;
   }
