@@ -43,6 +43,20 @@ export const APP_REGISTRY = {
     created: '2024-01-01',
     featured: true
   },
+  'hexa-snake-bee': {
+    id: 'hexa-snake-bee',
+    title: 'Hexa-Snake (Bee Edition)',
+    description: 'Guide a bee through a honeycomb hex-grid and collect golden nectar',
+    icon: '🐝',
+    category: 'Games',
+    component: null,
+    path: '/apps/hexa-snake',
+    tags: ['game', 'python', 'pygame', 'hex', 'arcade'],
+    version: '1.0.0',
+    author: 'OpenAI Assistant',
+    created: '2024-03-01',
+    featured: true
+  },
   'pong': {
     id: 'pong',
     title: 'Neon Pong',
