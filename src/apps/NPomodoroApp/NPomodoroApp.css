@@ -69,7 +69,7 @@
   transform: translateY(-2px);
 }
 
-.app-title {
+.n-pomodoro-app .app-title {
   color: white;
   font-size: 2.5rem;
   font-weight: 300;
