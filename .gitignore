@@ -27,3 +27,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Engine binaries
+public/stockfish/stockfish.wasm

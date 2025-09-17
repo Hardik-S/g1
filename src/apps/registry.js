@@ -43,6 +43,20 @@ export const APP_REGISTRY = {
     created: '2024-01-01',
     featured: true
   },
+  'chess': {
+    id: 'chess',
+    title: 'Chess',
+    description: 'Play classic chess against Stockfish or a friend on the same board',
+    icon: '♟️',
+    category: 'Games',
+    component: null,
+    path: '/apps/chess',
+    tags: ['game', 'strategy', 'board', 'ai'],
+    version: '1.0.0',
+    author: 'App Container Team',
+    created: '2024-01-01',
+    featured: true
+  },
   'app-3': {
     id: 'app-3',
     title: 'Coming Soon',

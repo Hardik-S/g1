@@ -1,110 +1,68 @@
-# Day of Week Switcher
+# App Container
 
-A simple React app that allows you to switch between different days of the week with beautiful animations and a modern UI.
+A React-powered launcher that bundles multiple micro-apps under a single UI. It currently ships with:
 
-## Features
-
-- 🗓️ Switch between all 7 days of the week
-- ⬅️➡️ Navigate with Previous/Next buttons
-- 🎲 Jump to a random day
-- 📱 Click on any day to switch directly
-- 📱 Fully responsive design
-- 🎨 Beautiful gradient UI
-
-## Live Demo
-
-[View on GitHub Pages](https://hardik-s.github.io/g1)
+- **Day Switcher** – cycle through the days of the week with animated transitions.
+- **N-Pomodoro Timer** – orchestrate multi-activity focus sessions.
+- **Snake Game** – revisit the arcade classic with persistent high scores.
+- **Chess** – play classic chess either head-to-head or against Stockfish running in a Web Worker.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js (version 14 or higher)
-- npm or yarn
+- Node.js 18+
+- npm 9+
 
 ### Installation
 
-1. Clone the repository:
-```bash
-git clone https://github.com/Hardik-S/g1.git
-cd g1
-```
-
-2. Install dependencies:
 ```bash
 npm install
 ```
 
-3. Start the development server:
+### Development Server
+
 ```bash
 npm start
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+The app is available at [http://localhost:3000](http://localhost:3000).
 
-### Building for Production
+### Running Tests
+
+```bash
+npm test
+```
+
+## Chess App Setup
+
+The Chess experience relies on the Stockfish 17.1 lite single-threaded WASM build. The Web Worker loader (`public/stockfish/stockfish.js`) expects to find a `stockfish.wasm` file alongside it, but the binary is not committed to the repository.
+
+1. **Download the engine binary (≈7 MB) into the public assets folder:**
+   ```bash
+   curl -L https://raw.githubusercontent.com/nmrugg/stockfish.js/master/src/stockfish-17.1-lite-single-03e3232.wasm \
+     -o public/stockfish/stockfish.wasm
+   ```
+2. **(PowerShell alternative)**
+   ```powershell
+   Invoke-WebRequest \
+     -Uri "https://raw.githubusercontent.com/nmrugg/stockfish.js/master/src/stockfish-17.1-lite-single-03e3232.wasm" \
+     -OutFile "public/stockfish/stockfish.wasm"
+   ```
+3. **Verify the download** – the resulting file should be roughly 7 MB and start with the bytes `00 61 73 6D` when inspected with a hex viewer.
+
+With the WASM file in place, refresh/rebuild the project and Stockfish-powered single-player games will be available.
+
+## Deployment
+
+Create an optimized build with:
 
 ```bash
 npm run build
 ```
 
-This creates a `dist` folder with the production build.
-
-## Deployment to GitHub Pages
-
-1. **Update the homepage URL** in `package.json`:
-   ```json
-   "homepage": "https://hardik-s.github.io/g1"
-   ```
-   Replace `yourusername` with your actual GitHub username.
-
-2. **Deploy to GitHub Pages**:
-   ```bash
-   npm run deploy
-   ```
-
-3. **Enable GitHub Pages** in your repository settings:
-   - Go to your repository on GitHub
-   - Click on "Settings"
-   - Scroll down to "Pages" section
-   - Select "Deploy from a branch"
-   - Choose "gh-pages" branch
-   - Click "Save"
-
-Your app will be available at: `https://hardik-s.github.io/g1`
-
-## Project Structure
-
-```
-day-of-week-switcher/
-├── public/
-│   └── index.html          # HTML template
-├── src/
-│   ├── App.js              # Main React component
-│   ├── App.css             # Component styles
-│   ├── index.js            # Entry point
-│   └── index.css           # Global styles
-├── package.json            # Dependencies and scripts
-├── webpack.config.js       # Webpack configuration
-└── README.md              # This file
-```
-
-## Technologies Used
-
-- React 18
-- Webpack 5
-- Babel
-- CSS3 with modern features
-- GitHub Pages for hosting
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Commit your changes: `git commit -am 'Add some feature'`
-4. Push to the branch: `git push origin feature-name`
-5. Submit a pull request
+The generated assets can be hosted on any static host (e.g., GitHub Pages, Netlify, Vercel). Remember to include the downloaded `public/stockfish/stockfish.wasm` file when publishing the build output.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
