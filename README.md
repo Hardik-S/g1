@@ -4,10 +4,14 @@ A small, modular React playground bundling multiple apps behind a simple launche
 
 ### Included apps
 
-- Day Switcher (switch between days of the week)
-- NPomodoro (Pomodoro timer)
-- Snake (classic snake game)
-- Pong Ring (futuristic circular pong arena)
+- Day Switcher — flip through the week with animated transitions.
+- N-Pomodoro — orchestrate multi-activity pomodoro sessions.
+- Snake — chase high scores across a responsive grid.
+- Hexa-Snake (Bee Edition) — guide a bee across a honeycomb board.
+- Neon Pong — duel classic paddles with a neon glow.
+- Pong Ring — rally inside a circular quartz arena.
+- Sudoku Roast — solve handcrafted puzzles in a café setting.
+- Chessboard Summit — play local chess or spar with Stockfish.
 
 ### Notes
 
@@ -92,17 +96,36 @@ g1/
 │   │   ├── AppLauncher.js
 │   │   └── AppLauncher.css
 │   └── apps/
+│       ├── ChessApp/
+│       │   ├── ChessApp.js
+│       │   └── index.js
 │       ├── DaySwitcherApp/
 │       │   ├── DaySwitcherApp.js
 │       │   ├── DaySwitcherApp.css
+│       │   └── index.js
+│       ├── HexaSnakeApp/
+│       │   ├── HexaSnakeApp.js
+│       │   ├── HexaSnakeApp.css
 │       │   └── index.js
 │       ├── NPomodoroApp/
 │       │   ├── NPomodoroApp.js
 │       │   ├── NPomodoroApp.css
 │       │   └── index.js
+│       ├── PongApp/
+│       │   ├── PongApp.js
+│       │   ├── PongApp.css
+│       │   └── index.js
+│       ├── PongRingApp/
+│       │   ├── PongRingApp.js
+│       │   ├── PongRingApp.css
+│       │   └── index.js
 │       ├── SnakeApp/
 │       │   ├── SnakeApp.js
 │       │   ├── SnakeApp.css
+│       │   └── index.js
+│       ├── SudokuApp/
+│       │   ├── SudokuApp.js
+│       │   ├── SudokuApp.css
 │       │   └── index.js
 │       └── registry.js
 ├── dist/

@@ -187,7 +187,10 @@
       this.board = null;
       this.afterMoveCallbacks = [];
     }
+  }
 
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = BoardManager;
   } else {
     global.BoardManager = BoardManager;
   }

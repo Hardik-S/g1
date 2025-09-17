@@ -10,9 +10,9 @@ Pages alongside the existing catalog of mini apps.
 1. Install dependencies if you have not already: `npm install`.
 2. Run `npm start` and open `http://localhost:3000`, or visit the published site at
    [`https://hardik-s.github.io/g1`](https://hardik-s.github.io/g1).
-3. In the launcher, open the **Chessboard Summit** tile to load the chess experience. The component dynamically loads
-   Chessboard.js, Chess.js, and Stockfish.js from their CDNs and shares styling with the standalone build so the look and feel
-   matches the rest of the suite.
+3. In the launcher, open the **Chessboard Summit** tile—featured on the home view and listed under the **Games** category—to
+   load the chess experience. The component dynamically loads Chessboard.js, Chess.js, and Stockfish.js from their CDNs and
+   shares styling with the standalone build so the look and feel matches the rest of the suite.
 
 ### Standalone fallback
 - Open `html/chess.html` directly in a browser. It loads the exact same board and engine modules via CDN and is useful for
