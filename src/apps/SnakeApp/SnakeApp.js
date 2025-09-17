@@ -209,10 +209,6 @@ const SnakeApp = ({ onBack }) => {
       
       <div className="app-content">
         <header className="app-header">
-          <button className="back-btn" onClick={onBack}>
-            ← Back to Apps
-          </button>
-          <h1 className="app-title">Snake Game</h1>
           <div className="score-display">
             <div className="score">Score: {score}</div>
             <div className="high-score">High: {highScore}</div>

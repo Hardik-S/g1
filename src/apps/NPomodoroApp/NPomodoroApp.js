@@ -130,10 +130,6 @@ const NPomodoroApp = ({ onBack }) => {
       
       <div className="app-content">
         <header className="app-header">
-          <button className="back-btn" onClick={onBack}>
-            ← Back to Apps
-          </button>
-          <h1 className="app-title">N-Pomodoro Timer</h1>
           <button 
             className="config-btn"
             onClick={() => setShowConfig(!showConfig)}
