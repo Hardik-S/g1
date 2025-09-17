@@ -4,14 +4,25 @@ A small, modular React playground bundling multiple apps behind a simple launche
 
 ### Included apps
 
-- Day Switcher (switch between days of the week)
-- NPomodoro (Pomodoro timer)
-- Snake (classic snake game)
-- Pong Ring (futuristic circular pong arena)
+- Day Switcher — switch between days of the week with playful transitions
+- N-Pomodoro Timer — customizable multi-activity Pomodoro workflow
+- Snake Game — classic grid chase with keyboard controls and high scores
+- Hexa-Snake (Bee Edition) — guide a bee through a honeycomb hex grid
+- Neon Pong — fast-paced paddle duel with session history tracking
+- Pong Ring — futuristic circular pong arena with adaptive AI
+- Sudoku Roast — cozy coffeehouse-themed Sudoku with solver and notes
+- Coming Soon — placeholder slot reserving space for the next experiment
 
 ### Notes
 
 - CirclePong has been renamed to Pong Ring with a refreshed canvas setup so the match starts reliably in the browser.
+
+### Project documentation
+
+- [`docs/AGENTS.md`](docs/AGENTS.md) — contributor handbook outlining required checks, code conventions, and documentation expectations.
+- [`docs/APPS.md`](docs/APPS.md) — catalog of bundled micro apps with behaviour notes.
+- [`docs/CHESS.md`](docs/CHESS.md) — reference for chess-specific helpers and utilities.
+- [`docs/GITSTORY.md`](docs/GITSTORY.md) — chronological log of commits, pushes, merges, and key design decisions.
 
 ## Live demo
 
@@ -72,6 +83,11 @@ Your site will be available at the `homepage` URL.
 
 ```
 g1/
+├── docs/
+│   ├── AGENTS.md
+│   ├── APPS.md
+│   ├── CHESS.md
+│   └── GITSTORY.md
 ├── public/
 │   └── index.html
 ├── src/
