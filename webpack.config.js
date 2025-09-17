@@ -36,6 +36,7 @@ module.exports = {
         { from: path.resolve(__dirname, 'public/html'), to: 'html' },
         { from: path.resolve(__dirname, 'public/css'), to: 'css' },
         { from: path.resolve(__dirname, 'public/js'), to: 'js' },
+        { from: path.resolve(__dirname, 'public/hexa-snake'), to: 'hexa-snake' },
       ],
     }),
   ],

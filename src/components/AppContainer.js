@@ -6,6 +6,7 @@ import './AppContainer.css';
 const DaySwitcherApp = React.lazy(() => import('../apps/DaySwitcherApp'));
 const NPomodoroApp = React.lazy(() => import('../apps/NPomodoroApp'));
 const SnakeApp = React.lazy(() => import('../apps/SnakeApp'));
+const HexaSnakeApp = React.lazy(() => import('../apps/HexaSnakeApp'));
 const PongApp = React.lazy(() => import('../apps/PongApp'));
 
 const AppContainer = () => {
@@ -32,6 +33,8 @@ const AppContainer = () => {
         return <NPomodoroApp onBack={handleBackToLauncher} />;
       case 'snake':
         return <SnakeApp onBack={handleBackToLauncher} />;
+      case 'hexa-snake-bee':
+        return <HexaSnakeApp onBack={handleBackToLauncher} />;
       case 'pong':
         return <PongApp onBack={handleBackToLauncher} />;
       default:
