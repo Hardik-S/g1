@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { APP_REGISTRY, APP_CATEGORIES, getAppsByCategory, getFeaturedApps, getAllApps } from '../apps/registry';
+import React, { useEffect, useMemo, useState } from 'react';
+import { APP_CATEGORIES, getAllApps } from '../apps/registry';
 import './AppLauncher.css';
 
 const AppLauncher = ({ onLaunchApp, currentView, onBackToLauncher }) => {
@@ -35,16 +35,22 @@ const AppLauncher = ({ onLaunchApp, currentView, onBackToLauncher }) => {
   }, []);
 
   const categories = ['All', ...Object.keys(APP_CATEGORIES)];
-  
-  const filteredApps = getAllApps().filter(app => {
-    const matchesCategory = selectedCategory === 'All' || app.category === selectedCategory;
-    const matchesSearch = app.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+
+  const allApps = useMemo(() => getAllApps(), []);
+
+  const filteredApps = useMemo(() => allApps
+    .filter(app => {
+      const matchesCategory = selectedCategory === 'All' || app.category === selectedCategory;
+      const matchesSearch = app.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          app.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          app.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesCategory && matchesSearch && !app.disabled;
-  });
+      return matchesCategory && matchesSearch && !app.disabled;
+    })
+    .sort((a, b) => a.title.localeCompare(b.title)), [allApps, selectedCategory, searchQuery]);
 
-  const featuredApps = getFeaturedApps();
+  const featuredApps = useMemo(() => allApps
+    .filter(app => app.featured && !app.disabled)
+    .sort((a, b) => a.title.localeCompare(b.title)), [allApps]);
 
   const isFavorited = (appId) => favoriteIds.includes(appId);
 
@@ -109,7 +115,7 @@ const AppLauncher = ({ onLaunchApp, currentView, onBackToLauncher }) => {
           <h1 className="launcher-title">
             <span className="title-icon">📱</span>
             App Container
-            <span className="app-count">({getAllApps().length} apps)</span>
+            <span className="app-count">({allApps.length} apps)</span>
           </h1>
 
           <div className="toronto-clock" aria-label="Current time">
