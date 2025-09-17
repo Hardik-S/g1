@@ -9,6 +9,7 @@ const SnakeApp = React.lazy(() => import('../apps/SnakeApp'));
 const HexaSnakeApp = React.lazy(() => import('../apps/HexaSnakeApp'));
 const PongApp = React.lazy(() => import('../apps/PongApp'));
 const SudokuApp = React.lazy(() => import('../apps/SudokuApp'));
+const ChessApp = React.lazy(() => import('../apps/ChessApp'));
 
 const AppContainer = () => {
   const [currentView, setCurrentView] = useState('launcher'); // 'launcher' or 'app'
@@ -40,6 +41,8 @@ const AppContainer = () => {
         return <PongApp onBack={handleBackToLauncher} />;
       case 'sudoku-coffee':
         return <SudokuApp onBack={handleBackToLauncher} />;
+      case 'chess':
+        return <ChessApp onBack={handleBackToLauncher} />;
       default:
         return (
           <div className="app-placeholder">
