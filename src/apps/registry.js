@@ -43,6 +43,20 @@ export const APP_REGISTRY = {
     created: '2024-01-01',
     featured: true
   },
+  'pong': {
+    id: 'pong',
+    title: 'Neon Pong',
+    description: 'Fast-paced neon Pong with solo and versus modes plus session history',
+    icon: '🏓',
+    category: 'Games',
+    component: null,
+    path: '/apps/pong',
+    tags: ['game', 'arcade', 'canvas', 'retro'],
+    version: '1.0.0',
+    author: 'OpenAI Assistant',
+    created: '2024-01-01',
+    featured: true
+  },
   'app-3': {
     id: 'app-3',
     title: 'Coming Soon',
