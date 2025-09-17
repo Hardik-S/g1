@@ -63,19 +63,6 @@ const AppContainer = () => {
         />
       ) : (
         <div className="app-view">
-          <header className="app-header">
-            <button 
-              className="back-btn"
-              onClick={handleBackToLauncher}
-            >
-              ← Back to Apps
-            </button>
-            <div className="app-title">
-              <span className="app-icon">{currentApp?.icon}</span>
-              <h1>{currentApp?.title}</h1>
-            </div>
-          </header>
-          
           <main className="app-content">
             <Suspense fallback={
               <div className="loading">
