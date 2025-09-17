@@ -39,22 +39,23 @@ const NPomodoroApp = ({ onBack }) => {
   }, [activities.length]);
 
   useEffect(() => {
-    if (isRunning && timeLeft > 0) {
-      intervalRef.current = setInterval(() => {
-        setTimeLeft(prev => {
-          if (prev <= 1) {
-            handleActivityComplete();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    } else {
-      clearInterval(intervalRef.current);
+    clearInterval(intervalRef.current);
+    if (!isRunning) {
+      return () => {};
     }
 
+    intervalRef.current = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          handleActivityComplete();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
     return () => clearInterval(intervalRef.current);
-  }, [isRunning, timeLeft]);
+  }, [isRunning, currentActivityIndex]);
 
   const handleActivityComplete = () => {
     if (currentActivityIndex < activities.length - 1) {

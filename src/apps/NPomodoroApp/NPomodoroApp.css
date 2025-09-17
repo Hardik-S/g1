@@ -52,6 +52,11 @@
   backdrop-filter: blur(10px);
 }
 
+/* Hide the top bar in the app view to provide a full-screen experience */
+.n-pomodoro-app .app-header {
+  display: none;
+}
+
 .back-btn, .config-btn {
   background: rgba(255, 255, 255, 0.1);
   color: white;

@@ -76,8 +76,7 @@ const AppLauncher = ({ onLaunchApp, currentView, onBackToLauncher }) => {
             <span className="app-count">({getAllApps().length} apps)</span>
           </h1>
 
-          <div className="toronto-clock" aria-label="Current time in Toronto">
-            <span className="clock-label">Toronto</span>
+          <div className="toronto-clock" aria-label="Current time">
             <span className="clock-time">{torontoTime}</span>
           </div>
         </div>
