@@ -1,0 +1,246 @@
+.circle-pong {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  padding: 2.5rem 1rem;
+  background: radial-gradient(circle at center, rgba(56, 189, 248, 0.12), rgba(31, 41, 55, 0.92) 65%);
+  color: #fdfdfd;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+.circle-pong__menu {
+  max-width: 28rem;
+  width: 100%;
+  padding: 2.5rem;
+  border-radius: 1.5rem;
+  background: rgba(31, 41, 55, 0.85);
+  border: 1px solid rgba(147, 197, 253, 0.3);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.55);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.circle-pong__title {
+  font-size: 2.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fdfdfd;
+  text-shadow: 0 0 32px rgba(147, 197, 253, 0.5);
+}
+
+.circle-pong__subtitle {
+  font-size: 1rem;
+  color: rgba(209, 213, 219, 0.78);
+  line-height: 1.6;
+}
+
+.circle-pong__menu-options {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.circle-pong__menu-options button {
+  padding: 0.85rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(147, 197, 253, 0.4);
+  background: linear-gradient(135deg, rgba(147, 197, 253, 0.25), rgba(56, 189, 248, 0.25));
+  color: #fdfdfd;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 200ms ease, box-shadow 200ms ease, background 200ms ease;
+  box-shadow: 0 15px 30px rgba(56, 189, 248, 0.25);
+}
+
+.circle-pong__menu-options button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 40px rgba(56, 189, 248, 0.35);
+  background: linear-gradient(135deg, rgba(147, 197, 253, 0.35), rgba(56, 189, 248, 0.35));
+}
+
+.circle-pong__menu-options button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.4);
+}
+
+.circle-pong__tips {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: rgba(209, 213, 219, 0.9);
+}
+
+.circle-pong__stage {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.circle-pong__canvas {
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  border: 1px solid rgba(147, 197, 253, 0.2);
+  background: radial-gradient(circle at 30% 30%, rgba(253, 253, 253, 0.08), rgba(31, 41, 55, 0.8));
+  box-shadow: 0 40px 100px rgba(15, 23, 42, 0.55);
+}
+
+.circle-pong__hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.5rem;
+}
+
+.circle-pong__scoreboard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.circle-pong__score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 999px;
+  background: rgba(31, 41, 55, 0.65);
+  border: 1px solid rgba(147, 197, 253, 0.35);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.45);
+}
+
+.circle-pong__score .label {
+  font-size: 0.75rem;
+  color: rgba(209, 213, 219, 0.85);
+}
+
+.circle-pong__score .value {
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: #fdfdfd;
+}
+
+.circle-pong__mode {
+  padding: 0.6rem 1.6rem;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.2);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  box-shadow: 0 10px 30px rgba(56, 189, 248, 0.25);
+  color: #fdfdfd;
+  font-weight: 600;
+}
+
+.circle-pong__controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 0.85rem;
+  color: rgba(209, 213, 219, 0.8);
+}
+
+.circle-pong__controls .divider {
+  width: 40px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(147, 197, 253, 0), rgba(147, 197, 253, 0.5), rgba(147, 197, 253, 0));
+}
+
+.circle-pong__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(31, 41, 55, 0.65);
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  text-align: center;
+  padding: 2rem;
+  border-radius: 50%;
+}
+
+.circle-pong__overlay h2 {
+  font-size: 2.3rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-shadow: 0 0 30px rgba(147, 197, 253, 0.6);
+  margin: 0;
+}
+
+.circle-pong__overlay p {
+  margin: 0;
+  font-size: 1rem;
+  color: rgba(209, 213, 219, 0.88);
+}
+
+.circle-pong__overlay-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.circle-pong__overlay-actions button {
+  pointer-events: auto;
+  padding: 0.85rem 1.6rem;
+  border-radius: 999px;
+  border: 1px solid rgba(147, 197, 253, 0.4);
+  background: linear-gradient(135deg, rgba(147, 197, 253, 0.35), rgba(56, 189, 248, 0.35));
+  color: #fdfdfd;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 200ms ease, box-shadow 200ms ease;
+  box-shadow: 0 12px 32px rgba(56, 189, 248, 0.3);
+}
+
+.circle-pong__overlay-actions button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 42px rgba(56, 189, 248, 0.42);
+}
+
+.circle-pong__overlay-actions button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.45);
+}
+
+@media (max-width: 640px) {
+  .circle-pong {
+    padding: 1.5rem 0.5rem;
+  }
+
+  .circle-pong__menu {
+    padding: 2rem 1.5rem;
+  }
+
+  .circle-pong__canvas {
+    width: 360px;
+    height: 360px;
+  }
+
+  .circle-pong__hud {
+    padding: 1rem;
+  }
+
+  .circle-pong__overlay {
+    border-radius: 2rem;
+  }
+}
