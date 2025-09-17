@@ -52,9 +52,9 @@
   align-items: flex-end;
   padding: 14px 24px;
   border-radius: 16px;
-  border: 2px solid #0a3d2a;
-  background: rgba(10, 61, 42, 0.6);
-  box-shadow: 0 0 20px rgba(10, 61, 42, 0.5);
+  border: 2px solid #00c853; /* dark neon green */
+  background: transparent; /* no background */
+  box-shadow: 0 0 18px rgba(0, 200, 83, 0.35);
   min-width: 170px;
 }
 
@@ -63,8 +63,8 @@
 .clock-time {
   font-size: clamp(1.6rem, 3vw, 2.2rem);
   font-weight: 700;
-  color: #0a3d2a;
-  text-shadow: 0 0 8px rgba(10, 61, 42, 0.7), 0 0 16px rgba(10, 61, 42, 0.5);
+  color: #00c853; /* dark neon green */
+  text-shadow: 0 0 12px rgba(0, 200, 83, 0.7), 0 0 24px rgba(0, 200, 83, 0.45);
   font-family: 'Orbitron', 'Courier New', monospace;
 }
 
