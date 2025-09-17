@@ -1,110 +1,115 @@
-# Day of Week Switcher
+## g1 — React Micro Apps Collection
 
-A simple React app that allows you to switch between different days of the week with beautiful animations and a modern UI.
+A small, modular React playground bundling multiple apps behind a simple launcher. Built with Webpack and React 18, and deployable to GitHub Pages.
 
-## Features
+### Included apps
 
-- 🗓️ Switch between all 7 days of the week
-- ⬅️➡️ Navigate with Previous/Next buttons
-- 🎲 Jump to a random day
-- 📱 Click on any day to switch directly
-- 📱 Fully responsive design
-- 🎨 Beautiful gradient UI
+- Day Switcher (switch between days of the week)
+- NPomodoro (Pomodoro timer)
+- Snake (classic snake game)
 
-## Live Demo
+## Live demo
 
-[View on GitHub Pages](https://hardik-s.github.io/g1)
+[Open on GitHub Pages](https://hardik-s.github.io/g1)
 
-## Getting Started
+## Getting started
 
 ### Prerequisites
 
-- Node.js (version 14 or higher)
-- npm or yarn
+- Node.js 16+ (18+ recommended)
+- npm
 
-### Installation
+### Install
 
-1. Clone the repository:
 ```bash
 git clone https://github.com/Hardik-S/g1.git
 cd g1
-```
-
-2. Install dependencies:
-```bash
 npm install
 ```
 
-3. Start the development server:
+### Develop
+
 ```bash
 npm start
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Then open http://localhost:3000.
 
-### Building for Production
+### Build
 
 ```bash
 npm run build
 ```
 
-This creates a `dist` folder with the production build.
+Artifacts are emitted to `dist/`.
 
-## Deployment to GitHub Pages
+### Deploy (GitHub Pages)
 
-1. **Update the homepage URL** in `package.json`:
-   ```json
-   "homepage": "https://hardik-s.github.io/g1"
-   ```
-   Replace `yourusername` with your actual GitHub username.
+1) Ensure `homepage` is set in `package.json` to your repo page (e.g. `https://hardik-s.github.io/g1`).
 
-2. **Deploy to GitHub Pages**:
-   ```bash
-   npm run deploy
-   ```
+2) Deploy:
 
-3. **Enable GitHub Pages** in your repository settings:
-   - Go to your repository on GitHub
-   - Click on "Settings"
-   - Scroll down to "Pages" section
-   - Select "Deploy from a branch"
-   - Choose "gh-pages" branch
-   - Click "Save"
+```bash
+npm run deploy
+```
 
-Your app will be available at: `https://hardik-s.github.io/g1`
+3) In GitHub → Settings → Pages, set Source to the `gh-pages` branch if not already configured.
 
-## Project Structure
+Your site will be available at the `homepage` URL.
+
+## Scripts
+
+- `npm start` — Start webpack dev server at `http://localhost:3000`
+- `npm run build` — Create production build in `dist/`
+- `npm run deploy` — Publish `dist/` to `gh-pages`
+
+## Project structure
 
 ```
-day-of-week-switcher/
+g1/
 ├── public/
-│   └── index.html          # HTML template
+│   └── index.html
 ├── src/
-│   ├── App.js              # Main React component
-│   ├── App.css             # Component styles
-│   ├── index.js            # Entry point
-│   └── index.css           # Global styles
-├── package.json            # Dependencies and scripts
-├── webpack.config.js       # Webpack configuration
-└── README.md              # This file
+│   ├── index.js
+│   ├── index.css
+│   ├── App.js
+│   ├── App.css
+│   ├── components/
+│   │   ├── AppContainer.js
+│   │   ├── AppContainer.css
+│   │   ├── AppLauncher.js
+│   │   └── AppLauncher.css
+│   └── apps/
+│       ├── DaySwitcherApp/
+│       │   ├── DaySwitcherApp.js
+│       │   ├── DaySwitcherApp.css
+│       │   └── index.js
+│       ├── NPomodoroApp/
+│       │   ├── NPomodoroApp.js
+│       │   ├── NPomodoroApp.css
+│       │   └── index.js
+│       ├── SnakeApp/
+│       │   ├── SnakeApp.js
+│       │   ├── SnakeApp.css
+│       │   └── index.js
+│       └── registry.js
+├── dist/
+│   └── ... (build output)
+├── webpack.config.js
+├── package.json
+└── README.md
 ```
 
-## Technologies Used
+## Tech stack
 
 - React 18
-- Webpack 5
-- Babel
-- CSS3 with modern features
-- GitHub Pages for hosting
+- Webpack 5 + webpack-dev-server
+- Babel (`@babel/preset-env`, `@babel/preset-react`)
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Commit your changes: `git commit -am 'Add some feature'`
-4. Push to the branch: `git push origin feature-name`
-5. Submit a pull request
+Pull requests are welcome. For larger changes, please open an issue to discuss the approach first.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT — see `LICENSE`.
