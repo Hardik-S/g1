@@ -6,6 +6,7 @@ import './AppContainer.css';
 const DaySwitcherApp = React.lazy(() => import('../apps/DaySwitcherApp'));
 const NPomodoroApp = React.lazy(() => import('../apps/NPomodoroApp'));
 const SnakeApp = React.lazy(() => import('../apps/SnakeApp'));
+const ChessApp = React.lazy(() => import('../apps/ChessApp'));
 
 const AppContainer = () => {
   const [currentView, setCurrentView] = useState('launcher'); // 'launcher' or 'app'
@@ -31,6 +32,8 @@ const AppContainer = () => {
         return <NPomodoroApp onBack={handleBackToLauncher} />;
       case 'snake':
         return <SnakeApp onBack={handleBackToLauncher} />;
+      case 'chess':
+        return <ChessApp onBack={handleBackToLauncher} />;
       default:
         return (
           <div className="app-placeholder">

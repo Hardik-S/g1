@@ -1,0 +1,230 @@
+.chess-app-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  padding: 2rem;
+  justify-content: center;
+  align-items: flex-start;
+  background: radial-gradient(circle at top, #f2e6d8 0%, #d5bfa3 35%, #b19063 100%);
+  color: #2f2519;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+.chess-board-wrapper {
+  flex: 1 1 360px;
+  max-width: 600px;
+  display: flex;
+  justify-content: center;
+}
+
+.chess-board {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  width: min(90vw, 560px);
+  aspect-ratio: 1 / 1;
+  border: 12px solid #4b2c14;
+  border-radius: 12px;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25);
+  background: repeating-linear-gradient(45deg, rgba(139, 92, 57, 0.4) 0, rgba(139, 92, 57, 0.4) 12px, rgba(193, 154, 107, 0.4) 12px, rgba(193, 154, 107, 0.4) 24px);
+  overflow: hidden;
+}
+
+.square {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0;
+}
+
+.square.light {
+  background: linear-gradient(135deg, #f4d8b2, #dcb488);
+}
+
+.square.dark {
+  background: linear-gradient(135deg, #8b5a2b, #5b3718);
+}
+
+.square.selected::after,
+.square.highlight::after,
+.square.last-move::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+.square.selected::after {
+  border: 3px solid rgba(255, 215, 0, 0.8);
+}
+
+.square.highlight::after {
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0) 70%);
+}
+
+.square.last-move::after {
+  border: 3px solid rgba(255, 255, 255, 0.35);
+}
+
+.square-label {
+  position: absolute;
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  font-weight: 600;
+}
+
+.square-label.file {
+  bottom: 4px;
+  right: 6px;
+}
+
+.square-label.rank {
+  top: 4px;
+  left: 6px;
+}
+
+.piece {
+  width: 82%;
+  height: 82%;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  cursor: grab;
+  touch-action: none;
+}
+
+.piece:active {
+  cursor: grabbing;
+}
+
+.drag-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.drag-piece {
+  position: absolute;
+}
+
+.chess-sidebar {
+  flex: 0 0 280px;
+  max-width: 360px;
+  background: rgba(255, 255, 255, 0.82);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 12px 24px rgba(75, 44, 20, 0.25);
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.control-group h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.2rem;
+  color: #3c2a1b;
+}
+
+.control-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.control-option input[type='radio'] {
+  accent-color: #8b5a2b;
+}
+
+.control-group input[type='range'] {
+  width: 100%;
+  accent-color: #8b5a2b;
+}
+
+.difficulty-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #4b2c14;
+  text-align: right;
+}
+
+.new-game-btn {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #b88a4a, #8b5a2b);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.new-game-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 18px rgba(139, 90, 43, 0.3);
+}
+
+.engine-warning {
+  margin-top: 0.75rem;
+  background: rgba(209, 67, 67, 0.08);
+  color: #8b1e1e;
+  padding: 0.75rem;
+  border-radius: 12px;
+  font-size: 0.95rem;
+}
+
+.status-panel h2 {
+  margin: 0 0 0.5rem;
+}
+
+.status-panel p {
+  margin: 0.25rem 0;
+  font-size: 1rem;
+}
+
+.status-panel .game-over {
+  color: #b21f1f;
+  font-weight: 700;
+}
+
+@media (max-width: 1024px) {
+  .chess-app-container {
+    padding: 1.5rem;
+    gap: 1.5rem;
+  }
+
+  .chess-sidebar {
+    width: 100%;
+    max-width: none;
+    order: -1;
+  }
+}
+
+@media (max-width: 600px) {
+  .chess-app-container {
+    padding: 1rem;
+  }
+
+  .chess-board {
+    width: 100%;
+    border-width: 10px;
+  }
+
+  .square-label {
+    font-size: 0.65rem;
+  }
+
+  .chess-sidebar {
+    padding: 1.25rem;
+  }
+}
