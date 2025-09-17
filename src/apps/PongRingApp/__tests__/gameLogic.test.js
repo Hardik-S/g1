@@ -5,7 +5,7 @@ import {
   normalizeAngle,
 } from '../gameLogic';
 
-describe('CirclePong game logic', () => {
+describe('Pong Ring game logic', () => {
   test('player paddles stay within their half-circle range', () => {
     const state = createInitialState({ mode: 'versus' });
     const input = createInputState();

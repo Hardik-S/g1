@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import './CirclePongApp.css';
+import './PongRingApp.css';
 import {
   DEFAULT_OPTIONS,
   createInitialState,
@@ -174,7 +174,7 @@ function useKeyboardControls(active, inputRef) {
   }, [active, inputRef]);
 }
 
-const CirclePongApp = () => {
+const PongRingApp = () => {
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
   const animationFrameRef = useRef(null);
@@ -190,23 +190,35 @@ const CirclePongApp = () => {
   useKeyboardControls(view === 'game', inputRef);
 
   useEffect(() => {
+    // Re-run the canvas prep whenever the view changes so the context exists before we render.
     const canvas = canvasRef.current;
     if (!canvas) {
       return;
     }
+
     const ratio = window.devicePixelRatio || 1;
-    canvas.width = CANVAS_SIZE * ratio;
-    canvas.height = CANVAS_SIZE * ratio;
+    if (canvas.width !== CANVAS_SIZE * ratio || canvas.height !== CANVAS_SIZE * ratio) {
+      canvas.width = CANVAS_SIZE * ratio;
+      canvas.height = CANVAS_SIZE * ratio;
+    }
     canvas.style.width = `${CANVAS_SIZE}px`;
     canvas.style.height = `${CANVAS_SIZE}px`;
+
     const ctx = canvas.getContext('2d');
-    ctx.scale(ratio, ratio);
+    // Reset the transform each time so repeated mounts do not compound scaling factors.
+    if (typeof ctx.setTransform === 'function') {
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    } else {
+      ctx.scale(ratio, ratio);
+    }
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
     contextRef.current = ctx;
+
+    // Draw a clean background immediately so the arena is visible before the loop starts.
     ctx.fillStyle = '#1f2937';
     ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-  }, []);
+  }, [view]);
 
   const startGame = useCallback((selectedMode) => {
     const state = createInitialState({ mode: selectedMode });
@@ -305,12 +317,12 @@ const CirclePongApp = () => {
   };
 
   return (
-    <div className="circle-pong" data-view={view}>
+    <div className="pong-ring" data-view={view}>
       {view === 'menu' && (
-        <div className="circle-pong__menu">
-          <h1 className="circle-pong__title">CirclePong</h1>
-          <p className="circle-pong__subtitle">Futuristic quartz-bound pong inside a luminous ring.</p>
-          <div className="circle-pong__menu-options">
+        <div className="pong-ring__menu">
+          <h1 className="pong-ring__title">Pong Ring</h1>
+          <p className="pong-ring__subtitle">Futuristic quartz-bound pong inside a luminous ring.</p>
+          <div className="pong-ring__menu-options">
             <button type="button" onClick={() => startGame('single')}>
               1 Player vs AI
             </button>
@@ -318,7 +330,7 @@ const CirclePongApp = () => {
               2 Player Local
             </button>
           </div>
-          <div className="circle-pong__tips">
+          <div className="pong-ring__tips">
             <span>Player 1: W / S (clockwise / counterclockwise)</span>
             <span>Player 2: ↑ / ↓ (clockwise / counterclockwise)</span>
           </div>
@@ -326,21 +338,21 @@ const CirclePongApp = () => {
       )}
 
       {(view === 'game' || view === 'win') && (
-        <div className="circle-pong__stage">
-          <canvas ref={canvasRef} className="circle-pong__canvas" />
-          <div className="circle-pong__hud">
-            <div className="circle-pong__scoreboard">
-              <div className="circle-pong__score circle-pong__score--p1">
+        <div className="pong-ring__stage">
+          <canvas ref={canvasRef} className="pong-ring__canvas" />
+          <div className="pong-ring__hud">
+            <div className="pong-ring__scoreboard">
+              <div className="pong-ring__score pong-ring__score--p1">
                 <span className="label">Player 1</span>
                 <span className="value">{scores.player1}</span>
               </div>
-              <div className="circle-pong__mode">{mode === 'single' ? 'vs AI' : 'Local Versus'}</div>
-              <div className="circle-pong__score circle-pong__score--p2">
+              <div className="pong-ring__mode">{mode === 'single' ? 'vs AI' : 'Local Versus'}</div>
+              <div className="pong-ring__score pong-ring__score--p2">
                 <span className="label">{mode === 'single' ? 'AI' : 'Player 2'}</span>
                 <span className="value">{scores.player2}</span>
               </div>
             </div>
-            <div className="circle-pong__controls">
+            <div className="pong-ring__controls">
               <span>W/S</span>
               <span className="divider" />
               <span>↑/↓</span>
@@ -348,10 +360,10 @@ const CirclePongApp = () => {
           </div>
 
           {view === 'win' && (
-            <div className="circle-pong__overlay">
+            <div className="pong-ring__overlay">
               <h2>{renderWinnerTitle()}</h2>
               <p>First to three points claims the quartz crown.</p>
-              <div className="circle-pong__overlay-actions">
+              <div className="pong-ring__overlay-actions">
                 <button type="button" onClick={playAgain}>
                   Play Again
                 </button>
@@ -367,4 +379,4 @@ const CirclePongApp = () => {
   );
 };
 
-export default CirclePongApp;
+export default PongRingApp;
