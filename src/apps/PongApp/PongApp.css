@@ -1,30 +1,111 @@
-.pong-app-shell {
+.pong-app {
   width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-items: center;
+}
+
+.pong-app__scoreboard {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 24px;
+  border-radius: 20px;
+  background: rgba(9, 7, 36, 0.75);
+  box-shadow: 0 22px 45px rgba(10, 7, 42, 0.55);
+  backdrop-filter: blur(10px);
+}
+
+.pong-app__score {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 120px;
+}
+
+.pong-app__score span {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.pong-app__score strong {
+  font-size: 2.6rem;
+  line-height: 1;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+}
+
+.pong-app__controls {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
 }
 
-.pong-iframe {
+.pong-app__status {
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.pong-app__button-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.pong-app__button {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(12, 9, 45, 0.85);
+  color: #ffffff;
+  font-size: 0.85rem;
+  padding: 9px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.pong-app__button:hover,
+.pong-app__button:focus-visible {
+  border-color: rgba(0, 245, 255, 0.9);
+  background: rgba(22, 17, 72, 0.92);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.pong-app__canvas {
   width: 100%;
-  min-height: 720px;
-  border: none;
-  border-radius: 24px;
-  box-shadow: 0 25px 60px rgba(0, 234, 255, 0.25);
-  background: #01010a;
+  max-width: 720px;
+  border-radius: 22px;
+  box-shadow: 0 32px 65px rgba(5, 16, 65, 0.65);
+  background: radial-gradient(circle at 50% 0%, rgba(0, 230, 255, 0.18), rgba(5, 1, 20, 0.96));
 }
 
-.pong-note {
+.pong-app__note {
   margin: 0;
-  font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.7);
   text-align: center;
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.7);
   max-width: 720px;
 }
 
-@media (max-width: 768px) {
-  .pong-iframe {
-    min-height: 540px;
+@media (max-width: 820px) {
+  .pong-app__scoreboard {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pong-app__score {
+    align-items: center;
   }
 }
