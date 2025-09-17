@@ -18,6 +18,12 @@ Snake Game modernizes the classic grid chase with keyboard-friendly controls, re
 - Publish leaderboards and social sharing to encourage friendly competition.
 - Offer touch controls and haptic feedback for mobile and tablet players.
 
+## Pong Ring
+Pong Ring reimagines Pong inside a circular quartz arena with luminous marble flourishes. Paddles glide along arcs of a perfect ring, defending their hemisphere as a glowing sphere rebounds with crisp physicality. Solo pilots can spar with an adaptive AI or battle locally, with rounds racing to three points amid ethereal neon scoring overlays.
+- Layer in dynamic backgrounds with refraction shaders for evolving ambience.
+- Introduce adjustable paddle arcs and experimental power-ups for advanced modes.
+- Extend online multiplayer with latency-friendly predictive inputs and leaderboards.
+
 ## Coming Soon
 Coming Soon placeholder reserves space for upcoming experiments within the launcher. It reminds contributors to ideate beyond the initial trio, surfacing metadata hooks, routing, and categories that future experiences will inherit. Documented scaffolding ensures new concepts launch smoothly while signaling a living roadmap to collaborators continuously exploring the ecosystem's potential.
 - Define a template generator for scaffolding new app directories, tests, and documentation.

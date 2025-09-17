@@ -71,6 +71,20 @@ export const APP_REGISTRY = {
     created: '2024-01-01',
     featured: true
   },
+  'pong-ring': {
+    id: 'pong-ring',
+    title: 'Pong Ring',
+    description: 'Circular quartz arena pong with marble glow and solo/versus modes',
+    icon: '🪩',
+    category: 'Games',
+    component: null,
+    path: '/apps/pong-ring',
+    tags: ['game', 'canvas', 'futuristic'],
+    version: '1.0.0',
+    author: 'OpenAI Assistant',
+    created: '2024-05-01',
+    featured: true
+  },
   'sudoku-coffee': {
     id: 'sudoku-coffee',
     title: 'Sudoku Roast',

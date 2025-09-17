@@ -8,6 +8,7 @@ const NPomodoroApp = React.lazy(() => import('../apps/NPomodoroApp'));
 const SnakeApp = React.lazy(() => import('../apps/SnakeApp'));
 const HexaSnakeApp = React.lazy(() => import('../apps/HexaSnakeApp'));
 const PongApp = React.lazy(() => import('../apps/PongApp'));
+const PongRingApp = React.lazy(() => import('../apps/PongRingApp'));
 const SudokuApp = React.lazy(() => import('../apps/SudokuApp'));
 const ChessApp = React.lazy(() => import('../apps/ChessApp'));
 
@@ -39,6 +40,8 @@ const AppContainer = () => {
         return <HexaSnakeApp onBack={handleBackToLauncher} />;
       case 'pong':
         return <PongApp onBack={handleBackToLauncher} />;
+      case 'pong-ring':
+        return <PongRingApp onBack={handleBackToLauncher} />;
       case 'sudoku-coffee':
         return <SudokuApp onBack={handleBackToLauncher} />;
       case 'chess':

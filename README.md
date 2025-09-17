@@ -7,6 +7,11 @@ A small, modular React playground bundling multiple apps behind a simple launche
 - Day Switcher (switch between days of the week)
 - NPomodoro (Pomodoro timer)
 - Snake (classic snake game)
+- Pong Ring (futuristic circular pong arena)
+
+### Notes
+
+- CirclePong has been renamed to Pong Ring with a refreshed canvas setup so the match starts reliably in the browser.
 
 ## Live demo
 
