@@ -7,6 +7,14 @@ const AppLauncher = ({ onLaunchApp, currentView, onBackToLauncher }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [torontoTime, setTorontoTime] = useState('--:--:--');
+  const [favoriteIds, setFavoriteIds] = useState(() => {
+    try {
+      const stored = localStorage.getItem('favoriteAppIds');
+      return stored ? JSON.parse(stored) : [];
+    } catch (e) {
+      return [];
+    }
+  });
 
   useEffect(() => {
     const formatter = new Intl.DateTimeFormat('en-CA', {
@@ -38,29 +46,57 @@ const AppLauncher = ({ onLaunchApp, currentView, onBackToLauncher }) => {
 
   const featuredApps = getFeaturedApps();
 
+  const isFavorited = (appId) => favoriteIds.includes(appId);
+
+  const toggleFavorite = (appId) => {
+    setFavoriteIds((prev) => {
+      const next = prev.includes(appId)
+        ? prev.filter((id) => id !== appId)
+        : [...prev, appId];
+      try {
+        localStorage.setItem('favoriteAppIds', JSON.stringify(next));
+      } catch (e) {}
+      return next;
+    });
+  };
+
   const handleAppClick = (app) => {
     if (app.disabled) return;
     onLaunchApp(app);
   };
 
-  const renderAppCard = (app) => (
-    <div 
-      key={app.id} 
-      className={`app-card ${app.disabled ? 'disabled' : ''} ${viewMode}`}
-      onClick={() => handleAppClick(app)}
-    >
-      <div className="app-icon">{app.icon}</div>
-      <div className="app-info">
-        <h3 className="app-title">{app.title}</h3>
-        <p className="app-description">{app.description}</p>
-        <div className="app-meta">
-          <span className="app-category">{app.category}</span>
-          <span className="app-version">v{app.version}</span>
+  const renderAppCard = (app) => {
+    const favorited = isFavorited(app.id);
+    return (
+      <div 
+        key={app.id} 
+        className={`app-card ${app.disabled ? 'disabled' : ''} ${viewMode}`}
+        onClick={() => handleAppClick(app)}
+      >
+        <button
+          type="button"
+          className={`favorite-toggle ${favorited ? 'favorited' : ''}`}
+          aria-label={favorited ? 'Unfavorite app' : 'Favorite app'}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleFavorite(app.id);
+          }}
+        >
+          {favorited ? '★' : '☆'}
+        </button>
+        {favorited && <span className="favorited-badge">★ Favorited</span>}
+        <div className="app-icon">{app.icon}</div>
+        <div className="app-info">
+          <h3 className="app-title">{app.title}</h3>
+          <p className="app-description">{app.description}</p>
+          <div className="app-meta">
+            <span className="app-category">{app.category}</span>
+            <span className="app-version">v{app.version}</span>
+          </div>
         </div>
-        {app.featured && <span className="featured-badge">⭐ Featured</span>}
       </div>
-    </div>
-  );
+    );
+  };
 
   if (currentView !== 'launcher') {
     return null;
