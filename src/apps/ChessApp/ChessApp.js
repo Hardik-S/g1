@@ -5,7 +5,6 @@ import ChessGameManager from './ChessGameManager';
 import './ChessApp.css';
 
 const STORAGE_KEY = 'app-container-chess-state';
-const DEFAULT_SKILL = 5;
 
 const describeGameState = (manager, mode, options = {}) => {
   const { engineThinking } = options;
@@ -38,7 +37,9 @@ const ChessApp = () => {
   const [boardState, setBoardState] = useState(managerRef.current.getBoard());
   const [mode, setMode] = useState(managerRef.current.getMode());
   const [difficulty, setDifficulty] = useState(managerRef.current.getDifficulty());
-  const [status, setStatus] = useState('Your move');
+  const [status, setStatus] = useState(() => (
+    describeGameState(managerRef.current, managerRef.current.getMode())
+  ));
   const [selectedSquare, setSelectedSquare] = useState(null);
   const [legalMoves, setLegalMoves] = useState([]);
   const [lastMove, setLastMove] = useState(null);
@@ -150,6 +151,9 @@ const ChessApp = () => {
 
     try {
       const bestMove = await engineRef.current.requestMove(managerRef.current.getFen(), { skillLevel: difficulty });
+      if (managerRef.current.getMode() !== 'single') {
+        return;
+      }
       if (!bestMove || bestMove === '(none)') {
         return;
       }
@@ -207,7 +211,7 @@ const ChessApp = () => {
     setLegalMoves([]);
     setLastMove(null);
     setBoardState(managerRef.current.getBoard());
-    setStatus('Your move');
+    setStatus(describeGameState(managerRef.current, managerRef.current.getMode()));
     if (engineRef.current) {
       engineRef.current.startNewGame().catch(() => {
         setEngineAvailable(false);
@@ -221,6 +225,9 @@ const ChessApp = () => {
     managerRef.current.setMode(nextMode);
     setSelectedSquare(null);
     setLegalMoves([]);
+    if (nextMode !== 'single') {
+      setEngineThinking(false);
+    }
   };
 
   const handleDifficultyChange = (event) => {

@@ -1,12 +1,28 @@
 const DEFAULT_SKILL = 5;
+const DEFAULT_WORKER_PATH = 'stockfish/stockfish.js';
+
+const resolveWorkerPath = (path = DEFAULT_WORKER_PATH) => {
+  if (typeof window === 'undefined') {
+    return path;
+  }
+
+  try {
+    const url = new URL(path, window.location.href);
+    url.hash = '';
+    url.search = '';
+    return url.toString();
+  } catch (error) {
+    return path;
+  }
+};
 
 export default class StockfishService {
-  constructor({ createWorker, nowProvider } = {}) {
+  constructor({ createWorker, nowProvider, workerPath } = {}) {
     this.createWorker = createWorker || (() => {
       if (typeof Worker === 'undefined') {
         throw new Error('Web Workers are not supported in this environment.');
       }
-      return new Worker('/stockfish/stockfish.js');
+      return new Worker(resolveWorkerPath(workerPath));
     });
 
     this.worker = this.createWorker();
@@ -90,13 +106,18 @@ export default class StockfishService {
         setTimeout(() => resolve(move), remaining);
       };
 
-      this.sendCommand(`position fen ${fen}`);
+      const trimmedFen = typeof fen === 'string' ? fen.trim() : '';
+      const positionCommand = trimmedFen === 'startpos'
+        ? 'position startpos'
+        : `position fen ${trimmedFen}`;
+      this.sendCommand(positionCommand);
       this.waitUntilReady()
         .then(() => {
           this.sendCommand('go movetime 500');
         })
         .catch(() => {
           this.bestMoveResolver = null;
+          resolve('(none)');
         });
     });
   }

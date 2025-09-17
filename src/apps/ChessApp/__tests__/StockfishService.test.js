@@ -16,12 +16,17 @@ describe('StockfishService', () => {
     service.waitUntilReady = jest.fn().mockResolvedValue(undefined);
 
     let resolved = false;
-    const movePromise = service.requestMove('startpos', { skillLevel: 5 }).then(() => {
+    const movePromise = service.requestMove('startpos', { skillLevel: 7 }).then(() => {
       resolved = true;
     });
 
     await Promise.resolve();
     await Promise.resolve();
+    expect(fakeWorker.postMessage).toHaveBeenCalledWith('position startpos');
+    const readyPromise = service.waitUntilReady.mock.results[0]?.value || Promise.resolve();
+    await readyPromise;
+    expect(fakeWorker.postMessage).toHaveBeenCalledWith('go movetime 500');
+
     const resolver = service.bestMoveResolver;
     expect(typeof resolver).toBe('function');
 
