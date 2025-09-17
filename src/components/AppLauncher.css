@@ -16,11 +16,20 @@
   backdrop-filter: blur(10px);
 }
 
+.launcher-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: var(--spacing-medium);
+  flex-wrap: wrap;
+}
+
 .launcher-title {
   display: flex;
   align-items: center;
   gap: 15px;
-  margin-bottom: var(--spacing-medium);
+  margin: 0;
   font-size: var(--font-size-large);
   font-weight: 700;
   color: #333;
@@ -34,6 +43,36 @@
   font-size: 1.2rem;
   color: #666;
   font-weight: 400;
+}
+
+.toronto-clock {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
+  padding: 14px 24px;
+  border-radius: 16px;
+  border: 2px solid #00ff9f;
+  background: rgba(0, 255, 159, 0.12);
+  box-shadow: 0 0 20px rgba(0, 255, 159, 0.35);
+  min-width: 170px;
+}
+
+.clock-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(0, 255, 159, 0.85);
+  margin-bottom: 6px;
+}
+
+.clock-time {
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 700;
+  color: #39ff14;
+  text-shadow: 0 0 12px rgba(57, 255, 20, 0.9), 0 0 24px rgba(57, 255, 20, 0.6);
+  font-family: 'Orbitron', 'Courier New', monospace;
 }
 
 .launcher-controls {
@@ -299,11 +338,21 @@
   .launcher-header {
     padding: 20px;
   }
-  
+
   .launcher-title {
     font-size: 2rem;
   }
-  
+
+  .launcher-header-top {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .toronto-clock {
+    align-items: center;
+  }
+
   .launcher-controls {
     flex-direction: column;
     align-items: stretch;
