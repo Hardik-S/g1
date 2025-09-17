@@ -1,4 +1,4 @@
-.circle-pong {
+.pong-ring {
   position: relative;
   display: flex;
   align-items: center;
@@ -10,7 +10,7 @@
   font-family: 'Inter', 'Segoe UI', sans-serif;
 }
 
-.circle-pong__menu {
+.pong-ring__menu {
   max-width: 28rem;
   width: 100%;
   padding: 2.5rem;
@@ -25,7 +25,7 @@
   gap: 1.75rem;
 }
 
-.circle-pong__title {
+.pong-ring__title {
   font-size: 2.75rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -34,19 +34,19 @@
   text-shadow: 0 0 32px rgba(147, 197, 253, 0.5);
 }
 
-.circle-pong__subtitle {
+.pong-ring__subtitle {
   font-size: 1rem;
   color: rgba(209, 213, 219, 0.78);
   line-height: 1.6;
 }
 
-.circle-pong__menu-options {
+.pong-ring__menu-options {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.circle-pong__menu-options button {
+.pong-ring__menu-options button {
   padding: 0.85rem 1rem;
   border-radius: 999px;
   border: 1px solid rgba(147, 197, 253, 0.4);
@@ -61,18 +61,18 @@
   box-shadow: 0 15px 30px rgba(56, 189, 248, 0.25);
 }
 
-.circle-pong__menu-options button:hover {
+.pong-ring__menu-options button:hover {
   transform: translateY(-2px);
   box-shadow: 0 18px 40px rgba(56, 189, 248, 0.35);
   background: linear-gradient(135deg, rgba(147, 197, 253, 0.35), rgba(56, 189, 248, 0.35));
 }
 
-.circle-pong__menu-options button:focus {
+.pong-ring__menu-options button:focus {
   outline: none;
   box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.4);
 }
 
-.circle-pong__tips {
+.pong-ring__tips {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
@@ -80,14 +80,14 @@
   color: rgba(209, 213, 219, 0.9);
 }
 
-.circle-pong__stage {
+.pong-ring__stage {
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.circle-pong__canvas {
+.pong-ring__canvas {
   width: 520px;
   height: 520px;
   border-radius: 50%;
@@ -96,7 +96,7 @@
   box-shadow: 0 40px 100px rgba(15, 23, 42, 0.55);
 }
 
-.circle-pong__hud {
+.pong-ring__hud {
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -106,7 +106,7 @@
   padding: 1.5rem;
 }
 
-.circle-pong__scoreboard {
+.pong-ring__scoreboard {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -115,7 +115,7 @@
   text-transform: uppercase;
 }
 
-.circle-pong__score {
+.pong-ring__score {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -127,18 +127,18 @@
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.45);
 }
 
-.circle-pong__score .label {
+.pong-ring__score .label {
   font-size: 0.75rem;
   color: rgba(209, 213, 219, 0.85);
 }
 
-.circle-pong__score .value {
+.pong-ring__score .value {
   font-size: 1.9rem;
   font-weight: 700;
   color: #fdfdfd;
 }
 
-.circle-pong__mode {
+.pong-ring__mode {
   padding: 0.6rem 1.6rem;
   border-radius: 999px;
   background: rgba(56, 189, 248, 0.2);
@@ -148,7 +148,7 @@
   font-weight: 600;
 }
 
-.circle-pong__controls {
+.pong-ring__controls {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -157,13 +157,13 @@
   color: rgba(209, 213, 219, 0.8);
 }
 
-.circle-pong__controls .divider {
+.pong-ring__controls .divider {
   width: 40px;
   height: 1px;
   background: linear-gradient(90deg, rgba(147, 197, 253, 0), rgba(147, 197, 253, 0.5), rgba(147, 197, 253, 0));
 }
 
-.circle-pong__overlay {
+.pong-ring__overlay {
   position: absolute;
   inset: 0;
   background: rgba(31, 41, 55, 0.65);
@@ -178,7 +178,7 @@
   border-radius: 50%;
 }
 
-.circle-pong__overlay h2 {
+.pong-ring__overlay h2 {
   font-size: 2.3rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -186,18 +186,18 @@
   margin: 0;
 }
 
-.circle-pong__overlay p {
+.pong-ring__overlay p {
   margin: 0;
   font-size: 1rem;
   color: rgba(209, 213, 219, 0.88);
 }
 
-.circle-pong__overlay-actions {
+.pong-ring__overlay-actions {
   display: flex;
   gap: 1rem;
 }
 
-.circle-pong__overlay-actions button {
+.pong-ring__overlay-actions button {
   pointer-events: auto;
   padding: 0.85rem 1.6rem;
   border-radius: 999px;
@@ -212,35 +212,35 @@
   box-shadow: 0 12px 32px rgba(56, 189, 248, 0.3);
 }
 
-.circle-pong__overlay-actions button:hover {
+.pong-ring__overlay-actions button:hover {
   transform: translateY(-2px);
   box-shadow: 0 16px 42px rgba(56, 189, 248, 0.42);
 }
 
-.circle-pong__overlay-actions button:focus {
+.pong-ring__overlay-actions button:focus {
   outline: none;
   box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.45);
 }
 
 @media (max-width: 640px) {
-  .circle-pong {
+  .pong-ring {
     padding: 1.5rem 0.5rem;
   }
 
-  .circle-pong__menu {
+  .pong-ring__menu {
     padding: 2rem 1.5rem;
   }
 
-  .circle-pong__canvas {
+  .pong-ring__canvas {
     width: 360px;
     height: 360px;
   }
 
-  .circle-pong__hud {
+  .pong-ring__hud {
     padding: 1rem;
   }
 
-  .circle-pong__overlay {
+  .pong-ring__overlay {
     border-radius: 2rem;
   }
 }

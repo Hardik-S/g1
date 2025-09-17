@@ -18,8 +18,8 @@ Snake Game modernizes the classic grid chase with keyboard-friendly controls, re
 - Publish leaderboards and social sharing to encourage friendly competition.
 - Offer touch controls and haptic feedback for mobile and tablet players.
 
-## CirclePong
-CirclePong reimagines Pong inside a circular quartz arena with luminous marble flourishes. Paddles glide along arcs of a perfect ring, defending their hemisphere as a glowing sphere rebounds with crisp physicality. Solo pilots can spar with an adaptive AI or battle locally, with rounds racing to three points amid ethereal neon scoring overlays.
+## Pong Ring
+Pong Ring reimagines Pong inside a circular quartz arena with luminous marble flourishes. Paddles glide along arcs of a perfect ring, defending their hemisphere as a glowing sphere rebounds with crisp physicality. Solo pilots can spar with an adaptive AI or battle locally, with rounds racing to three points amid ethereal neon scoring overlays.
 - Layer in dynamic backgrounds with refraction shaders for evolving ambience.
 - Introduce adjustable paddle arcs and experimental power-ups for advanced modes.
 - Extend online multiplayer with latency-friendly predictive inputs and leaderboards.
