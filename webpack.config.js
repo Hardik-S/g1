@@ -1,6 +1,22 @@
 const path = require('path');
+const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const { homepage = '' } = require('./package.json');
+
+const resolvedHomepagePath = (() => {
+  if (!homepage) {
+    return '';
+  }
+
+  try {
+    return new URL(homepage).pathname.replace(/\/$/, '');
+  } catch (error) {
+    return homepage.replace(/\/$/, '');
+  }
+})();
+
+const PUBLIC_URL = process.env.PUBLIC_URL ?? resolvedHomepagePath;
 
 module.exports = {
   entry: './src/index.js',
@@ -28,6 +44,9 @@ module.exports = {
     ],
   },
   plugins: [
+    new webpack.DefinePlugin({
+      'process.env.PUBLIC_URL': JSON.stringify(PUBLIC_URL || ''),
+    }),
     new HtmlWebpackPlugin({
       template: './public/index.html',
     }),
@@ -36,6 +55,7 @@ module.exports = {
         { from: path.resolve(__dirname, 'public/html'), to: 'html' },
         { from: path.resolve(__dirname, 'public/css'), to: 'css' },
         { from: path.resolve(__dirname, 'public/js'), to: 'js' },
+        { from: path.resolve(__dirname, 'public/hexa-snake'), to: 'hexa-snake' },
       ],
     }),
   ],
