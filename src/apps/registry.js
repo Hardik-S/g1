@@ -15,14 +15,28 @@ export const APP_REGISTRY = {
     featured: true
   },
   // Placeholder for future apps
-  'app-2': {
-    id: 'app-2',
+  'n-pomodoro': {
+    id: 'n-pomodoro',
+    title: 'N-Pomodoro Timer',
+    description: 'Customizable Pomodoro timer with N activities and deep space theme',
+    icon: '🍅',
+    category: 'Productivity',
+    component: null,
+    path: '/apps/n-pomodoro',
+    tags: ['productivity', 'timer', 'space', 'customizable'],
+    version: '1.0.0',
+    author: 'Hardik-S',
+    created: '2024-01-01',
+    featured: true
+  },
+  'app-3': {
+    id: 'app-3',
     title: 'Coming Soon',
     description: 'This app is under development',
     icon: '🚧',
     category: 'Development',
     component: null,
-    path: '/apps/app-2',
+    path: '/apps/app-3',
     tags: ['coming-soon'],
     version: '0.0.0',
     author: 'Hardik-S',
