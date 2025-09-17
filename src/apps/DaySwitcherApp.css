@@ -3,43 +3,45 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--container-padding);
+  padding: 40px;
 }
 
 .app-container {
   background: rgba(255, 255, 255, 0.95);
-  border-radius: var(--border-radius);
-  padding: var(--card-padding);
+  border-radius: 20px;
+  padding: 50px 60px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
   text-align: center;
-  max-width: min(600px, 80vw);
+  max-width: 800px;
   width: 100%;
   backdrop-filter: blur(10px);
+  min-width: 600px;
 }
 
 .day-display {
-  margin-bottom: 40px;
+  margin-bottom: 50px;
 }
 
 .current-day {
-  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-size: 4.5rem;
   color: #333;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
   font-weight: 600;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  line-height: 1.1;
 }
 
 .day-number {
   color: #666;
-  font-size: 1.1rem;
+  font-size: 1.3rem;
   font-weight: 500;
 }
 
 .button-container {
   display: flex;
-  gap: 15px;
+  gap: 20px;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
   flex-wrap: wrap;
 }
 
@@ -47,14 +49,14 @@
   background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
   border: none;
-  padding: 12px 24px;
+  padding: 15px 30px;
   border-radius: 50px;
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-  min-width: 140px;
+  min-width: 160px;
 }
 
 .btn:hover {
@@ -69,9 +71,10 @@
 .btn-random {
   background: linear-gradient(135deg, #ff6b6b, #ee5a24);
   box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
-  font-size: 1.1rem;
-  padding: 15px 30px;
-  margin-bottom: 30px;
+  font-size: 1.3rem;
+  padding: 18px 40px;
+  margin-bottom: 40px;
+  min-width: 200px;
 }
 
 .btn-random:hover {
@@ -79,36 +82,41 @@
 }
 
 .all-days {
-  margin-top: 30px;
+  margin-top: 40px;
 }
 
 .all-days h3 {
   color: #333;
-  margin-bottom: 15px;
-  font-size: 1.2rem;
+  margin-bottom: 25px;
+  font-size: 1.4rem;
+  font-weight: 600;
 }
 
 .days-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 12px;
   justify-content: center;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .day-item {
   background: #f8f9fa;
   color: #666;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 0.9rem;
+  padding: 10px 20px;
+  border-radius: 25px;
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
   border: 2px solid transparent;
+  font-weight: 500;
 }
 
 .day-item:hover {
   background: #e9ecef;
   transform: translateY(-1px);
+  color: #333;
 }
 
 .day-item.active {
@@ -117,16 +125,34 @@
   border-color: #667eea;
   font-weight: 600;
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  transform: translateY(-2px);
 }
 
-/* Responsive design */
-@media (max-width: 600px) {
+/* Desktop-first responsive design */
+@media (max-width: 900px) {
   .app-container {
-    padding: 30px 20px;
+    min-width: 500px;
+    padding: 40px 50px;
   }
   
   .current-day {
-    font-size: 2.5rem;
+    font-size: 4rem;
+  }
+}
+
+@media (max-width: 700px) {
+  .day-switcher-app {
+    padding: 20px;
+  }
+  
+  .app-container {
+    min-width: 0;
+    max-width: 90vw;
+    padding: 30px 25px;
+  }
+  
+  .current-day {
+    font-size: 3rem;
   }
   
   .button-container {
@@ -136,11 +162,27 @@
   
   .btn {
     width: 100%;
-    max-width: 200px;
+    max-width: 250px;
+  }
+  
+  .btn-random {
+    width: 100%;
+    max-width: 280px;
   }
   
   .days-list {
-    gap: 6px;
+    gap: 8px;
+  }
+  
+  .day-item {
+    font-size: 0.9rem;
+    padding: 8px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .current-day {
+    font-size: 2.5rem;
   }
   
   .day-item {
