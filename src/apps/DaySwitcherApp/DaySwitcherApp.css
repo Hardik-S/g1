@@ -6,7 +6,7 @@
   padding: 40px;
 }
 
-.app-container {
+.day-switcher-card {
   background: rgba(255, 255, 255, 0.95);
   border-radius: 20px;
   padding: 50px 60px;
@@ -16,6 +16,7 @@
   width: 100%;
   backdrop-filter: blur(10px);
   min-width: 600px;
+  margin: 0 auto;
 }
 
 .day-display {
@@ -130,7 +131,7 @@
 
 /* Desktop-first responsive design */
 @media (max-width: 900px) {
-  .app-container {
+  .day-switcher-card {
     min-width: 500px;
     padding: 40px 50px;
   }
@@ -145,7 +146,7 @@
     padding: 20px;
   }
   
-  .app-container {
+  .day-switcher-card {
     min-width: 0;
     max-width: 90vw;
     padding: 30px 25px;

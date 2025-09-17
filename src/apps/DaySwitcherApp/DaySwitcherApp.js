@@ -28,7 +28,7 @@ const DaySwitcherApp = ({ onBack }) => {
 
   return (
     <div className="day-switcher-app">
-      <div className="app-container">
+      <div className="day-switcher-card">
         <div className="day-display">
           <h2 className="current-day">{daysOfWeek[currentDayIndex]}</h2>
           <p className="day-number">Day {currentDayIndex + 1} of 7</p>

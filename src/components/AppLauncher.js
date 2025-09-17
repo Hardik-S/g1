@@ -6,6 +6,25 @@ const AppLauncher = ({ onLaunchApp, currentView, onBackToLauncher }) => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [torontoTime, setTorontoTime] = useState('--:--:--');
+
+  useEffect(() => {
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Toronto',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    });
+
+    const updateTime = () => {
+      setTorontoTime(formatter.format(new Date()));
+    };
+
+    updateTime();
+    const intervalId = setInterval(updateTime, 1000);
+    return () => clearInterval(intervalId);
+  }, []);
 
   const categories = ['All', ...Object.keys(APP_CATEGORIES)];
   
@@ -50,12 +69,19 @@ const AppLauncher = ({ onLaunchApp, currentView, onBackToLauncher }) => {
   return (
     <div className="app-launcher">
       <header className="launcher-header">
-        <h1 className="launcher-title">
-          <span className="title-icon">📱</span>
-          App Container
-          <span className="app-count">({getAllApps().length} apps)</span>
-        </h1>
-        
+        <div className="launcher-header-top">
+          <h1 className="launcher-title">
+            <span className="title-icon">📱</span>
+            App Container
+            <span className="app-count">({getAllApps().length} apps)</span>
+          </h1>
+
+          <div className="toronto-clock" aria-label="Current time in Toronto">
+            <span className="clock-label">Toronto</span>
+            <span className="clock-time">{torontoTime}</span>
+          </div>
+        </div>
+
         <div className="launcher-controls">
           <div className="search-container">
             <input
