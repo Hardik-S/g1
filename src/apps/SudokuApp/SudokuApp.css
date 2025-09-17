@@ -1,0 +1,127 @@
+.sudoku-coffee-shell {
+  position: relative;
+  min-height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: #f6ede4;
+}
+
+.sudoku-coffee-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+      35deg,
+      rgba(193, 165, 132, 0.18) 0px,
+      rgba(193, 165, 132, 0.18) 8px,
+      rgba(221, 196, 170, 0.18) 8px,
+      rgba(221, 196, 170, 0.18) 20px
+    ),
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.35), transparent 55%),
+    radial-gradient(circle at 80% 0%, rgba(173, 128, 87, 0.12), transparent 45%);
+  opacity: 0.85;
+  filter: blur(0.1px);
+  z-index: 0;
+}
+
+.sudoku-coffee-shell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('data:image/svg+xml,%3Csvg width="160" height="160" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg"%3E%3Cdefs%3E%3ClinearGradient id="a" x1="50%25" x2="50%25" y1="0%25" y2="100%25"%3E%3Cstop offset="0%25" stop-color="%23fef6ea" stop-opacity="0.35"/%3E%3Cstop offset="100%25" stop-color="%23f4e3d0" stop-opacity="0.35"/%3E%3C/linearGradient%3E%3Cpattern id="b" width="40" height="40" patternUnits="userSpaceOnUse"%3E%3Cpath d="M 0 40 L 40 40 L 40 0" fill="none" stroke="%23e2d0bc" stroke-width="0.6" opacity="0.5"/%3E%3C/pattern%3E%3C/defs%3E%3Crect width="160" height="160" fill="url(%23a)"/%3E%3Crect width="160" height="160" fill="url(%23b)"/%3E%3C/svg%3E');
+  opacity: 0.25;
+  z-index: 0;
+}
+
+.sudoku-coffee-content {
+  position: relative;
+  z-index: 1;
+}
+
+.sudoku-panel {
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(149, 115, 84, 0.2);
+  box-shadow: 0 25px 45px rgba(91, 70, 54, 0.15);
+  border-radius: 1.5rem;
+  transition: transform 0.6s ease, box-shadow 0.6s ease;
+}
+
+.sudoku-panel:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 28px 50px rgba(91, 70, 54, 0.18);
+}
+
+.sudoku-board-surface {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255, 250, 245, 0.95), rgba(244, 229, 210, 0.92));
+  border-radius: 1.2rem;
+  padding: 1.25rem;
+  box-shadow: inset 0 0 0 1px rgba(161, 124, 92, 0.12), inset 0 12px 18px rgba(255, 255, 255, 0.35);
+}
+
+.sudoku-board-surface::before {
+  content: '';
+  position: absolute;
+  inset: 1.25rem;
+  background: repeating-linear-gradient(
+      0deg,
+      rgba(209, 182, 149, 0.15) 0px,
+      rgba(209, 182, 149, 0.15) 1px,
+      transparent 1px,
+      transparent 36px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(209, 182, 149, 0.12) 0px,
+      rgba(209, 182, 149, 0.12) 1px,
+      transparent 1px,
+      transparent 36px
+    );
+  opacity: 0.5;
+  border-radius: 1rem;
+  pointer-events: none;
+}
+
+.sudoku-canvas {
+  border-radius: 1rem;
+  box-shadow: 0 15px 30px rgba(91, 70, 54, 0.12);
+  transition: box-shadow 0.4s ease;
+}
+
+.sudoku-canvas:focus-visible {
+  outline: 2px solid rgba(194, 155, 124, 0.65);
+  outline-offset: 4px;
+}
+
+.sudoku-canvas.fade-in {
+  animation: fadeInBoard 0.6s ease;
+}
+
+@keyframes fadeInBoard {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.coffee-chip {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0));
+  border: 1px solid rgba(209, 182, 149, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.coffee-chip-active {
+  background: linear-gradient(135deg, rgba(224, 200, 173, 0.8), rgba(203, 170, 136, 0.85));
+  color: #4a3526;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65), 0 12px 20px rgba(91, 70, 54, 0.2);
+}
+
+.status-badge {
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(209, 182, 149, 0.45);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}

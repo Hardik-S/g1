@@ -71,6 +71,20 @@ export const APP_REGISTRY = {
     created: '2024-01-01',
     featured: true
   },
+  'sudoku-coffee': {
+    id: 'sudoku-coffee',
+    title: 'Sudoku Roast',
+    description: 'A cozy coffeehouse Sudoku with handcrafted generator, solver, and notes',
+    icon: '☕',
+    category: 'Games',
+    component: null,
+    path: '/apps/sudoku-coffee',
+    tags: ['game', 'puzzle', 'canvas', 'tailwind'],
+    version: '1.0.0',
+    author: 'OpenAI Assistant',
+    created: '2024-04-01',
+    featured: true
+  },
   'app-3': {
     id: 'app-3',
     title: 'Coming Soon',
