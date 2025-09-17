@@ -4,4 +4,5 @@ module.exports = {
   moduleNameMapper: {
     '\\.(css|less|scss)$': '<rootDir>/src/testUtils/styleMock.js',
   },
+  setupFilesAfterEnv: ['<rootDir>/src/setupTests.js'],
 };
