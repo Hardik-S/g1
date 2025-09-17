@@ -13,6 +13,13 @@ A small, modular React playground bundling multiple apps behind a simple launche
 
 - CirclePong has been renamed to Pong Ring with a refreshed canvas setup so the match starts reliably in the browser.
 
+### Project documentation
+
+- [`AGENTS.md`](AGENTS.md) — contributor handbook outlining required checks, code conventions, and documentation expectations.
+- [`APPS.md`](APPS.md) — catalog of bundled micro apps with behaviour notes.
+- [`CHESS.md`](CHESS.md) — reference for chess-specific helpers and utilities.
+- [`GITSTORY.md`](GITSTORY.md) — chronological log of commits, pushes, merges, and key design decisions.
+
 ## Live demo
 
 [Open on GitHub Pages](https://hardik-s.github.io/g1)
