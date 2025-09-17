@@ -1,53 +1,276 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback
+} from 'react';
 import './NPomodoroApp.css';
 
-const NPomodoroApp = ({ onBack }) => {
-  const [currentActivityIndex, setCurrentActivityIndex] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(0);
+const STORAGE_KEY = 'n-pomodoro-sessions-v2';
+const RING_RADIUS = 118;
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+
+const colorPalette = [
+  '#7F5AF0',
+  '#2CB1BC',
+  '#F25F4C',
+  '#FFB627',
+  '#26C485',
+  '#9966FF',
+  '#5BC0BE'
+];
+
+const createId = () => Math.random().toString(36).slice(2, 9);
+
+const createDefaultPlan = () => [
+  {
+    id: createId(),
+    name: 'Morning Momentum',
+    blocks: [
+      { id: createId(), name: 'Ignition Focus', minutes: 30, color: '#7F5AF0' },
+      { id: createId(), name: 'Micro Break', minutes: 5, color: '#2CB1BC' },
+      { id: createId(), name: 'Deep Dive', minutes: 35, color: '#9966FF' },
+      { id: createId(), name: 'Reset Walk', minutes: 10, color: '#26C485' }
+    ]
+  },
+  {
+    id: createId(),
+    name: 'Midday Flow',
+    blocks: [
+      { id: createId(), name: 'Focus Sprint', minutes: 25, color: '#7F5AF0' },
+      { id: createId(), name: 'Reflect & Stretch', minutes: 10, color: '#2CB1BC' },
+      { id: createId(), name: 'Deep Work', minutes: 30, color: '#F25F4C' },
+      { id: createId(), name: 'Recharge', minutes: 15, color: '#FFB627' }
+    ]
+  },
+  {
+    id: createId(),
+    name: 'Evening Cooldown',
+    blocks: [
+      { id: createId(), name: 'Creative Focus', minutes: 20, color: '#7F5AF0' },
+      { id: createId(), name: 'Pause & Breathe', minutes: 5, color: '#2CB1BC' },
+      { id: createId(), name: 'Wrap Up', minutes: 20, color: '#5BC0BE' },
+      { id: createId(), name: 'Celebrate', minutes: 10, color: '#F25F4C' }
+    ]
+  }
+];
+
+const readStoredPlan = () => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    return parsed;
+  } catch (error) {
+    console.warn('Unable to read stored N-Pomodoro plan:', error);
+    return null;
+  }
+};
+
+const NPomodoroApp = () => {
+  const initialPlanRef = useRef();
+
+  if (!initialPlanRef.current) {
+    initialPlanRef.current = readStoredPlan() || createDefaultPlan();
+  }
+
+  const [sessions, setSessions] = useState(initialPlanRef.current);
+  const [currentSessionIndex, setCurrentSessionIndex] = useState(0);
+  const [currentBlockIndex, setCurrentBlockIndex] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const firstBlock = initialPlanRef.current[0]?.blocks[0];
+    return firstBlock ? firstBlock.minutes * 60 : 0;
+  });
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [activities, setActivities] = useState([]);
-  const [showConfig, setShowConfig] = useState(false);
-  const [cycleCount, setCycleCount] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
+  const [isPlannerExpanded, setIsPlannerExpanded] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return window.innerWidth >= 960;
+  });
+
   const intervalRef = useRef(null);
 
-  // Default presets
-  const presets = {
-    2: [
-      { name: 'Work', duration: 25, color: '#667eea' },
-      { name: 'Break', duration: 5, color: '#4ecdc4' }
-    ],
-    3: [
-      { name: 'Work', duration: 25, color: '#667eea' },
-      { name: 'Break', duration: 5, color: '#4ecdc4' },
-      { name: 'Stretch', duration: 5, color: '#ff6b6b' }
-    ],
-    4: [
-      { name: 'Work', duration: 25, color: '#667eea' },
-      { name: 'Chore', duration: 10, color: '#96ceb4' },
-      { name: 'Break', duration: 10, color: '#4ecdc4' },
-      { name: 'Stretch', duration: 5, color: '#ff6b6b' }
-    ]
+  const currentSession = sessions[currentSessionIndex];
+  const currentBlock = currentSession?.blocks[currentBlockIndex];
+  const accentColor = currentBlock?.color || '#7F5AF0';
+  const softenedAccent = useMemo(() => {
+    if (!accentColor.startsWith('#') || accentColor.length !== 7) {
+      return 'rgba(255, 255, 255, 0.2)';
+    }
+    return `${accentColor}33`;
+  }, [accentColor]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+  }, [sessions]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const handleResize = () => {
+      if (window.innerWidth >= 960) {
+        setIsPlannerExpanded(true);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const totalSeconds = useMemo(
+    () =>
+      sessions.reduce((sessionAcc, session) => {
+        const blocksTotal = session.blocks.reduce(
+          (blockAcc, block) => blockAcc + block.minutes * 60,
+          0
+        );
+        return sessionAcc + blocksTotal;
+      }, 0),
+    [sessions]
+  );
+
+  const completedSeconds = useMemo(() => {
+    let tally = 0;
+    sessions.forEach((session, sessionIndex) => {
+      session.blocks.forEach((block, blockIndex) => {
+        const blockDuration = block.minutes * 60;
+        if (sessionIndex < currentSessionIndex) {
+          tally += blockDuration;
+        } else if (sessionIndex === currentSessionIndex) {
+          if (blockIndex < currentBlockIndex) {
+            tally += blockDuration;
+          } else if (blockIndex === currentBlockIndex) {
+            tally += blockDuration - timeLeft;
+          }
+        }
+      });
+    });
+    return tally;
+  }, [sessions, currentSessionIndex, currentBlockIndex, timeLeft]);
+
+  const overallProgress = totalSeconds
+    ? Math.min(100, (completedSeconds / totalSeconds) * 100)
+    : 0;
+
+  const blockProgress = currentBlock
+    ? Math.min(
+        100,
+        ((currentBlock.minutes * 60 - timeLeft) /
+          (currentBlock.minutes * 60 || 1)) *
+          100
+      )
+    : 0;
+
+  const starDensity = useMemo(() => {
+    const base = 240;
+    return Math.max(60, Math.floor(base * (1 - overallProgress / 100)));
+  }, [overallProgress]);
+
+  const ritualMinutes = Math.round(totalSeconds / 60);
+  const minutesRemaining = Math.max(
+    0,
+    Math.ceil((totalSeconds - completedSeconds) / 60)
+  );
+  const sessionMinutes = currentSession
+    ? currentSession.blocks.reduce((acc, block) => acc + block.minutes, 0)
+    : 0;
+
+  const nextBlockInfo = useMemo(() => {
+    if (!sessions.length) return null;
+    if (currentSession && currentBlockIndex < currentSession.blocks.length - 1) {
+      const block = currentSession.blocks[currentBlockIndex + 1];
+      return { label: block.name, minutes: block.minutes, session: currentSession.name };
+    }
+    const upcomingSession = sessions[currentSessionIndex + 1];
+    if (upcomingSession) {
+      const block = upcomingSession.blocks[0];
+      return {
+        label: block?.name,
+        minutes: block?.minutes,
+        session: upcomingSession.name
+      };
+    }
+    return null;
+  }, [sessions, currentSession, currentBlockIndex, currentSessionIndex]);
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs
+      .toString()
+      .padStart(2, '0')}`;
   };
 
-  useEffect(() => {
-    if (activities.length === 0) {
-      setActivities(presets[2]);
-      setTimeLeft(presets[2][0].duration * 60);
+  const focusBlock = useCallback(
+    (sessionIndex, blockIndex) => {
+      const session = sessions[sessionIndex];
+      const block = session?.blocks[blockIndex];
+      if (!block) return;
+      setCurrentSessionIndex(sessionIndex);
+      setCurrentBlockIndex(blockIndex);
+      setTimeLeft(block.minutes * 60);
+      setIsRunning(false);
+      setIsPaused(false);
+      setIsComplete(false);
+    },
+    [sessions]
+  );
+
+  const advanceToNextBlock = useCallback(() => {
+    if (!sessions.length || !currentSession) {
+      setIsRunning(false);
+      return;
     }
-  }, [activities.length]);
+
+    if (currentBlockIndex < currentSession.blocks.length - 1) {
+      const nextBlock = currentSession.blocks[currentBlockIndex + 1];
+      setCurrentBlockIndex((prev) => prev + 1);
+      setTimeLeft(nextBlock.minutes * 60);
+      return;
+    }
+
+    if (currentSessionIndex < sessions.length - 1) {
+      const nextSession = sessions[currentSessionIndex + 1];
+      setCurrentSessionIndex((prev) => prev + 1);
+      setCurrentBlockIndex(0);
+      const block = nextSession.blocks[0];
+      setTimeLeft(block ? block.minutes * 60 : 0);
+      return;
+    }
+
+    setIsRunning(false);
+    setIsPaused(false);
+    setIsComplete(true);
+    setTimeLeft(0);
+  }, [
+    sessions,
+    currentSession,
+    currentBlockIndex,
+    currentSessionIndex
+  ]);
 
   useEffect(() => {
-    clearInterval(intervalRef.current);
     if (!isRunning) {
-      return () => {};
+      clearInterval(intervalRef.current);
+      return undefined;
+    }
+
+    if (!currentBlock) {
+      setIsRunning(false);
+      return undefined;
     }
 
     intervalRef.current = setInterval(() => {
-      setTimeLeft(prev => {
+      setTimeLeft((prev) => {
         if (prev <= 1) {
-          handleActivityComplete();
+          clearInterval(intervalRef.current);
+          advanceToNextBlock();
           return 0;
         }
         return prev - 1;
@@ -55,20 +278,19 @@ const NPomodoroApp = ({ onBack }) => {
     }, 1000);
 
     return () => clearInterval(intervalRef.current);
-  }, [isRunning, currentActivityIndex]);
+  }, [isRunning, currentBlock, advanceToNextBlock]);
 
-  const handleActivityComplete = () => {
-    if (currentActivityIndex < activities.length - 1) {
-      setCurrentActivityIndex(prev => prev + 1);
-      setTimeLeft(activities[currentActivityIndex + 1].duration * 60);
-    } else {
-      setCycleCount(prev => prev + 1);
-      setIsComplete(true);
-      setIsRunning(false);
+  useEffect(() => {
+    if (isRunning) return;
+    if (!currentBlock) {
+      setTimeLeft(0);
+      return;
     }
-  };
+    setTimeLeft(currentBlock.minutes * 60);
+  }, [currentBlock, isRunning]);
 
   const startTimer = () => {
+    if (!currentBlock) return;
     setIsRunning(true);
     setIsPaused(false);
     setIsComplete(false);
@@ -80,175 +302,633 @@ const NPomodoroApp = ({ onBack }) => {
   };
 
   const resetTimer = () => {
+    if (!sessions.length) return;
     setIsRunning(false);
     setIsPaused(false);
-    setCurrentActivityIndex(0);
-    setTimeLeft(activities[0].duration * 60);
     setIsComplete(false);
-    setCycleCount(0);
+    setCurrentSessionIndex(0);
+    setCurrentBlockIndex(0);
+    const firstBlock = sessions[0]?.blocks[0];
+    setTimeLeft(firstBlock ? firstBlock.minutes * 60 : 0);
   };
 
-  const nextActivity = () => {
-    if (currentActivityIndex < activities.length - 1) {
-      setCurrentActivityIndex(prev => prev + 1);
-      setTimeLeft(activities[currentActivityIndex + 1].duration * 60);
+  const skipForward = () => {
+    setIsRunning(false);
+    setIsPaused(false);
+    setIsComplete(false);
+    advanceToNextBlock();
+  };
+
+  const skipBackward = () => {
+    if (!sessions.length || !currentSession) return;
+
+    setIsRunning(false);
+    setIsPaused(false);
+    setIsComplete(false);
+
+    if (currentBlockIndex > 0) {
+      const previousBlock = currentSession.blocks[currentBlockIndex - 1];
+      setCurrentBlockIndex((prev) => prev - 1);
+      setTimeLeft(previousBlock.minutes * 60);
+      return;
+    }
+
+    if (currentSessionIndex > 0) {
+      const previousSession = sessions[currentSessionIndex - 1];
+      const lastIndex = previousSession.blocks.length - 1;
+      const targetBlock = previousSession.blocks[lastIndex];
+      setCurrentSessionIndex((prev) => prev - 1);
+      setCurrentBlockIndex(lastIndex);
+      setTimeLeft(targetBlock ? targetBlock.minutes * 60 : 0);
+      return;
+    }
+
+    const block = currentSession.blocks[0];
+    setTimeLeft(block ? block.minutes * 60 : 0);
+  };
+
+  const updateSessionName = (sessionId, name) => {
+    setSessions((prev) =>
+      prev.map((session) =>
+        session.id === sessionId ? { ...session, name } : session
+      )
+    );
+    setIsComplete(false);
+  };
+
+  const updateBlock = (sessionId, blockId, patch) => {
+    setSessions((prev) =>
+      prev.map((session) => {
+        if (session.id !== sessionId) return session;
+        return {
+          ...session,
+          blocks: session.blocks.map((block) =>
+            block.id === blockId ? { ...block, ...patch } : block
+          )
+        };
+      })
+    );
+    setIsComplete(false);
+  };
+
+  const addSession = () => {
+    setSessions((prev) => {
+      const sessionNumber = prev.length + 1;
+      const focusColor = colorPalette[sessionNumber % colorPalette.length];
+      const newSession = {
+        id: createId(),
+        name: `Session ${sessionNumber}`,
+        blocks: [
+          {
+            id: createId(),
+            name: 'Focus Block',
+            minutes: 25,
+            color: focusColor
+          },
+          {
+            id: createId(),
+            name: 'Recovery Break',
+            minutes: 5,
+            color: '#2CB1BC'
+          }
+        ]
+      };
+      return [...prev, newSession];
+    });
+    setIsComplete(false);
+  };
+
+  const removeSession = (sessionId) => {
+    let removed = false;
+    setSessions((prev) => {
+      if (prev.length <= 1) return prev;
+      const index = prev.findIndex((session) => session.id === sessionId);
+      if (index === -1) return prev;
+      removed = true;
+      const updated = prev.filter((session) => session.id !== sessionId);
+
+      if (!updated.length) {
+        setCurrentSessionIndex(0);
+        setCurrentBlockIndex(0);
+        setTimeLeft(0);
+        return updated;
+      }
+
+      const tentativeIndex =
+        currentSessionIndex > index
+          ? currentSessionIndex - 1
+          : currentSessionIndex === index
+          ? Math.max(0, index - 1)
+          : currentSessionIndex;
+
+      const safeIndex = Math.min(tentativeIndex, updated.length - 1);
+      const nextSession = updated[safeIndex];
+      const nextBlock = nextSession?.blocks[0];
+
+      setCurrentSessionIndex(safeIndex);
+      setCurrentBlockIndex(0);
+      setTimeLeft(nextBlock ? nextBlock.minutes * 60 : 0);
+
+      return updated;
+    });
+
+    if (removed) {
+      setIsRunning(false);
+      setIsPaused(false);
+      setIsComplete(false);
     }
   };
 
-  const loadPreset = (presetKey) => {
-    setActivities(presets[presetKey]);
-    setCurrentActivityIndex(0);
-    setTimeLeft(presets[presetKey][0].duration * 60);
+  const addBlock = (sessionId) => {
+    setSessions((prev) =>
+      prev.map((session) => {
+        if (session.id !== sessionId) return session;
+        const nextIndex = session.blocks.length + 1;
+        return {
+          ...session,
+          blocks: [
+            ...session.blocks,
+            {
+              id: createId(),
+              name: `Block ${nextIndex}`,
+              minutes: 15,
+              color:
+                colorPalette[session.blocks.length % colorPalette.length]
+            }
+          ]
+        };
+      })
+    );
+    setIsComplete(false);
+  };
+
+  const removeBlock = (sessionId, blockId) => {
+    let removed = false;
+    setSessions((prev) =>
+      prev.map((session, sessionIndex) => {
+        if (session.id !== sessionId) return session;
+        if (session.blocks.length <= 1) return session;
+        const blockIndex = session.blocks.findIndex((block) => block.id === blockId);
+        if (blockIndex === -1) return session;
+        removed = true;
+        const updatedBlocks = session.blocks.filter((block) => block.id !== blockId);
+
+        if (
+          sessionIndex === currentSessionIndex &&
+          currentBlockIndex >= updatedBlocks.length
+        ) {
+          const nextIndex = Math.max(0, updatedBlocks.length - 1);
+          setCurrentBlockIndex(nextIndex);
+          const nextBlock = updatedBlocks[nextIndex];
+          setTimeLeft(nextBlock ? nextBlock.minutes * 60 : 0);
+        } else if (
+          sessionIndex === currentSessionIndex &&
+          currentBlockIndex > blockIndex
+        ) {
+          setCurrentBlockIndex((prevIndex) => prevIndex - 1);
+        }
+
+        return { ...session, blocks: updatedBlocks };
+      })
+    );
+
+    if (removed) {
+      setIsRunning(false);
+      setIsPaused(false);
+      setIsComplete(false);
+    }
+  };
+
+  const restoreDefaults = () => {
+    const defaults = createDefaultPlan();
+    setSessions(defaults);
+    setCurrentSessionIndex(0);
+    setCurrentBlockIndex(0);
+    const firstBlock = defaults[0]?.blocks[0];
+    setTimeLeft(firstBlock ? firstBlock.minutes * 60 : 0);
     setIsRunning(false);
     setIsPaused(false);
     setIsComplete(false);
-    setCycleCount(0);
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(STORAGE_KEY);
+    }
   };
 
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const getProgressPercentage = () => {
-    const totalTime = activities[currentActivityIndex]?.duration * 60 || 1;
-    return ((totalTime - timeLeft) / totalTime) * 100;
-  };
-
-  const getStarCount = () => {
-    const totalStars = 200;
-    const progress = getProgressPercentage() / 100;
-    return Math.floor(totalStars * (1 - progress));
-  };
+  const timelineSegments = useMemo(() => {
+    const activeBlocks = currentSession?.blocks ?? [];
+    return sessions.map((session, index) => {
+      const sessionSeconds = session.blocks.reduce(
+        (acc, block) => acc + block.minutes * 60,
+        0
+      );
+      let completion = 0;
+      if (index < currentSessionIndex) {
+        completion = 100;
+      } else if (index === currentSessionIndex && sessionSeconds > 0) {
+        const completedInSession = activeBlocks
+          .slice(0, currentBlockIndex)
+          .reduce((acc, block) => acc + block.minutes * 60, 0);
+        const currentBlockDuration = currentBlock
+          ? currentBlock.minutes * 60
+          : 0;
+        completion =
+          ((completedInSession + (currentBlockDuration - timeLeft)) /
+            sessionSeconds) *
+          100;
+        completion = Math.max(0, Math.min(100, completion));
+      }
+      return {
+        id: session.id,
+        name: session.name,
+        accent: session.blocks[0]?.color || '#7F5AF0',
+        completion,
+        weight: Math.max(1, sessionSeconds)
+      };
+    });
+  }, [
+    sessions,
+    currentSessionIndex,
+    currentBlockIndex,
+    currentSession,
+    currentBlock,
+    timeLeft
+  ]);
 
   return (
     <div className="n-pomodoro-app">
-      <div className="space-background">
-        <div className="stars" style={{ '--star-count': getStarCount() }}></div>
+      <div className="cosmic-backdrop">
+        <div className="stellar-dust" style={{ '--star-count': starDensity }} />
+        <div className="aurora" />
       </div>
-      
-      <div className="app-content">
-        <header className="app-header">
-          <button 
-            className="config-btn"
-            onClick={() => setShowConfig(!showConfig)}
-          >
-            ⚙️
-          </button>
-        </header>
 
-        {showConfig ? (
-          <div className="config-panel">
-            <h3>Configure Activities</h3>
-            <div className="presets">
-              <h4>Quick Presets</h4>
-              <div className="preset-buttons">
-                {Object.keys(presets).map(key => (
-                  <button 
-                    key={key}
-                    className="preset-btn"
-                    onClick={() => loadPreset(parseInt(key))}
-                  >
-                    {key} Activities
-                  </button>
-                ))}
+      <div className="n-pomodoro-shell">
+        <header className="n-pomodoro-header">
+          <div className="header-copy">
+            <h1>N-Pomodoro Designer</h1>
+            <p>
+              Build intentional focus rituals that span multiple sessions. Name
+              every block, tune durations, and let the cosmic timer carry you
+              from lift-off to landing.
+            </p>
+          </div>
+          <div className="header-actions">
+            <div className="journey-progress">
+              <span className="label">Journey Progress</span>
+              <div className="progress-track">
+                <div
+                  className="progress-fill"
+                  style={{ width: `${overallProgress}%` }}
+                />
               </div>
+              <span className="value">{Math.round(overallProgress)}%</span>
+              <span className="supplement">{ritualMinutes} min planned</span>
             </div>
-            <button 
-              className="close-config-btn"
-              onClick={() => setShowConfig(false)}
+            <button
+              type="button"
+              className="planner-toggle"
+              onClick={() => setIsPlannerExpanded((prev) => !prev)}
             >
-              Close Configuration
+              {isPlannerExpanded ? 'Hide planner' : 'Show planner'}
             </button>
           </div>
-        ) : (
-          <div className="timer-interface">
-            <div className="activity-info">
-              <h2 className="current-activity">
-                {activities[currentActivityIndex]?.name || 'No Activity'}
-              </h2>
-              <p className="activity-progress">
-                Activity {currentActivityIndex + 1} of {activities.length}
+        </header>
+
+        <div
+          className={`n-pomodoro-layout ${
+            isPlannerExpanded ? 'planner-open' : 'planner-collapsed'
+          }`}
+        >
+          <aside className="planner-panel">
+            <div className="planner-header">
+              <h2>Session planner</h2>
+              <p>
+                Compose as many sessions as you need (five and beyond), give
+                each block a purpose, and sculpt the flow of your day.
               </p>
             </div>
 
-            <div className="timer-display">
-              <div className="time-circle">
-                <div className="time-text">{formatTime(timeLeft)}</div>
-                <div className="progress-ring">
-                  <svg className="progress-ring-svg" width="200" height="200">
-                    <circle
-                      className="progress-ring-circle"
-                      stroke={activities[currentActivityIndex]?.color || '#667eea'}
-                      strokeWidth="8"
-                      fill="transparent"
-                      r="96"
-                      cx="100"
-                      cy="100"
-                      style={{
-                        strokeDasharray: `${2 * Math.PI * 96}`,
-                        strokeDashoffset: `${2 * Math.PI * 96 * (1 - getProgressPercentage() / 100)}`
-                      }}
-                    />
-                  </svg>
+            <div className="session-stack">
+              {sessions.map((session, index) => {
+                const totalMinutes = session.blocks.reduce(
+                  (acc, block) => acc + block.minutes,
+                  0
+                );
+                return (
+                  <div
+                    key={session.id}
+                    className={`session-card ${
+                      index === currentSessionIndex ? 'active' : ''
+                    }`}
+                    style={{ '--session-accent': session.blocks[0]?.color || '#7F5AF0' }}
+                  >
+                    <div className="session-card-header">
+                      <input
+                        className="session-name-input"
+                        value={session.name}
+                        onChange={(event) =>
+                          updateSessionName(session.id, event.target.value)
+                        }
+                      />
+                      <span className="session-duration">{totalMinutes} min</span>
+                    </div>
+                    <div className="session-card-actions">
+                      <button
+                        type="button"
+                        className="session-focus-btn"
+                        onClick={() => focusBlock(index, 0)}
+                      >
+                        Focus session
+                      </button>
+                      <button
+                        type="button"
+                        className="session-remove-btn"
+                        onClick={() => removeSession(session.id)}
+                        disabled={sessions.length <= 1}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    <div className="block-editor">
+                      {session.blocks.map((block, blockIndex) => (
+                        <div
+                          key={block.id}
+                          className={`block-row ${
+                            index === currentSessionIndex &&
+                            blockIndex === currentBlockIndex
+                              ? 'current'
+                              : ''
+                          }`}
+                        >
+                          <button
+                            type="button"
+                            className="block-handle"
+                            onClick={() => focusBlock(index, blockIndex)}
+                          >
+                            {blockIndex + 1}
+                          </button>
+                          <input
+                            className="block-name-input"
+                            value={block.name}
+                            onChange={(event) =>
+                              updateBlock(session.id, block.id, {
+                                name: event.target.value
+                              })
+                            }
+                          />
+                          <div className="block-duration-input">
+                            <input
+                              type="number"
+                              min="1"
+                              max="999"
+                              value={block.minutes}
+                              onChange={(event) => {
+                                const value = Math.max(
+                                  1,
+                                  Math.min(
+                                    999,
+                                    parseInt(event.target.value, 10) || 0
+                                  )
+                                );
+                                updateBlock(session.id, block.id, {
+                                  minutes: value
+                                });
+                              }}
+                            />
+                            <span>min</span>
+                          </div>
+                          <input
+                            type="color"
+                            className="block-color-input"
+                            value={block.color}
+                            onChange={(event) =>
+                              updateBlock(session.id, block.id, {
+                                color: event.target.value
+                              })
+                            }
+                          />
+                          <button
+                            type="button"
+                            className="block-remove-btn"
+                            onClick={() => removeBlock(session.id, block.id)}
+                            disabled={session.blocks.length <= 1}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      className="add-block-btn"
+                      onClick={() => addBlock(session.id)}
+                    >
+                      + Add block
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="planner-footer">
+              <button
+                type="button"
+                className="add-session-btn"
+                onClick={addSession}
+              >
+                + Add session
+              </button>
+              <button
+                type="button"
+                className="restore-defaults-btn"
+                onClick={restoreDefaults}
+              >
+                Restore defaults
+              </button>
+            </div>
+          </aside>
+
+          <section className="play-panel">
+            <div className="timer-card">
+              <div className="timer-meta">
+                <span className="session-label">
+                  Session {Math.min(currentSessionIndex + 1, sessions.length)} of{' '}
+                  {sessions.length}
+                </span>
+                <h2>{currentSession?.name || 'Create your first session'}</h2>
+                <p className="block-label">
+                  {currentBlock?.name || 'Add blocks to begin your ritual'}
+                </p>
+              </div>
+
+              <div className="timer-visual">
+                <div className="time-display">{formatTime(timeLeft)}</div>
+                <svg className="progress-ring" viewBox="0 0 260 260">
+                  <circle
+                    className="progress-ring-bg"
+                    cx="130"
+                    cy="130"
+                    r={RING_RADIUS}
+                  />
+                  <circle
+                    className="progress-ring-track"
+                    cx="130"
+                    cy="130"
+                    r={RING_RADIUS}
+                    style={{ stroke: softenedAccent }}
+                  />
+                  <circle
+                    className="progress-ring-indicator"
+                    cx="130"
+                    cy="130"
+                    r={RING_RADIUS}
+                    style={{
+                      stroke: accentColor,
+                      strokeDasharray: RING_CIRCUMFERENCE,
+                      strokeDashoffset:
+                        RING_CIRCUMFERENCE * (1 - blockProgress / 100)
+                    }}
+                  />
+                </svg>
+              </div>
+
+              <div className="quick-stats">
+                <div className="stat-card">
+                  <span className="stat-label">Current block</span>
+                  <strong className="stat-value">
+                    {currentBlock ? `${currentBlock.minutes} min` : '--'}
+                  </strong>
+                </div>
+                <div className="stat-card">
+                  <span className="stat-label">Session total</span>
+                  <strong className="stat-value">{sessionMinutes} min</strong>
+                </div>
+                <div className="stat-card">
+                  <span className="stat-label">Ritual remaining</span>
+                  <strong className="stat-value">{minutesRemaining} min</strong>
+                </div>
+                <div className="stat-card">
+                  <span className="stat-label">Next up</span>
+                  <strong className="stat-value">
+                    {nextBlockInfo
+                      ? `${
+                          nextBlockInfo.session &&
+                          nextBlockInfo.session !== currentSession?.name
+                            ? `${nextBlockInfo.session}: `
+                            : ''
+                        }${nextBlockInfo.label} (${nextBlockInfo.minutes} min)`
+                      : currentBlock
+                      ? 'Final block'
+                      : '--'}
+                  </strong>
                 </div>
               </div>
-            </div>
 
-            <div className="timer-controls">
-              {!isRunning && !isPaused && (
-                <button className="control-btn start-btn" onClick={startTimer}>
-                  ▶️ Start
+              <div className="timer-controls">
+                <button
+                  type="button"
+                  className="control-btn ghost"
+                  onClick={skipBackward}
+                  disabled={!currentBlock}
+                >
+                  ⟲ Previous
                 </button>
-              )}
-              {isRunning && (
-                <button className="control-btn pause-btn" onClick={pauseTimer}>
-                  ⏸️ Pause
-                </button>
-              )}
-              {isPaused && (
-                <button className="control-btn resume-btn" onClick={startTimer}>
-                  ▶️ Resume
-                </button>
-              )}
-              <button className="control-btn reset-btn" onClick={resetTimer}>
-                🔄 Reset
-              </button>
-              {currentActivityIndex < activities.length - 1 && (
-                <button className="control-btn next-btn" onClick={nextActivity}>
-                  ⏭️ Next
-                </button>
-              )}
-            </div>
-
-            {isComplete && (
-              <div className="completion-message">
-                <h3>🎉 Cycle Complete!</h3>
-                <p>Completed {cycleCount} cycle{cycleCount !== 1 ? 's' : ''}</p>
-                <button className="control-btn" onClick={resetTimer}>
-                  Start New Cycle
-                </button>
-              </div>
-            )}
-
-            <div className="activity-list">
-              <h4>Activities in this cycle:</h4>
-              <div className="activities">
-                {activities.map((activity, index) => (
-                  <div 
-                    key={index}
-                    className={`activity-item ${index === currentActivityIndex ? 'active' : ''} ${index < currentActivityIndex ? 'completed' : ''}`}
-                    style={{ '--activity-color': activity.color }}
+                {!isRunning && !isPaused && (
+                  <button
+                    type="button"
+                    className="control-btn primary"
+                    onClick={startTimer}
+                    disabled={!currentBlock}
                   >
-                    <span className="activity-name">{activity.name}</span>
-                    <span className="activity-duration">{activity.duration}m</span>
-                  </div>
-                ))}
+                    ▶ Start
+                  </button>
+                )}
+                {isRunning && (
+                  <button
+                    type="button"
+                    className="control-btn warning"
+                    onClick={pauseTimer}
+                  >
+                    ⏸ Pause
+                  </button>
+                )}
+                {isPaused && !isRunning && (
+                  <button
+                    type="button"
+                    className="control-btn primary"
+                    onClick={startTimer}
+                  >
+                    ▶ Resume
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="control-btn ghost"
+                  onClick={resetTimer}
+                  disabled={!currentBlock}
+                >
+                  ⟲ Reset
+                </button>
+                <button
+                  type="button"
+                  className="control-btn ghost"
+                  onClick={skipForward}
+                  disabled={!currentBlock}
+                >
+                  Next ⟳
+                </button>
               </div>
+
+              {isComplete && (
+                <div className="completion-banner">
+                  <h3>Cycle complete ✨</h3>
+                  <p>
+                    You navigated every planned block. Feel free to adjust your
+                    sessions and launch a fresh journey.
+                  </p>
+                  <button
+                    type="button"
+                    className="control-btn primary"
+                    onClick={resetTimer}
+                  >
+                    Restart journey
+                  </button>
+                </div>
+              )}
             </div>
-          </div>
-        )}
+
+            <div className="session-timeline">
+              {timelineSegments.map((segment, index) => (
+                <button
+                  key={segment.id}
+                  type="button"
+                  className={`timeline-segment ${
+                    index === currentSessionIndex ? 'active' : ''
+                  }`}
+                  style={{
+                    '--segment-accent': segment.accent,
+                    flexGrow: segment.weight
+                  }}
+                  onClick={() => focusBlock(index, 0)}
+                >
+                  <div
+                    className="timeline-progress"
+                    style={{ width: `${segment.completion}%` }}
+                  />
+                  <span className="timeline-label">{segment.name}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {isPlannerExpanded && (
+            <button
+              type="button"
+              className="planner-overlay"
+              onClick={() => setIsPlannerExpanded(false)}
+              aria-label="Close planner"
+            />
+          )}
+        </div>
       </div>
     </div>
   );
