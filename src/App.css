@@ -1,4 +1,50 @@
 .app {
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Responsive sizing system */
+:root {
+  --container-max-width: min(1400px, 95vw);
+  --container-padding: clamp(20px, 4vw, 60px);
+  --card-padding: clamp(20px, 3vw, 40px);
+  --font-size-large: clamp(2rem, 4vw, 3.5rem);
+  --font-size-medium: clamp(1.2rem, 2.5vw, 2rem);
+  --font-size-small: clamp(0.9rem, 1.5vw, 1.2rem);
+  --border-radius: clamp(15px, 2vw, 25px);
+  --spacing-large: clamp(30px, 5vw, 60px);
+  --spacing-medium: clamp(20px, 3vw, 40px);
+  --spacing-small: clamp(10px, 2vw, 20px);
+}
+
+/* Desktop-first breakpoints */
+@media (min-width: 1200px) {
+  :root {
+    --container-max-width: 1400px;
+    --container-padding: 60px;
+    --card-padding: 40px;
+    --font-size-large: 3.5rem;
+    --font-size-medium: 2rem;
+    --font-size-small: 1.2rem;
+    --border-radius: 25px;
+    --spacing-large: 60px;
+    --spacing-medium: 40px;
+    --spacing-small: 20px;
+  }
+}
+
+@media (min-width: 1600px) {
+  :root {
+    --container-max-width: 1600px;
+    --container-padding: 80px;
+    --card-padding: 50px;
+    --font-size-large: 4rem;
+    --font-size-medium: 2.5rem;
+    --font-size-small: 1.4rem;
+    --spacing-large: 80px;
+    --spacing-medium: 50px;
+    --spacing-small: 25px;
+  }
 }

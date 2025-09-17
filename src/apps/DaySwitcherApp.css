@@ -3,16 +3,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: var(--container-padding);
 }
 
 .app-container {
   background: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  padding: 40px;
+  border-radius: var(--border-radius);
+  padding: var(--card-padding);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
   text-align: center;
-  max-width: 500px;
+  max-width: min(600px, 80vw);
   width: 100%;
   backdrop-filter: blur(10px);
 }
@@ -22,7 +22,7 @@
 }
 
 .current-day {
-  font-size: 3rem;
+  font-size: clamp(2.5rem, 6vw, 4rem);
   color: #333;
   margin-bottom: 10px;
   font-weight: 600;

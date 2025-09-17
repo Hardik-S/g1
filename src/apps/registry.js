@@ -29,6 +29,20 @@ export const APP_REGISTRY = {
     created: '2024-01-01',
     featured: true
   },
+  'snake': {
+    id: 'snake',
+    title: 'Snake Game',
+    description: 'Classic Snake game with keyboard controls and modern design',
+    icon: '🐍',
+    category: 'Games',
+    component: null,
+    path: '/apps/snake',
+    tags: ['game', 'classic', 'keyboard', 'arcade'],
+    version: '1.0.0',
+    author: 'Hardik-S',
+    created: '2024-01-01',
+    featured: true
+  },
   'app-3': {
     id: 'app-3',
     title: 'Coming Soon',

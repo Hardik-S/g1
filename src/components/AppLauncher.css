@@ -1,14 +1,17 @@
 .app-launcher {
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
+  padding: var(--container-padding);
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  width: 100%;
 }
 
 .launcher-header {
   background: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  padding: 30px;
-  margin-bottom: 30px;
+  border-radius: var(--border-radius);
+  padding: var(--card-padding);
+  margin-bottom: var(--spacing-medium);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(10px);
 }
@@ -17,8 +20,8 @@
   display: flex;
   align-items: center;
   gap: 15px;
-  margin-bottom: 25px;
-  font-size: 2.5rem;
+  margin-bottom: var(--spacing-medium);
+  font-size: var(--font-size-large);
   font-weight: 700;
   color: #333;
 }
@@ -165,7 +168,8 @@
 }
 
 .apps-container.grid {
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: var(--spacing-medium);
 }
 
 .apps-container.list {
