@@ -114,7 +114,7 @@ const AppLauncher = ({ onLaunchApp, currentView, onBackToLauncher }) => {
         <div className="launcher-header-top">
           <h1 className="launcher-title">
             <span className="title-icon">📱</span>
-            App Container
+            64 Apps
             <span className="app-count">({allApps.length} apps)</span>
           </h1>
 
