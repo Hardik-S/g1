@@ -127,6 +127,20 @@ export const APP_REGISTRY = {
     created: '2024-05-01',
     featured: true
   },
+  'catnap-leap': {
+    id: 'catnap-leap',
+    title: 'CatNap Leap',
+    description: 'Guide a drowsy cat through floating pillows, chase scores, and sip dreamy powerups.',
+    icon: '🐱',
+    category: 'Games',
+    component: null,
+    path: '/apps/catnap-leap',
+    tags: ['game', 'canvas', 'flappy', 'cat'],
+    version: '1.0.0',
+    author: 'OpenAI Assistant',
+    created: '2024-06-01',
+    featured: true
+  },
   'app-3': {
     id: 'app-3',
     title: 'Coming Soon',

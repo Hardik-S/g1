@@ -1,0 +1,226 @@
+.catnap-app {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  color: #2f2a45;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.catnap-hud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: stretch;
+}
+
+.scoreboard {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(80px, 1fr));
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 16px;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 12px 24px rgba(47, 42, 69, 0.08);
+  backdrop-filter: blur(8px);
+}
+
+.score-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.score-item .label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #746c9a;
+}
+
+.score-item .value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #2f2a45;
+}
+
+.drowsiness-meter {
+  flex: 1 1 220px;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 16px;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 12px 24px rgba(47, 42, 69, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: 220px;
+}
+
+.meter-header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  color: #5b5185;
+}
+
+.meter-track {
+  position: relative;
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(206, 198, 235, 0.45);
+  overflow: hidden;
+}
+
+.meter-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #6be0b8, #ffcf6f, #ff7f8c);
+  transition: width 0.25s ease;
+}
+
+.active-effects {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+  color: #4a3f70;
+}
+
+.active-effects li {
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(140, 118, 200, 0.16);
+  font-weight: 600;
+}
+
+.catnap-canvas-wrapper {
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 24px 40px rgba(47, 42, 69, 0.15);
+  background: linear-gradient(180deg, #aee3ff 0%, #fef6d7 100%);
+}
+
+.catnap-canvas {
+  width: 100%;
+  display: block;
+  background: transparent;
+}
+
+.catnap-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(24, 20, 38, 0.35);
+  backdrop-filter: blur(6px);
+}
+
+.overlay-card {
+  max-width: 360px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 20px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 16px 32px rgba(47, 42, 69, 0.18);
+}
+
+.overlay-card h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.8rem;
+  color: #3d3560;
+}
+
+.overlay-card p {
+  margin: 0 0 1rem;
+  color: #4f466f;
+  line-height: 1.4;
+}
+
+.overlay-list {
+  list-style: disc;
+  text-align: left;
+  padding-left: 1.2rem;
+  margin: 0 0 1rem;
+  color: #4f466f;
+}
+
+.overlay-button {
+  background: linear-gradient(135deg, #7b66ff, #ff87ab);
+  border: none;
+  color: white;
+  font-weight: 600;
+  padding: 0.65rem 1.4rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.overlay-button:hover,
+.overlay-button:focus {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(123, 102, 255, 0.35);
+  outline: none;
+}
+
+.catnap-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0.75rem 1rem;
+  border-radius: 16px;
+  box-shadow: 0 12px 24px rgba(47, 42, 69, 0.08);
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #463d6a;
+  font-weight: 600;
+}
+
+.controls kbd {
+  background: rgba(76, 64, 120, 0.15);
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.tips {
+  color: #645b8f;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 600px) {
+  .catnap-app {
+    gap: 1rem;
+  }
+
+  .scoreboard {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .drowsiness-meter {
+    min-width: unset;
+  }
+
+  .overlay-card {
+    padding: 1.2rem;
+  }
+}

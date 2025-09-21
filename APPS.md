@@ -42,6 +42,12 @@ Pong Ring reimagines Pong inside a circular quartz arena with luminous marble fl
 - Introduce adjustable paddle arcs and experimental power-ups for advanced modes.
 - Extend online multiplayer with latency-friendly predictive inputs and leaderboards.
 
+## CatNap Leap
+CatNap Leap sends a sleepy kitten soaring between plush pillows in an ever-shifting dreamscape. Responsive canvas physics balance gentle gravity with satisfying jumps across desktop, tablet, and mobile screens. A drowsiness meter keeps the pressure rising, while coffee, yarn, and catnip powerups remix the tempo with resets, boosts, and slow motion for precise, high-score hunting.
+- Extend background transitions with constellations that react to score milestones and perfect leaps.
+- Add accessibility toggles for reduced motion, color shifting, and simplified visuals.
+- Introduce daily challenges seeded from the clock with unique pillow routes and bonus modifiers.
+
 ## Sudoku Roast
 Sudoku Roast brings a cozy café vibe to the classic logic puzzle with parchment-inspired styling, smooth note-taking, and an original puzzle generator. Solvers can pencil in candidates, validate progress, and request handcrafted hints without breaking immersion.
 - Track solve statistics, streaks, and difficulty preferences for returning players.

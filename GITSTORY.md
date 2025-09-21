@@ -4,4 +4,6 @@ Use this file to track commits, pushes, merges, and noteworthy design choices. E
 
 - 2025-09-17 — docs — Added AGENTS.md guidance, refreshed README documentation, and introduced this log for future history tracking.
 - 2025-09-18 — feature+docs — Surfaced Chessboard Summit in the launcher list, refreshed documentation for every bundled app, and added coverage to guard the registry entry.
+- 2025-09-19 — feature+docs — Introduced CatNap Leap with a dreamy canvas game loop, registry wiring, and documentation updates across the catalog.
 - 2025-09-21 — feature+docs — Added the CatPad notepad with IndexedDB persistence, GitHub gist syncing, and refreshed docs/tests for the new launcher entry.
+
