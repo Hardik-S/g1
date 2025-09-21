@@ -16,4 +16,14 @@ describe('app registry', () => {
 
     expect(allAppIds).toContain('chess');
   });
+
+  it('registers the CatPad app metadata', () => {
+    const catpad = getAppById('catpad');
+
+    expect(catpad).toBeTruthy();
+    expect(catpad.title).toBe('CatPad');
+    expect(catpad.category).toBe('Productivity');
+    expect(catpad.icon).toBe('😺');
+    expect(catpad.path).toBe('/apps/catpad');
+  });
 });

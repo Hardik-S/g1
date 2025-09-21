@@ -1,0 +1,390 @@
+
+.catpad-app {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  display: flex;
+  justify-content: center;
+  background-color: #fff5ec;
+  background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27140%27%20height%3D%27140%27%20viewBox%3D%270%200%20140%20140%27%3E%0A%3Crect%20width%3D%27140%27%20height%3D%27140%27%20fill%3D%27%23fffaf5%27/%3E%0A%3Cg%20fill%3D%27%23f2d3bd%27%20stroke%3D%27%23e0bfa0%27%20stroke-width%3D%271.5%27%3E%0A%3Ccircle%20cx%3D%2730%27%20cy%3D%2730%27%20r%3D%2718%27/%3E%0A%3Ccircle%20cx%3D%27110%27%20cy%3D%2730%27%20r%3D%2718%27/%3E%0A%3Ccircle%20cx%3D%2770%27%20cy%3D%2770%27%20r%3D%2718%27/%3E%0A%3Ccircle%20cx%3D%2730%27%20cy%3D%27110%27%20r%3D%2718%27/%3E%0A%3Ccircle%20cx%3D%27110%27%20cy%3D%27110%27%20r%3D%2718%27/%3E%0A%3C/g%3E%0A%3Cg%20stroke%3D%27%23392b28%27%20stroke-width%3D%272%27%20fill%3D%27none%27%20stroke-linecap%3D%27round%27%3E%0A%3Cpath%20d%3D%27M24%2024%20l-6%20-10%27/%3E%0A%3Cpath%20d%3D%27M36%2024%20l6%20-10%27/%3E%0A%3Cpath%20d%3D%27M104%2024%20l-6%20-10%27/%3E%0A%3Cpath%20d%3D%27M116%2024%20l6%20-10%27/%3E%0A%3Cpath%20d%3D%27M64%2064%20l-6%20-10%27/%3E%0A%3Cpath%20d%3D%27M76%2064%20l6%20-10%27/%3E%0A%3Cpath%20d%3D%27M24%20104%20l-6%20-10%27/%3E%0A%3Cpath%20d%3D%27M36%20104%20l6%20-10%27/%3E%0A%3Cpath%20d%3D%27M104%20104%20l-6%20-10%27/%3E%0A%3Cpath%20d%3D%27M116%20104%20l6%20-10%27/%3E%0A%3C/g%3E%0A%3Cg%20fill%3D%27%23392b28%27%3E%0A%3Ccircle%20cx%3D%2730%27%20cy%3D%2730%27%20r%3D%272.5%27/%3E%0A%3Ccircle%20cx%3D%27110%27%20cy%3D%2730%27%20r%3D%272.5%27/%3E%0A%3Ccircle%20cx%3D%2770%27%20cy%3D%2770%27%20r%3D%272.5%27/%3E%0A%3Ccircle%20cx%3D%2730%27%20cy%3D%27110%27%20r%3D%272.5%27/%3E%0A%3Ccircle%20cx%3D%27110%27%20cy%3D%27110%27%20r%3D%272.5%27/%3E%0A%3C/g%3E%0A%3C/svg%3E');
+  background-size: 140px 140px;
+  color: #3a2723;
+  font-family: 'Nunito', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  box-sizing: border-box;
+  cursor: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2732%27%20height%3D%2732%27%20viewBox%3D%270%200%2032%2032%27%3E%0A%3Cpath%20d%3D%27M8%206%20L4%202%20L4%2012%20Z%27%20fill%3D%27%23f7cbaa%27%20stroke%3D%27%23392b28%27%20stroke-width%3D%271.5%27/%3E%0A%3Cpath%20d%3D%27M24%206%20L28%202%20L28%2012%20Z%27%20fill%3D%27%23f7cbaa%27%20stroke%3D%27%23392b28%27%20stroke-width%3D%271.5%27/%3E%0A%3Ccircle%20cx%3D%2716%27%20cy%3D%2718%27%20r%3D%2712%27%20fill%3D%27%23ffe7d8%27%20stroke%3D%27%23392b28%27%20stroke-width%3D%272%27/%3E%0A%3Ccircle%20cx%3D%2712%27%20cy%3D%2716%27%20r%3D%272.2%27%20fill%3D%27%23392b28%27/%3E%0A%3Ccircle%20cx%3D%2720%27%20cy%3D%2716%27%20r%3D%272.2%27%20fill%3D%27%23392b28%27/%3E%0A%3Cpath%20d%3D%27M12%2022%20Q16%2025%2020%2022%27%20fill%3D%27none%27%20stroke%3D%27%23392b28%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27/%3E%0A%3Cpath%20d%3D%27M16%2018%20l0%203%27%20stroke%3D%27%23392b28%27%20stroke-width%3D%271.5%27%20stroke-linecap%3D%27round%27/%3E%0A%3C/svg%3E') 2 2, auto;
+}
+
+.catpad-app * {
+  box-sizing: border-box;
+  cursor: inherit;
+}
+
+.catpad-loading {
+  align-items: center;
+  padding: 3rem;
+}
+
+.catpad-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  font-size: 1.1rem;
+  color: #50322d;
+}
+
+.catpad-paw-spinner {
+  width: 48px;
+  height: 48px;
+  border: 6px solid rgba(255, 199, 171, 0.4);
+  border-top-color: #f28f7b;
+  border-radius: 50%;
+  animation: catpad-spin 1s linear infinite;
+}
+
+@keyframes catpad-spin {
+  to { transform: rotate(360deg); }
+}
+
+.catpad-layout {
+  flex: 1;
+  width: 100%;
+  padding: 2rem;
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 320px;
+  gap: 1.5rem;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.catpad-sidebar,
+.catpad-editor,
+.catpad-settings {
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 18px;
+  border: 1px solid rgba(226, 181, 148, 0.6);
+  box-shadow: 0 18px 32px rgba(117, 76, 64, 0.12);
+  padding: 1.25rem;
+}
+
+.catpad-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.catpad-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.catpad-sidebar-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #2c1a18;
+}
+
+.catpad-note-list {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 0.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.catpad-note-item {
+  border: none;
+  text-align: left;
+  border-radius: 16px;
+  padding: 0.9rem 1rem;
+  background: rgba(255, 246, 239, 0.85);
+  color: inherit;
+  transition: background 0.2s ease, transform 0.2s ease;
+  box-shadow: inset 0 0 0 1px rgba(230, 184, 147, 0.35);
+}
+
+.catpad-note-item:hover {
+  background: rgba(255, 229, 210, 0.95);
+  transform: translateY(-1px);
+}
+
+.catpad-note-item.active {
+  background: linear-gradient(135deg, rgba(255, 206, 173, 0.95), rgba(255, 230, 214, 0.95));
+  box-shadow: inset 0 0 0 2px rgba(222, 148, 115, 0.6);
+}
+
+.catpad-note-title {
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 0.35rem;
+  color: #3a241f;
+}
+
+.catpad-note-meta {
+  font-size: 0.85rem;
+  color: #7f655c;
+}
+
+.catpad-empty {
+  text-align: center;
+  color: #8a6f66;
+  padding: 1.5rem 1rem;
+  border-radius: 12px;
+  background: rgba(255, 239, 227, 0.7);
+}
+
+.catpad-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.catpad-editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+}
+
+.catpad-title-input {
+  flex: 1;
+  min-width: 180px;
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(224, 170, 138, 0.7);
+  background: rgba(255, 255, 255, 0.85);
+  font-size: 1.05rem;
+  color: #2b1a17;
+  cursor: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2732%27%20height%3D%2732%27%20viewBox%3D%270%200%2032%2032%27%3E%0A%3Cpath%20d%3D%27M8%206%20L4%202%20L4%2012%20Z%27%20fill%3D%27%23f7cbaa%27%20stroke%3D%27%23392b28%27%20stroke-width%3D%271.5%27/%3E%0A%3Cpath%20d%3D%27M24%206%20L28%202%20L28%2012%20Z%27%20fill%3D%27%23f7cbaa%27%20stroke%3D%27%23392b28%27%20stroke-width%3D%271.5%27/%3E%0A%3Ccircle%20cx%3D%2716%27%20cy%3D%2718%27%20r%3D%2712%27%20fill%3D%27%23ffe7d8%27%20stroke%3D%27%23392b28%27%20stroke-width%3D%272%27/%3E%0A%3Ccircle%20cx%3D%2712%27%20cy%3D%2716%27%20r%3D%272.2%27%20fill%3D%27%23392b28%27/%3E%0A%3Ccircle%20cx%3D%2720%27%20cy%3D%2716%27%20r%3D%272.2%27%20fill%3D%27%23392b28%27/%3E%0A%3Cpath%20d%3D%27M12%2022%20Q16%2025%2020%2022%27%20fill%3D%27none%27%20stroke%3D%27%23392b28%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27/%3E%0A%3Cpath%20d%3D%27M16%2018%20l0%203%27%20stroke%3D%27%23392b28%27%20stroke-width%3D%271.5%27%20stroke-linecap%3D%27round%27/%3E%0A%3C/svg%3E') 2 2, text;
+}
+
+.catpad-title-input:focus {
+  outline: none;
+  border-color: #f08c73;
+  box-shadow: 0 0 0 3px rgba(240, 140, 115, 0.2);
+}
+
+.catpad-toolbar-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.catpad-textarea {
+  width: 100%;
+  flex: 1;
+  min-height: 340px;
+  resize: none;
+  padding: 1.1rem 1.2rem;
+  border-radius: 16px;
+  border: 1px solid rgba(222, 168, 138, 0.65);
+  background: rgba(255, 255, 255, 0.92);
+  font-size: 1rem;
+  line-height: 1.65;
+  color: #2b1a17;
+  caret-color: #f08c73;
+  cursor: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2732%27%20height%3D%2732%27%20viewBox%3D%270%200%2032%2032%27%3E%0A%3Cpath%20d%3D%27M8%206%20L4%202%20L4%2012%20Z%27%20fill%3D%27%23f7cbaa%27%20stroke%3D%27%23392b28%27%20stroke-width%3D%271.5%27/%3E%0A%3Cpath%20d%3D%27M24%206%20L28%202%20L28%2012%20Z%27%20fill%3D%27%23f7cbaa%27%20stroke%3D%27%23392b28%27%20stroke-width%3D%271.5%27/%3E%0A%3Ccircle%20cx%3D%2716%27%20cy%3D%2718%27%20r%3D%2712%27%20fill%3D%27%23ffe7d8%27%20stroke%3D%27%23392b28%27%20stroke-width%3D%272%27/%3E%0A%3Ccircle%20cx%3D%2712%27%20cy%3D%2716%27%20r%3D%272.2%27%20fill%3D%27%23392b28%27/%3E%0A%3Ccircle%20cx%3D%2720%27%20cy%3D%2716%27%20r%3D%272.2%27%20fill%3D%27%23392b28%27/%3E%0A%3Cpath%20d%3D%27M12%2022%20Q16%2025%2020%2022%27%20fill%3D%27none%27%20stroke%3D%27%23392b28%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27/%3E%0A%3Cpath%20d%3D%27M16%2018%20l0%203%27%20stroke%3D%27%23392b28%27%20stroke-width%3D%271.5%27%20stroke-linecap%3D%27round%27/%3E%0A%3C/svg%3E') 2 2, text;
+}
+
+.catpad-textarea:focus {
+  outline: none;
+  border-color: #f08c73;
+  box-shadow: 0 0 0 3px rgba(240, 140, 115, 0.2);
+}
+
+.catpad-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.9rem;
+}
+
+.catpad-sync-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 12px;
+  background: rgba(255, 239, 227, 0.7);
+  color: #78483d;
+}
+
+.catpad-sync-status.syncing {
+  background: rgba(240, 140, 115, 0.15);
+  color: #b35a48;
+}
+
+.catpad-sync-status.success {
+  background: rgba(166, 211, 182, 0.25);
+  color: #2d7a48;
+}
+
+.catpad-sync-status.error {
+  background: rgba(255, 180, 180, 0.25);
+  color: #c03a2f;
+}
+
+.catpad-sync-icon {
+  font-size: 1.1rem;
+}
+
+.catpad-save-meta {
+  color: #7f655c;
+}
+
+.catpad-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.catpad-settings h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #2c1a18;
+}
+
+.catpad-settings-blurb {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #6c5147;
+  line-height: 1.5;
+}
+
+.catpad-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  font-size: 0.9rem;
+  color: #50322d;
+}
+
+.catpad-field input[type="text"],
+.catpad-field input[type="password"] {
+  padding: 0.65rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid rgba(220, 172, 140, 0.7);
+  background: rgba(255, 255, 255, 0.92);
+  font-size: 0.95rem;
+  color: #2c1a18;
+  cursor: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2732%27%20height%3D%2732%27%20viewBox%3D%270%200%2032%2032%27%3E%0A%3Cpath%20d%3D%27M8%206%20L4%202%20L4%2012%20Z%27%20fill%3D%27%23f7cbaa%27%20stroke%3D%27%23392b28%27%20stroke-width%3D%271.5%27/%3E%0A%3Cpath%20d%3D%27M24%206%20L28%202%20L28%2012%20Z%27%20fill%3D%27%23f7cbaa%27%20stroke%3D%27%23392b28%27%20stroke-width%3D%271.5%27/%3E%0A%3Ccircle%20cx%3D%2716%27%20cy%3D%2718%27%20r%3D%2712%27%20fill%3D%27%23ffe7d8%27%20stroke%3D%27%23392b28%27%20stroke-width%3D%272%27/%3E%0A%3Ccircle%20cx%3D%2712%27%20cy%3D%2716%27%20r%3D%272.2%27%20fill%3D%27%23392b28%27/%3E%0A%3Ccircle%20cx%3D%2720%27%20cy%3D%2716%27%20r%3D%272.2%27%20fill%3D%27%23392b28%27/%3E%0A%3Cpath%20d%3D%27M12%2022%20Q16%2025%2020%2022%27%20fill%3D%27none%27%20stroke%3D%27%23392b28%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27/%3E%0A%3Cpath%20d%3D%27M16%2018%20l0%203%27%20stroke%3D%27%23392b28%27%20stroke-width%3D%271.5%27%20stroke-linecap%3D%27round%27/%3E%0A%3C/svg%3E') 2 2, text;
+}
+
+.catpad-field input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: #f08c73;
+}
+
+.catpad-remember {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.catpad-sync-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.catpad-primary,
+.catpad-secondary,
+.catpad-danger {
+  border: none;
+  border-radius: 999px;
+  padding: 0.65rem 1.4rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2732%27%20height%3D%2732%27%20viewBox%3D%270%200%2032%2032%27%3E%0A%3Cpath%20d%3D%27M8%206%20L4%202%20L4%2012%20Z%27%20fill%3D%27%23f7cbaa%27%20stroke%3D%27%23392b28%27%20stroke-width%3D%271.5%27/%3E%0A%3Cpath%20d%3D%27M24%206%20L28%202%20L28%2012%20Z%27%20fill%3D%27%23f7cbaa%27%20stroke%3D%27%23392b28%27%20stroke-width%3D%271.5%27/%3E%0A%3Ccircle%20cx%3D%2716%27%20cy%3D%2718%27%20r%3D%2712%27%20fill%3D%27%23ffe7d8%27%20stroke%3D%27%23392b28%27%20stroke-width%3D%272%27/%3E%0A%3Ccircle%20cx%3D%2712%27%20cy%3D%2716%27%20r%3D%272.2%27%20fill%3D%27%23392b28%27/%3E%0A%3Ccircle%20cx%3D%2720%27%20cy%3D%2716%27%20r%3D%272.2%27%20fill%3D%27%23392b28%27/%3E%0A%3Cpath%20d%3D%27M12%2022%20Q16%2025%2020%2022%27%20fill%3D%27none%27%20stroke%3D%27%23392b28%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27/%3E%0A%3Cpath%20d%3D%27M16%2018%20l0%203%27%20stroke%3D%27%23392b28%27%20stroke-width%3D%271.5%27%20stroke-linecap%3D%27round%27/%3E%0A%3C/svg%3E') 2 2, pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.catpad-primary {
+  background: linear-gradient(135deg, #ffb996, #f08c73);
+  color: #3a1f1b;
+  box-shadow: 0 10px 18px rgba(240, 140, 115, 0.3);
+}
+
+.catpad-secondary {
+  background: rgba(255, 213, 190, 0.65);
+  color: #4d2c26;
+  box-shadow: 0 8px 16px rgba(232, 175, 147, 0.25);
+}
+
+.catpad-danger {
+  background: rgba(219, 103, 87, 0.85);
+  color: #fff9f6;
+  box-shadow: 0 10px 18px rgba(219, 103, 87, 0.35);
+}
+
+.catpad-primary:hover,
+.catpad-secondary:hover,
+.catpad-danger:hover {
+  transform: translateY(-1px);
+}
+
+.catpad-primary:disabled,
+.catpad-secondary:disabled,
+.catpad-danger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.catpad-tip {
+  margin-top: auto;
+  padding: 1rem;
+  border-radius: 14px;
+  background: rgba(255, 235, 220, 0.7);
+  color: #6c5147;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  font-size: 0.95rem;
+}
+
+.catpad-tip-icon {
+  font-size: 1.5rem;
+}
+
+@media (max-width: 1200px) {
+  .catpad-layout {
+    grid-template-columns: 230px minmax(0, 1fr);
+    grid-template-areas: 'sidebar editor' 'settings settings';
+  }
+  .catpad-settings {
+    grid-column: 1 / span 2;
+  }
+}
+
+@media (max-width: 860px) {
+  .catpad-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+  }
+  .catpad-sidebar,
+  .catpad-editor,
+  .catpad-settings {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .catpad-layout {
+    padding: 1.25rem;
+  }
+  .catpad-editor-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .catpad-toolbar-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

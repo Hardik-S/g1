@@ -5,6 +5,7 @@ A small, modular React playground bundling multiple apps behind a simple launche
 ### Included apps
 
 - Day Switcher — flip through the week with animated transitions.
+- CatPad — jot notes with a cat-themed editor that syncs through GitHub gists.
 - N-Pomodoro — orchestrate multi-activity pomodoro sessions.
 - Snake — chase high scores across a responsive grid.
 - Hexa-Snake (Bee Edition) — guide a bee across a honeycomb board.
@@ -98,6 +99,10 @@ g1/
 │   └── apps/
 │       ├── ChessApp/
 │       │   ├── ChessApp.js
+│       │   └── index.js
+│       ├── CatPadApp/
+│       │   ├── CatPadApp.js
+│       │   ├── CatPadApp.css
 │       │   └── index.js
 │       ├── DaySwitcherApp/
 │       │   ├── DaySwitcherApp.js
