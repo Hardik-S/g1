@@ -14,6 +14,20 @@ export const APP_REGISTRY = {
     created: '2024-01-01',
     featured: true
   },
+  catpad: {
+    id: 'catpad',
+    title: 'CatPad',
+    description: 'Feline-themed notepad with cloud sync across every browser.',
+    icon: '😺',
+    category: 'Productivity',
+    component: null,
+    path: '/apps/catpad',
+    tags: ['notes', 'editor', 'sync', 'cats'],
+    version: '1.0.0',
+    author: 'OpenAI Assistant',
+    created: '2024-06-01',
+    featured: true,
+  },
   // Placeholder for future apps
   'n-pomodoro': {
     id: 'n-pomodoro',

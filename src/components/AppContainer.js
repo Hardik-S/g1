@@ -11,7 +11,11 @@ const PongApp = React.lazy(() => import('../apps/PongApp'));
 const PongRingApp = React.lazy(() => import('../apps/PongRingApp'));
 const SudokuApp = React.lazy(() => import('../apps/SudokuApp'));
 const ChessApp = React.lazy(() => import('../apps/ChessApp'));
+
 const CatNapLeapApp = React.lazy(() => import('../apps/CatNapLeapApp'));
+
+const CatPadApp = React.lazy(() => import('../apps/CatPadApp'));
+
 
 const AppContainer = () => {
   const [currentView, setCurrentView] = useState('launcher'); // 'launcher' or 'app'
@@ -47,8 +51,13 @@ const AppContainer = () => {
         return <SudokuApp onBack={handleBackToLauncher} />;
       case 'chess':
         return <ChessApp onBack={handleBackToLauncher} />;
+
       case 'catnap-leap':
         return <CatNapLeapApp onBack={handleBackToLauncher} />;
+
+      case 'catpad':
+        return <CatPadApp onBack={handleBackToLauncher} />;
+
       default:
         return (
           <div className="app-placeholder">
