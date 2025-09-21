@@ -1,44 +1,53 @@
 # Chess Sub-App
 
-The Chess sub-application is delivered in two incremental phases. It lives alongside the existing project as a collection of static assets (`html/`, `js/`, and `css/`) so it can be served without impacting the React bundle.
+The Chess experience ships in two phases and is now fully integrated with the g1 React micro-app launcher while remaining
+available as a standalone HTML page. The React version is bundled with the rest of the site so it works seamlessly on GitHub
+Pages alongside the existing catalog of mini apps.
+
+## Accessing Chess
+
+### Inside the React launcher (recommended)
+1. Install dependencies if you have not already: `npm install`.
+2. Run `npm start` and open `http://localhost:3000`, or visit the published site at
+   [`https://hardik-s.github.io/g1`](https://hardik-s.github.io/g1).
+3. In the launcher, open the **Chessboard Summit** tile to load the chess experience. The component dynamically loads
+   Chessboard.js, Chess.js, and Stockfish.js from their CDNs and shares styling with the standalone build so the look and feel
+   matches the rest of the suite.
+
+### Standalone fallback
+- Open `html/chess.html` directly in a browser. It loads the exact same board and engine modules via CDN and is useful for
+  smoke testing outside the React bundle.
 
 ## Phase 1 – Local Two-Player Chessboard
-
-### Setup
-1. Open `html/chess.html` in your browser. No local build step is required; all dependencies are loaded via CDNs.
-2. The page includes [Chessboard.js](https://github.com/oakmac/chessboardjs) for the visual board and [Chess.js](https://github.com/jhlywa/chess.js) for rules enforcement.
-3. `js/boardManager.js` handles board wiring, move validation, and integrates with Chess.js so only legal moves are accepted.
-
-### Usage
-- Drag pieces to make moves. Illegal moves automatically snap back.
-- The **New Game** button resets the position.
-- Status messaging (whose turn, check, mate, draw) updates after every move.
+- Visual board powered by [Chessboard.js](https://github.com/oakmac/chessboardjs) with draggable pieces.
+- `js/boardManager.js` keeps board state in sync with [Chess.js](https://github.com/jhlywa/chess.js) so every move is legally
+  validated before it lands.
+- Status panel surfaces whose turn it is, check, draw, and checkmate states. The **New Game** button resets to the starting
+  position.
 
 ## Phase 2 – Stockfish Integration
+- [Stockfish.js](https://github.com/official-stockfish/Stockfish) is loaded from jsDelivr. No binaries live in the repository,
+  satisfying GitHub’s storage restrictions for large compiled artifacts.
+- `js/stockfishEngine.js` wraps the global `Stockfish()` worker with cancelation and timing helpers.
+- `src/apps/ChessApp/ChessApp.js` orchestrates the UI: toggle between two-player local play and a Stockfish opponent, adjust the
+  skill slider (0–20), and reset games. In engine mode Stockfish always answers after one second with 0.5 seconds of thinking
+  time, matching the spec.
+- The modular design keeps board state separate from engine logic so alternative engines or offline play can be slotted in
+  without touching the UI.
 
-### Setup
-1. The same HTML entry point (`html/chess.html`) now also loads [Stockfish.js](https://github.com/official-stockfish/Stockfish) via jsDelivr CDN.
-2. `js/stockfishEngine.js` wraps the global `Stockfish()` worker so engine logic is isolated from board state.
-3. `js/chess.js` composes the board and engine layers and exposes UI controls for the active mode and Stockfish skill level.
-
-### Usage
-- Use the **Mode** dropdown to choose between:
-  - **2 Player Local** – both sides are human controlled.
-  - **Play vs Stockfish** – you play White, Stockfish plays Black.
-- In engine mode Stockfish always replies 1 second after your move. It spends 0.5 seconds thinking (`go movetime 500`) before responding.
-- Adjust the **Skill Level** slider (0–20) to tweak Stockfish’s strength. The slider is disabled in two-player mode.
-- The board logic and engine logic are modular; Stockfish can be swapped or disabled by updating the `StockfishEngine` wrapper without touching the board manager.
-
-### Rationale for CDN Stockfish
-Stockfish distributes WebAssembly binaries. GitHub forbids storing large engine binaries in source control, so the app references Stockfish.js directly from a CDN. This keeps the repository lightweight and guarantees users always load the official build.
+## Architecture notes
+- Both the React component and standalone HTML page reuse the same `BoardManager` and `StockfishEngine` modules. The React
+  wrapper disposes of workers and boards when unmounted to avoid leaking resources as you switch between other apps.
+- External scripts and stylesheets are loaded once per session through a lightweight loader so multiple visits (or re-renders)
+  do not inject duplicate `<script>` tags.
 
 ## Running Tests
-1. Install dependencies: `npm install` (if not already done).
-2. Execute the automated suite: `npm test`.
+1. Install dependencies: `npm install`.
+2. Run the Jest suite: `npm test`.
 
-The Jest tests cover:
+The automated tests cover:
 - Local move validation via `BoardManager`.
-- Engine timing to ensure Stockfish waits a full second before moving.
+- Engine timing to ensure Stockfish waits a full second before committing a move.
 - Verification that the HTML entry point references the CDN-hosted Stockfish script.
 
 ## Future Enhancements

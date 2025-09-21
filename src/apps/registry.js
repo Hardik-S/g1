@@ -99,6 +99,20 @@ export const APP_REGISTRY = {
     created: '2024-04-01',
     featured: true
   },
+  chess: {
+    id: 'chess',
+    title: 'Chessboard Summit',
+    description: 'Challenge a friend locally or face Stockfish with adjustable strength.',
+    icon: '♟️',
+    category: 'Games',
+    component: null,
+    path: '/apps/chess',
+    tags: ['game', 'board', 'stockfish', 'ai'],
+    version: '1.0.0',
+    author: 'OpenAI Assistant',
+    created: '2024-05-01',
+    featured: true
+  },
   'app-3': {
     id: 'app-3',
     title: 'Coming Soon',

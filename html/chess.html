@@ -11,7 +11,7 @@
     />
     <link rel="stylesheet" href="../css/chess.css" />
   </head>
-  <body>
+  <body class="chess-standalone">
     <div class="chess-app">
       <h1>Chess</h1>
       <div class="chess-toolbar">
@@ -30,8 +30,8 @@
         <button id="new-game">New Game</button>
       </div>
       <div class="chess-board-container">
-        <div id="chessboard"></div>
-        <div id="chess-status">
+        <div id="chessboard" class="chess-board"></div>
+        <div id="chess-status" class="chess-status">
           <h2>Status</h2>
           <div id="status-turn" class="status-line">Turn: White</div>
           <div id="status-info" class="status-line">White to move.</div>
