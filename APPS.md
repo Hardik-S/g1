@@ -6,6 +6,12 @@ Day Switcher transforms the weekly calendar into an interactive playground. Smoo
 - Offer accessibility-focused themes, including high-contrast palettes and reduced-motion options.
 - Introduce keyboard shortcuts and swipe gestures for faster navigation across devices.
 
+## CatPad
+CatPad is a feline-inspired notepad that autosaves to IndexedDB and offers optional GitHub gist syncing so every browser shares the same whisker scribbles. A cat cursor, tiled background, and cozy palette make editing playful while a cloud panel handles credentials, manual pulls, and push-on-demand.
+- Expand sync providers beyond GitHub gists, such as WebDAV or commercial cloud storage adapters.
+- Layer in version history so writers can rewind to an earlier meowment or compare drafts.
+- Provide rich-text flourishes like headings or checklists while keeping the editor lightweight.
+
 ## N-Pomodoro Timer
 N-Pomodoro Timer choreographs customizable work cycles within a cosmic interface. Users pick multi-activity presets, monitor progress through animated rings, and toggle configuration panels without losing context. Timers persist across states, enabling focused sprints, reflective breaks, and celebratory completions through ambient stars, all tailored to evolving productivity rituals and team rhythms.
 - Enable user-defined activity presets with saved profiles synchronized across devices.
