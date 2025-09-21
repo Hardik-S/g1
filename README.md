@@ -10,6 +10,7 @@ A small, modular React playground bundling multiple apps behind a simple launche
 - Hexa-Snake (Bee Edition) — guide a bee across a honeycomb board.
 - Neon Pong — duel classic paddles with a neon glow.
 - Pong Ring — rally inside a circular quartz arena.
+- CatNap Leap — glide between dreamy pillows while keeping a sleepy cat alert.
 - Sudoku Roast — solve handcrafted puzzles in a café setting.
 - Chessboard Summit — play local chess or spar with Stockfish.
 
