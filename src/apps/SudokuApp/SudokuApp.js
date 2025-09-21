@@ -6,6 +6,7 @@ import {
   generateSudoku,
   getDifficultyLevels,
   isBoardComplete,
+  solveSudoku,
 } from './sudokuLogic';
 
 const CANVAS_SIZE = 540;
@@ -133,6 +134,43 @@ const SudokuApp = ({ onBack }) => {
     startNewPuzzle(difficulty);
     setLastAction('Restarted the brew — new possibilities await.');
   };
+
+  const handleRevealSolution = useCallback(() => {
+    if (boardMatchesSolution) {
+      setLastAction('Already perfected — savor the calm.');
+      setNoteMode(false);
+      return;
+    }
+
+    let solvedBoard = null;
+
+    if (gameData.solution) {
+      solvedBoard = cloneBoard(gameData.solution);
+    } else if (gameData.puzzle) {
+      const computedFromPuzzle = solveSudoku(gameData.puzzle);
+      if (computedFromPuzzle) {
+        solvedBoard = computedFromPuzzle;
+      }
+    }
+
+    if (!solvedBoard) {
+      const computedFromBoard = solveSudoku(board);
+      if (computedFromBoard) {
+        solvedBoard = computedFromBoard;
+      }
+    }
+
+    if (!solvedBoard) {
+      setLastAction('This blend resisted a solution — try a fresh brew.');
+      return;
+    }
+
+    setBoard(cloneBoard(solvedBoard));
+    setNotes(createEmptyNotes());
+    setNoteMode(false);
+    setLastAction('Solution revealed — savor the mastery.');
+    triggerBoardAnimation();
+  }, [board, boardMatchesSolution, gameData, triggerBoardAnimation]);
 
   const handleCanvasSelection = (event) => {
     if (!canvasRef.current) return;
@@ -433,6 +471,14 @@ const SudokuApp = ({ onBack }) => {
                 className="px-5 py-2 rounded-full bg-coffee-foam/80 text-coffee-ink font-medium uppercase tracking-[0.3em] text-xs shadow-md transition hover:bg-coffee-foam hover:shadow-lg"
               >
                 Brew fresh puzzle
+              </button>
+              <button
+                type="button"
+                onClick={handleRevealSolution}
+                className="px-5 py-2 rounded-full bg-coffee-ink/80 text-coffee-cream font-medium uppercase tracking-[0.3em] text-xs shadow-md transition hover:bg-coffee-ink hover:shadow-lg"
+                data-testid="reveal-solution"
+              >
+                Solution
               </button>
               <button
                 type="button"

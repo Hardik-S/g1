@@ -121,4 +121,17 @@ describe('SudokuApp component', () => {
     fireEvent.click(mediumButton);
     expect(generateSudoku).toHaveBeenLastCalledWith('medium');
   });
+
+  it('reveals the full solution when the Solution button is clicked', async () => {
+    render(<SudokuApp onBack={jest.fn()} />);
+    const canvas = screen.getByLabelText(/Sudoku board/i);
+
+    const solutionButton = screen.getByRole('button', { name: /solution/i });
+    fireEvent.click(solutionButton);
+
+    await waitFor(() => {
+      const boardData = canvas.getAttribute('data-board');
+      expect(boardData.split('|')[0]).toBe('435269781');
+    });
+  });
 });
