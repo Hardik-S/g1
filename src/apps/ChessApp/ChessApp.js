@@ -13,7 +13,7 @@ const CHESSBOARD_SCRIPT_URL =
 const CHESS_RULES_SCRIPT_URL =
   'https://cdn.jsdelivr.net/npm/chess.js@0.13.4/chess.min.js';
 const STOCKFISH_SCRIPT_URL =
-  'https://cdn.jsdelivr.net/npm/stockfish@16.1.1/dist/stockfish.js';
+  'https://cdn.jsdelivr.net/npm/stockfish@16.0.0/src/stockfish-nnue-16.js';
 
 const resourcePromises = new Map();
 
