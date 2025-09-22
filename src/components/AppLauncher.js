@@ -166,6 +166,43 @@ const AppLauncher = () => {
     .filter((app) => app.featured && !app.disabled)
     .sort((a, b) => a.title.localeCompare(b.title)), [allApps]);
 
+  const favoriteApps = useMemo(() => allApps
+    .filter((app) => favoriteIds.includes(app.id) && !app.disabled)
+    .filter((app) => {
+      const matchesCategory = selectedCategory === 'All' || app.category === selectedCategory;
+      const matchesSearch = app.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         app.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         app.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+      return matchesCategory && matchesSearch;
+    })
+    .sort((a, b) => a.title.localeCompare(b.title)), [allApps, favoriteIds, searchQuery, selectedCategory]);
+
+  const hasHiddenFavoritesInCategory = useMemo(() => {
+    if (selectedCategory === 'All' || favoriteIds.length === 0) {
+      return false;
+    }
+
+    const searchLower = searchQuery.toLowerCase();
+
+    return favoriteIds.some((favoriteId) => {
+      const app = allApps.find((candidate) => candidate.id === favoriteId);
+
+      if (!app || app.disabled) {
+        return false;
+      }
+
+      const matchesSearch = app.title.toLowerCase().includes(searchLower) ||
+        app.description.toLowerCase().includes(searchLower) ||
+        app.tags.some((tag) => tag.toLowerCase().includes(searchLower));
+
+      if (!matchesSearch) {
+        return false;
+      }
+
+      return app.category !== selectedCategory;
+    });
+  }, [allApps, favoriteIds, searchQuery, selectedCategory]);
+
   const isFavorited = (appId) => favoriteIds.includes(appId);
 
   const toggleFavorite = (appId) => {
@@ -309,6 +346,19 @@ const AppLauncher = () => {
             </button>
           ))}
         </nav>
+
+        {favoriteApps.length > 0 && (
+          <section className="favorites-section">
+            <h2 className="section-title">★ Favorite Apps</h2>
+            <div className={`apps-container ${viewMode}`}>
+              {favoriteApps.map(renderAppCard)}
+            </div>
+          </section>
+        )}
+
+        {favoriteApps.length === 0 && favoriteIds.length > 0 && hasHiddenFavoritesInCategory && (
+          <div className="favorites-empty-message">Mark apps as ★ to see them here</div>
+        )}
 
         {selectedCategory === 'All' && featuredApps.length > 0 && (
           <section className="featured-section">
