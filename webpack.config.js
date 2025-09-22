@@ -19,6 +19,10 @@ const resolvedHomepagePath = (() => {
 
 const PUBLIC_URL = process.env.PUBLIC_URL ?? resolvedHomepagePath;
 
+const cacheLabDir = path.resolve(__dirname, 'src/apps/cache-lab');
+const cacheLabWorkspaceDir = path.resolve(__dirname, 'apps/cache-lab');
+const relocatedSubAppDirs = [cacheLabDir, cacheLabWorkspaceDir];
+
 module.exports = {
   entry: './src/index.js',
   output: {
@@ -30,7 +34,7 @@ module.exports = {
     rules: [
       {
         test: /\.(js|jsx)$/,
-        exclude: /node_modules/,
+        exclude: [/node_modules/, ...relocatedSubAppDirs],
         use: {
           loader: 'babel-loader',
           options: {
@@ -40,6 +44,7 @@ module.exports = {
       },
       {
         test: /\.css$/i,
+        exclude: [/node_modules/, ...relocatedSubAppDirs],
         use: ['style-loader', 'css-loader'],
       },
     ],
