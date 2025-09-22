@@ -18,9 +18,19 @@ A small, modular React playground bundling multiple apps behind a simple launche
 - Chessboard Summit — play local chess or spar with Stockfish.
 - Cache Lab — explore cache mapping, replacement, hierarchy, and assessments via the `/cache-lab` subapp.
 
+#### Launcher features
+
+- Universal search trims the app grid to matching titles and descriptions.
+- Category filters narrow the catalog to related experiences.
+- A grid/list toggle lets you switch between compact tiles and detail rows.
+- Featured apps surface in a hero rail for quick discovery.
+- A Toronto time badge keeps the global clock in view.
+- Local favorites pin chosen apps to the top so they are always within reach.
+
 ### Notes
 
 - CirclePong has been renamed to Pong Ring with a refreshed canvas setup so the match starts reliably in the browser.
+- Favorites persist via `localStorage`; clear browser storage between runs when testing related flows.
 
 ### Project documentation
 
