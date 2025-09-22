@@ -60,6 +60,12 @@ CatNap Leap sends a sleepy kitten soaring between plush pillows in an ever-shift
 - Add accessibility toggles for reduced motion, color shifting, and simplified visuals.
 - Introduce daily challenges seeded from the clock with unique pillow routes and bonus modifiers.
 
+## Cat Connect Four
+Cat Connect Four stages a whimsical match inside a pastel cat café. Players pick from six paw-print styles before linking four in classic mode, three in the Kitten quickplay board, or facing Rhythm, Kimchi, and Siella AI rivals with animated drops and sparkling victories. Session scoreboards, ambient café audio, and pawprint controls keep the experience welcoming for local duos and solo challengers alike.
+- Add online multiplayer with emoji chat bubbles so café pals can connect remotely.
+- Offer weekly puzzle challenges where players solve near-win boards against each AI difficulty.
+- Expand cosmetics with unlockable paw trails, animated board frames, and seasonal café decor.
+
 ## Sudoku Roast
 Sudoku Roast brings a cozy café vibe to the classic logic puzzle with parchment-inspired styling, smooth note-taking, and an original puzzle generator. Solvers can pencil in candidates, validate progress, and request handcrafted hints without breaking immersion.
 - Track solve statistics, streaks, and difficulty preferences for returning players.
