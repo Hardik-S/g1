@@ -726,6 +726,7 @@ const CatNapLeapApp = () => {
           width: Math.max(80, width * 0.18),
           gapCenter,
           gapHeight,
+          variant: Math.random() < 0.5 ? 'cluster' : 'column',
           scored: false,
         });
       }
@@ -864,7 +865,7 @@ const CatNapLeapApp = () => {
     drawBackgroundDetails(ctx, state);
 
     state.pillows.forEach((pillow) => {
-      drawPillow(ctx, pillow, width, height);
+      drawPillow(ctx, pillow);
     });
 
     state.powerups.forEach((powerup) => {
@@ -910,43 +911,207 @@ const CatNapLeapApp = () => {
   };
 
   const drawPillow = (ctx, pillow) => {
-    const { x, width, gapCenter, gapHeight } = pillow;
+    const { x, width, gapCenter, gapHeight, variant = 'cluster' } = pillow;
     const topHeight = gapCenter - gapHeight / 2;
     const bottomY = gapCenter + gapHeight / 2;
-    const pillowColor = '#fef6fb';
-    const outline = '#d2c3f1';
+    const canvasHeight = ctx.canvas.height;
+    const pillowColor = variant === 'column' ? '#f1edff' : '#fef7ff';
+    const outline = variant === 'column' ? '#c7bff0' : '#d8c9f5';
+    const shadowColor = 'rgba(40, 32, 78, 0.18)';
 
-    ctx.fillStyle = pillowColor;
+    ctx.save();
+    ctx.shadowColor = shadowColor;
+    ctx.shadowBlur = 18;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 8;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+
+    if (variant === 'column') {
+      drawColumnSection(ctx, {
+        x,
+        width,
+        top: 0,
+        bottom: topHeight,
+        color: pillowColor,
+        outline,
+        isTop: true,
+      });
+
+      drawColumnSection(ctx, {
+        x,
+        width,
+        top: bottomY,
+        bottom: canvasHeight,
+        color: pillowColor,
+        outline,
+        isTop: false,
+      });
+    } else {
+      drawCloudSection(ctx, {
+        x,
+        width,
+        baseY: topHeight,
+        canvasHeight,
+        color: pillowColor,
+        outline,
+        isTop: true,
+      });
+
+      drawCloudSection(ctx, {
+        x,
+        width,
+        baseY: bottomY,
+        canvasHeight,
+        color: pillowColor,
+        outline,
+        isTop: false,
+      });
+    }
+
+    ctx.restore();
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+  };
+
+  const drawCloudSection = (ctx, { x, width, baseY, canvasHeight, color, outline, isTop }) => {
+    const lumps = Math.max(3, Math.round(width / 55));
+    const step = width / lumps;
+    const depth = Math.min(52, Math.max(24, step * 1.1));
+    const arcY = clamp(baseY, 0, canvasHeight);
+    const support = depth * 0.65;
+
+    ctx.fillStyle = color;
+
+    if (isTop) {
+      const rectBottom = Math.max(0, arcY - support);
+      if (rectBottom > 0) {
+        ctx.beginPath();
+        ctx.rect(x, 0, width, rectBottom);
+        ctx.fill();
+      }
+    } else {
+      const rectTop = Math.min(canvasHeight, arcY + support);
+      if (rectTop < canvasHeight) {
+        ctx.beginPath();
+        ctx.rect(x, rectTop, width, canvasHeight - rectTop);
+        ctx.fill();
+      }
+    }
+
+    ctx.beginPath();
+    if (isTop) {
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x + width, 0);
+      ctx.lineTo(x + width, Math.max(0, arcY - support * 0.5));
+    } else {
+      ctx.moveTo(x, canvasHeight);
+      ctx.lineTo(x + width, canvasHeight);
+      ctx.lineTo(x + width, Math.min(canvasHeight, arcY + support * 0.5));
+    }
+
+    for (let i = lumps - 1; i >= 0; i -= 1) {
+      const centerX = x + (i + 0.5) * step;
+      const radiusX = step * 0.65;
+      const radiusY = Math.min(depth, isTop ? arcY + depth : canvasHeight - arcY + depth);
+      const startX = centerX + radiusX;
+      ctx.lineTo(startX, arcY);
+      ctx.ellipse(centerX, arcY, radiusX, radiusY, 0, 0, Math.PI, isTop ? false : true);
+    }
+
+    if (isTop) {
+      ctx.lineTo(x, Math.max(0, arcY - support * 0.5));
+    } else {
+      ctx.lineTo(x, Math.min(canvasHeight, arcY + support * 0.5));
+    }
+    ctx.closePath();
+
+    ctx.fill();
     ctx.strokeStyle = outline;
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 2.3;
+    ctx.stroke();
 
-    // Top pillow
+    const sheen = ctx.createLinearGradient(0, arcY - depth, 0, arcY + depth);
+    if (isTop) {
+      sheen.addColorStop(0, 'rgba(255, 255, 255, 0)');
+      sheen.addColorStop(0.75, 'rgba(255, 255, 255, 0.32)');
+      sheen.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    } else {
+      sheen.addColorStop(0, 'rgba(255, 255, 255, 0)');
+      sheen.addColorStop(0.25, 'rgba(255, 255, 255, 0.32)');
+      sheen.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    }
+    ctx.fillStyle = sheen;
     ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x + width, 0);
-    ctx.lineTo(x + width, Math.max(0, topHeight - 20));
-    ctx.quadraticCurveTo(x + width * 0.5, topHeight + 20, x, Math.max(0, topHeight - 20));
+    for (let i = 0; i < lumps; i += 1) {
+      const centerX = x + (i + 0.5) * step;
+      const radiusX = step * 0.5;
+      const radiusY = depth * 0.6;
+      const offsetY = depth * 0.25;
+      const ellipseY = isTop ? arcY - offsetY : arcY + offsetY;
+      ctx.ellipse(centerX, ellipseY, radiusX, radiusY, 0, 0, Math.PI * 2);
+    }
+    ctx.fill();
+  };
+
+  const drawColumnSection = (ctx, { x, width, top, bottom, color, outline, isTop }) => {
+    const height = bottom - top;
+    if (height <= 0) return;
+
+    const bodyInset = Math.min(width * 0.28, 38);
+    const curveDepth = Math.min(height * 0.45, 42);
+    const innerInset = Math.min(bodyInset * 0.65, width * 0.2);
+
+    ctx.fillStyle = color;
+    ctx.strokeStyle = outline;
+    ctx.lineWidth = 2.3;
+
+    ctx.beginPath();
+    if (isTop) {
+      ctx.moveTo(x, top);
+      ctx.lineTo(x + width, top);
+      ctx.lineTo(x + width - bodyInset, bottom - curveDepth * 0.25);
+      ctx.quadraticCurveTo(
+        x + width * 0.5,
+        bottom + curveDepth * 0.6,
+        x + bodyInset,
+        bottom - curveDepth * 0.25,
+      );
+    } else {
+      ctx.moveTo(x + bodyInset, top + curveDepth * 0.25);
+      ctx.quadraticCurveTo(
+        x + width * 0.5,
+        top - curveDepth * 0.6,
+        x + width - bodyInset,
+        top + curveDepth * 0.25,
+      );
+      ctx.lineTo(x + width, bottom);
+      ctx.lineTo(x, bottom);
+    }
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
-    // Bottom pillow
-    const bottomHeight = ctx.canvas.height - bottomY;
-    ctx.beginPath();
-    ctx.moveTo(x, ctx.canvas.height);
-    ctx.lineTo(x + width, ctx.canvas.height);
-    ctx.lineTo(x + width, Math.min(ctx.canvas.height, bottomY + 20));
-    ctx.quadraticCurveTo(x + width * 0.5, bottomY - 20, x, Math.min(ctx.canvas.height, bottomY + 20));
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
+    const highlight = ctx.createLinearGradient(0, top, 0, bottom);
+    highlight.addColorStop(isTop ? 0.05 : 0.4, 'rgba(255, 255, 255, 0.3)');
+    highlight.addColorStop(isTop ? 0.8 : 0.95, 'rgba(255, 255, 255, 0)');
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+    ctx.fillStyle = highlight;
     ctx.beginPath();
-    ctx.ellipse(x + width * 0.5, topHeight * 0.6, width * 0.25, 14, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(x + width * 0.5, bottomY + (bottomHeight * 0.4), width * 0.25, 14, 0, 0, Math.PI * 2);
+    if (isTop) {
+      ctx.moveTo(x + innerInset, top + height * 0.1);
+      ctx.lineTo(x + width - innerInset, top + height * 0.1);
+      ctx.lineTo(x + width - bodyInset * 0.85, bottom - curveDepth * 0.45);
+      ctx.lineTo(x + bodyInset * 0.85, bottom - curveDepth * 0.45);
+    } else {
+      ctx.moveTo(x + bodyInset * 0.85, top + curveDepth * 0.45);
+      ctx.lineTo(x + width - bodyInset * 0.85, top + curveDepth * 0.45);
+      ctx.lineTo(x + width - innerInset, bottom - height * 0.1);
+      ctx.lineTo(x + innerInset, bottom - height * 0.1);
+    }
+    ctx.closePath();
     ctx.fill();
   };
 
