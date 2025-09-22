@@ -150,6 +150,10 @@ g1/
 - React 18
 - Webpack 5 + webpack-dev-server
 - Babel (`@babel/preset-env`, `@babel/preset-react`)
+- SortableJS for drag-and-drop reordering in shared UIs
+- Vite + TypeScript + pnpm toolchain powering `apps/cache-lab`
+
+The Cache Lab workspace also ships with Vitest and Playwright for unit, component, and end-to-end testing flows.
 
 ## Contributing
 
