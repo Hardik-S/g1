@@ -91,6 +91,19 @@ export const APP_REGISTRY = {
     created: '2024-09-23',
     featured: true,
   }),
+  'quantum-playground': withDefaults({
+    id: 'quantum-playground',
+    title: 'Quantum Playground',
+    description: 'Experiment with quantum circuits, visualize qubits, and explore superposition.',
+    icon: '⚛️',
+    category: 'Education',
+    component: null,
+    loader: () => import('./quantum-playground'),
+    path: '/apps/quantum-playground',
+    tags: ['quantum', 'physics', 'circuits', 'visualization'],
+    created: '2025-01-15',
+    featured: true,
+  }),
   // Placeholder for future apps
   'n-pomodoro': withDefaults({
     id: 'n-pomodoro',
