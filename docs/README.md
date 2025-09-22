@@ -93,6 +93,12 @@ Your site will be available at the `homepage` URL.
 
 ```
 g1/
+├── apps/
+│   ├── cache-lab/
+│   └── cat-typing-speed-test/
+├── docs/
+│   ├── README.md
+│   └── ... (additional guides)
 ├── public/
 │   └── index.html
 ├── src/
@@ -106,12 +112,23 @@ g1/
 │   │   ├── AppLauncher.js
 │   │   └── AppLauncher.css
 │   └── apps/
-│       ├── ChessApp/
-│       │   ├── ChessApp.js
-│       │   └── index.js
+│       ├── CacheLabApp/
+│       │   ├── index.js
+│       │   └── styles.css
+│       ├── CatNapLeapApp/
+│       │   ├── CatNapLeapApp.js
+│       │   ├── CatNapLeapApp.css
+│       │   └── spawnLogic.js
 │       ├── CatPadApp/
 │       │   ├── CatPadApp.js
 │       │   ├── CatPadApp.css
+│       │   └── index.js
+│       ├── CatTypingSpeedTestApp/
+│       │   ├── CatTypingSpeedTestApp.js
+│       │   ├── CatTypingSpeedTestApp.css
+│       │   └── index.js
+│       ├── ChessApp/
+│       │   ├── ChessApp.js
 │       │   └── index.js
 │       ├── DaySwitcherApp/
 │       │   ├── DaySwitcherApp.js
@@ -141,6 +158,10 @@ g1/
 │       │   ├── SudokuApp.js
 │       │   ├── SudokuApp.css
 │       │   └── index.js
+│       ├── ZenDoApp/
+│       │   ├── ZenDoApp.js
+│       │   ├── ZenDoApp.css
+│       │   └── components/
 │       └── registry.js
 ├── dist/
 │   └── ... (build output)
