@@ -210,6 +210,12 @@ body {
   box-shadow: 0 10px 24px rgba(236, 72, 153, 0.35);
 }
 
+.duration-btn[data-active] {
+  background: var(--accent-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(236, 72, 153, 0.4);
+}
+
 .duration-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -220,6 +226,11 @@ body {
 .duration-btn:focus-visible {
   outline: 3px solid rgba(236, 72, 153, 0.4);
   outline-offset: 3px;
+}
+
+.duration-btn[data-active]:focus-visible {
+  outline: 3px solid rgba(236, 72, 153, 0.55);
+  box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.35), 0 12px 28px rgba(236, 72, 153, 0.4);
 }
 
 .start-hint {
