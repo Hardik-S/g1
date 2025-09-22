@@ -20,6 +20,27 @@
 
   const durationButtons = Array.from(document.querySelectorAll('.duration-btn'));
 
+  const parseDurationValue = (button) => {
+    if (!button) return null;
+    const value = Number(button.dataset.duration);
+    if (!Number.isFinite(value) || value <= 0) {
+      return null;
+    }
+    return value;
+  };
+
+  const defaultDuration = (() => {
+    for (let index = 0; index < durationButtons.length; index += 1) {
+      const parsed = parseDurationValue(durationButtons[index]);
+      if (parsed !== null) {
+        return parsed;
+      }
+    }
+    return null;
+  })();
+
+  let lastSelectedDuration = defaultDuration;
+
   const loginForm = document.getElementById('login-form');
   const aliasInput = document.getElementById('alias-input');
   const loginButton = document.getElementById('login-button');
@@ -115,6 +136,7 @@
   };
 
   const defaultStartHint = startHint ? startHint.textContent : '';
+  const keyboardShortcutHint = 'Tip: Press 1 or 2 (\u2190/\u2192) to launch instantly, hit Esc to return to the menu, and tap R or Space to restart mid-test or from results.';
 
   let corpusCache = null;
   let corpusPromise = null;
@@ -126,6 +148,100 @@
   let charSpans = [];
   let correctChars = 0;
   let typedChars = 0;
+  let activeScreen = startScreen;
+
+  const setActiveDuration = (duration) => {
+    let appliedDuration = null;
+    durationButtons.forEach((button) => {
+      const parsed = parseDurationValue(button);
+      if (parsed === null) {
+        button.removeAttribute('data-active');
+        return;
+      }
+      const isActive = parsed === duration;
+      if (isActive) {
+        appliedDuration = parsed;
+        button.setAttribute('data-active', 'true');
+      } else {
+        button.removeAttribute('data-active');
+      }
+    });
+
+    if (appliedDuration !== null) {
+      lastSelectedDuration = appliedDuration;
+    }
+
+    return appliedDuration;
+  };
+
+  const getDurationByIndex = (index) => {
+    if (index < 0 || index >= durationButtons.length) {
+      return null;
+    }
+    return parseDurationValue(durationButtons[index]);
+  };
+
+  const getCurrentDurationIndex = () => {
+    if (!Number.isFinite(lastSelectedDuration)) {
+      return -1;
+    }
+    for (let index = 0; index < durationButtons.length; index += 1) {
+      if (parseDurationValue(durationButtons[index]) === lastSelectedDuration) {
+        return index;
+      }
+    }
+    return -1;
+  };
+
+  const focusActiveDurationButton = () => {
+    const activeButton = durationButtons.find((button) => button.hasAttribute('data-active'));
+    if (activeButton) {
+      activeButton.focus();
+    }
+  };
+
+  const getPreferredDuration = () => {
+    if (Number.isFinite(testDuration) && testDuration > 0) {
+      return testDuration;
+    }
+    if (Number.isFinite(lastSelectedDuration) && lastSelectedDuration > 0) {
+      return lastSelectedDuration;
+    }
+    if (Number.isFinite(defaultDuration) && defaultDuration > 0) {
+      return defaultDuration;
+    }
+    return null;
+  };
+
+  const startDuration = (duration) => {
+    const applied = setActiveDuration(duration);
+    if (!Number.isFinite(applied) || applied <= 0) {
+      return;
+    }
+    countdownSeconds = applied;
+    beginTest(applied);
+  };
+
+  const startDurationByIndex = (index) => {
+    const parsed = getDurationByIndex(index);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return;
+    }
+    startDuration(parsed);
+  };
+
+  if (Number.isFinite(lastSelectedDuration) && lastSelectedDuration > 0) {
+    setActiveDuration(lastSelectedDuration);
+  }
+
+  const isTextEntryElement = (element) => {
+    if (!element) return false;
+    if (element.isContentEditable) return true;
+    const tagName = element.tagName;
+    if (!tagName) return false;
+    const normalized = tagName.toUpperCase();
+    return normalized === 'INPUT' || normalized === 'TEXTAREA' || normalized === 'SELECT';
+  };
 
   let gistStore = {};
   let currentAlias = '';
@@ -201,11 +317,13 @@
 
   const updateStartHint = (canSync) => {
     if (!startHint) return;
+
     if (canSync) {
       startHint.textContent = defaultStartHint;
     } else {
       startHint.textContent = 'Connect GitHub access from the global settings to sync your scores. You can still practice without signing in.';
     }
+
   };
 
   const setLoginState = (loggedIn) => {
@@ -708,6 +826,7 @@
         }
       }
     });
+    activeScreen = screen;
   };
 
   const focusStartScreenControl = () => {
@@ -977,46 +1096,132 @@
 
   durationButtons.forEach((button) => {
     button.addEventListener('click', () => {
-      const duration = Number(button.dataset.duration);
+      const duration = parseDurationValue(button);
       if (!Number.isFinite(duration) || duration <= 0) return;
-      countdownSeconds = duration;
-      beginTest(duration);
+      startDuration(duration);
     });
   });
 
   restartBtn.addEventListener('click', () => {
-    if (testDuration > 0 && targetText) {
-      beginTest(testDuration);
-    } else {
+    const preferredDuration = Number.isFinite(testDuration) && testDuration > 0
+      ? testDuration
+      : getPreferredDuration();
+    if (!Number.isFinite(preferredDuration) || preferredDuration <= 0) {
       setScreen(startScreen);
-      focusStartScreenControl();
+      requestAnimationFrame(() => {
+        focusActiveDurationButton();
+      });
+      return;
 
     }
+    startDuration(preferredDuration);
   });
 
   backBtn.addEventListener('click', () => {
     resetTestState();
     setScreen(startScreen);
-    focusStartScreenControl();
+    requestAnimationFrame(() => {
+      focusActiveDurationButton();
+    });
 
   });
 
   typingInput.addEventListener('input', handleInput);
 
   resultsRetry.addEventListener('click', () => {
-    if (!targetText) {
+    const preferredDuration = getPreferredDuration();
+    if (!Number.isFinite(preferredDuration) || preferredDuration <= 0) {
       setScreen(startScreen);
-      focusStartScreenControl();
+      requestAnimationFrame(() => {
+        focusActiveDurationButton();
+      });
 
       return;
     }
-    beginTest(testDuration || 15);
+    startDuration(preferredDuration);
   });
 
   resultsMenu.addEventListener('click', () => {
     resetTestState();
     setScreen(startScreen);
-    focusStartScreenControl();
+    requestAnimationFrame(() => {
+      focusActiveDurationButton();
+    });
+  });
+
+  window.addEventListener('keydown', (event) => {
+    if (event.defaultPrevented || event.repeat) {
+      return;
+    }
+
+    const { key } = event;
+    const activeElement = document.activeElement;
+    const lowerKey = typeof key === 'string' ? key.toLowerCase() : '';
+    const restartKey = lowerKey === 'r' || key === ' ' || key === 'Spacebar';
+    const isMenuActive = activeScreen === startScreen;
+    const isTestOrResults = activeScreen === testScreen || activeScreen === resultsScreen;
+
+    if (isMenuActive) {
+      if (isTextEntryElement(activeElement)) {
+        return;
+      }
+
+      if (/^[1-9]$/.test(key)) {
+        const numericIndex = Number.parseInt(key, 10) - 1;
+        if (numericIndex >= 0 && numericIndex < durationButtons.length) {
+          event.preventDefault();
+          startDurationByIndex(numericIndex);
+          return;
+        }
+      }
+
+      if (durationButtons.length > 0) {
+        if (key === 'ArrowLeft' || key === 'ArrowUp') {
+          event.preventDefault();
+          const currentIndex = getCurrentDurationIndex();
+          const targetIndex = currentIndex > 0 ? currentIndex - 1 : 0;
+          startDurationByIndex(targetIndex);
+          return;
+        }
+        if (key === 'ArrowRight' || key === 'ArrowDown') {
+          event.preventDefault();
+          const currentIndex = getCurrentDurationIndex();
+          const fallbackIndex = durationButtons.length - 1;
+          const targetIndex = currentIndex >= 0 && currentIndex < fallbackIndex
+            ? currentIndex + 1
+            : fallbackIndex;
+          startDurationByIndex(targetIndex);
+          return;
+        }
+      }
+    }
+
+    if (key === 'Escape' && isTestOrResults) {
+      event.preventDefault();
+      resetTestState();
+      setScreen(startScreen);
+      requestAnimationFrame(() => {
+        focusActiveDurationButton();
+      });
+      return;
+    }
+
+    if (restartKey && isTestOrResults) {
+      if (isTextEntryElement(activeElement) && activeElement === typingInput && !typingInput.disabled) {
+        return;
+      }
+      event.preventDefault();
+      const preferredDuration = getPreferredDuration();
+      if (!Number.isFinite(preferredDuration) || preferredDuration <= 0) {
+        resetTestState();
+        setScreen(startScreen);
+        requestAnimationFrame(() => {
+          focusActiveDurationButton();
+        });
+        return;
+      }
+      startDuration(preferredDuration);
+    }
 
   });
 
@@ -1049,6 +1254,9 @@
   }
 
   setScreen(startScreen);
+  requestAnimationFrame(() => {
+    focusActiveDurationButton();
+  });
   focusStartScreenControl();
   scheduleNextFrame(() => {
     focusTypingInput();
