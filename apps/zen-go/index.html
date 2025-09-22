@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Zen Go — 9×9 Web Go sparring</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="zen-go-app">
+      <section class="zen-go-shell">
+        <div class="zen-go-board-panel">
+          <header class="zen-go-header">
+            <h1>Zen Go</h1>
+            <p>
+              Practice 9×9 fuseki against a lightweight GNU Go engine compiled to
+              WebAssembly. Adjust strength, set handicap stones, and enjoy a calm
+              board-side flow.
+            </p>
+          </header>
+          <div class="board-wrapper">
+            <div id="board" class="board-canvas" aria-label="Go board"></div>
+          </div>
+          <div class="zen-go-status" id="statusText">Preparing engine…</div>
+          <div class="zen-go-captures">
+            <div class="capture-card capture-black">
+              <span class="capture-label">Black captures</span>
+              <span class="capture-count" id="blackCaptures">0</span>
+            </div>
+            <div class="capture-card capture-white">
+              <span class="capture-label">White captures</span>
+              <span class="capture-count" id="whiteCaptures">0</span>
+            </div>
+          </div>
+        </div>
+        <aside class="zen-go-side-panel">
+          <section class="control-group">
+            <h2>Match setup</h2>
+            <label class="control-field" for="difficultySelect">
+              <span class="control-label">AI difficulty</span>
+              <select id="difficultySelect" class="control-select"></select>
+            </label>
+            <div class="difficulty-meta">
+              <span id="rankLabel" class="difficulty-rank"></span>
+              <span id="eloLabel" class="difficulty-elo"></span>
+            </div>
+            <p class="difficulty-note" id="difficultyNote"></p>
+          </section>
+          <section class="control-group">
+            <h2>Handicap</h2>
+            <label class="control-field" for="handicapSelect">
+              <span class="control-label">Stones for Black</span>
+              <select id="handicapSelect" class="control-select">
+                <option value="0">None</option>
+                <option value="2">2 stones</option>
+                <option value="3">3 stones</option>
+                <option value="4">4 stones</option>
+                <option value="5">5 stones</option>
+                <option value="6">6 stones</option>
+                <option value="7">7 stones</option>
+                <option value="8">8 stones</option>
+                <option value="9">9 stones</option>
+              </select>
+            </label>
+            <p class="control-help">
+              Handicap stones follow standard 9×9 star points. White plays first
+              whenever handicap ≥ 2.
+            </p>
+          </section>
+          <section class="control-group">
+            <h2>Actions</h2>
+            <div class="button-row">
+              <button id="newGameButton" class="primary-button">New game</button>
+              <button id="undoButton" class="ghost-button">Undo</button>
+              <button id="resignButton" class="ghost-button danger">Resign</button>
+            </div>
+          </section>
+          <section class="control-group">
+            <h2>Engine status</h2>
+            <div id="engineStatus" class="engine-status">Loading WebAssembly…</div>
+            <p class="control-help">
+              GNU Go runs inside a Web Worker so the board stays responsive while
+              moves are analysed.
+            </p>
+          </section>
+          <section class="control-group future-note">
+            <h2>Coming next</h2>
+            <ul>
+              <li>13×13 and 19×19 boards</li>
+              <li>Game review with SGF export</li>
+              <li>Win-rate graphs and deeper analysis</li>
+            </ul>
+          </section>
+        </aside>
+      </section>
+    </main>
+    <script src="vendor/wgo.min.js"></script>
+    <script src="main.js"></script>
+  </body>
+</html>

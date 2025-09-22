@@ -16,6 +16,7 @@ A small, modular React playground bundling multiple apps behind a simple launche
 - CatNap Leap — glide between dreamy pillows while keeping a sleepy cat alert.
 - Sudoku Roast — solve handcrafted puzzles in a café setting.
 - Chessboard Summit — play local chess or spar with Stockfish.
+- Zen Go — spar on a 9×9 board against a WebAssembly GNU Go engine with rank presets.
 - Cache Lab — explore cache mapping, replacement, hierarchy, and assessments via the `/cache-lab` subapp.
 
 #### Launcher features
