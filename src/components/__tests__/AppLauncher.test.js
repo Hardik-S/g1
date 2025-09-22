@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { render, screen, within } from '@testing-library/react';
 import AppLauncher from '../AppLauncher';
 
@@ -48,6 +49,7 @@ jest.mock('../../apps/registry', () => {
       Productivity: { icon: '💼' },
     },
     getAllApps: jest.fn(() => mockApps),
+
   };
 });
 
@@ -58,21 +60,25 @@ jest.mock('../../state/globalGistSettings', () => ({
   writeGlobalGistSettings: jest.fn(),
 }));
 
+
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
   useNavigate: () => jest.fn(),
 }));
 
+
 describe('AppLauncher', () => {
   beforeEach(() => {
     localStorage.clear();
     jest.clearAllMocks();
+
   });
 
   it('renders favorite apps before non-favorites', () => {
     localStorage.setItem('favoriteAppIds', JSON.stringify(['beta-app']));
 
     render(<AppLauncher />);
+
 
     const appsSection = screen.getByText(/All Apps/).closest('section');
     expect(appsSection).not.toBeNull();
@@ -81,4 +87,5 @@ describe('AppLauncher', () => {
 
     expect(titles).toEqual(['Beta App', 'Alpha App', 'Gamma App']);
   });
+
 });

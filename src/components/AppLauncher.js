@@ -188,18 +188,37 @@ const AppLauncher = () => {
     };
   }, [handleCloseWithoutSaving, isSettingsOpen]);
 
-  const categories = ['All', ...Object.keys(APP_CATEGORIES)];
-
   const allApps = useMemo(() => getAllApps(), []);
+
+  const categories = useMemo(() => {
+    const categoriesFromApps = [];
+
+    allApps.forEach((app) => {
+      if (!app || !app.category) {
+        return;
+      }
+
+      if (!categoriesFromApps.includes(app.category)) {
+        categoriesFromApps.push(app.category);
+      }
+    });
+
+    const knownCategories = categoriesFromApps.filter((category) => APP_CATEGORIES[category]);
+    const customCategories = categoriesFromApps.filter((category) => !APP_CATEGORIES[category]);
+
+    return ['All', ...knownCategories, ...customCategories];
+  }, [allApps]);
 
   const filteredApps = useMemo(() => {
     const favoriteSet = new Set(favoriteIds);
+    const searchLower = searchQuery.toLowerCase();
+
     return allApps
       .filter((app) => {
         const matchesCategory = selectedCategory === 'All' || app.category === selectedCategory;
-        const matchesSearch = app.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           app.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           app.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+        const matchesSearch = app.title.toLowerCase().includes(searchLower) ||
+          app.description.toLowerCase().includes(searchLower) ||
+          app.tags.some((tag) => tag.toLowerCase().includes(searchLower));
         return matchesCategory && matchesSearch && !app.disabled;
       })
       .sort((a, b) => {
@@ -224,8 +243,9 @@ const AppLauncher = () => {
     .filter((app) => {
       const matchesCategory = selectedCategory === 'All' || app.category === selectedCategory;
       const matchesSearch = app.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         app.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         app.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+        app.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        app.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+
       return matchesCategory && matchesSearch;
     })
     .sort((a, b) => a.title.localeCompare(b.title)), [allApps, favoriteIds, searchQuery, selectedCategory]);
