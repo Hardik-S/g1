@@ -66,6 +66,32 @@
   color: #5b5185;
 }
 
+.mode-indicator {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #7c74a4;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.mode-indicator::before {
+  content: '';
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: #f5c542;
+  box-shadow: 0 0 0 3px rgba(245, 197, 66, 0.25);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.mode-indicator.active::before {
+  background: #6be0b8;
+  box-shadow: 0 0 0 3px rgba(107, 224, 184, 0.3);
+}
+
 .meter-track {
   position: relative;
   width: 100%;
@@ -108,7 +134,7 @@
   border-radius: 24px;
   overflow: hidden;
   box-shadow: 0 24px 40px rgba(47, 42, 69, 0.15);
-  background: linear-gradient(180deg, #aee3ff 0%, #fef6d7 100%);
+  background: transparent;
 }
 
 .catnap-canvas {
@@ -136,6 +162,10 @@
   padding: 1.5rem;
   text-align: center;
   box-shadow: 0 16px 32px rgba(47, 42, 69, 0.18);
+}
+
+.overlay-card.selecting {
+  max-width: 540px;
 }
 
 .overlay-card h2 {
@@ -176,6 +206,73 @@
   outline: none;
 }
 
+.overlay-button.secondary {
+  background: rgba(123, 102, 255, 0.12);
+  color: #6656c2;
+  box-shadow: none;
+}
+
+.overlay-button.secondary:hover,
+.overlay-button.secondary:focus {
+  box-shadow: 0 8px 18px rgba(123, 102, 255, 0.25);
+  background: rgba(123, 102, 255, 0.18);
+}
+
+.overlay-actions {
+  margin-top: 1rem;
+}
+
+.cat-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.cat-choice {
+  position: relative;
+  border: 2px solid transparent;
+  border-radius: 18px;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 12px 24px rgba(47, 42, 69, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  cursor: pointer;
+  width: 100%;
+}
+
+.cat-choice:hover,
+.cat-choice:focus {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 28px rgba(47, 42, 69, 0.16);
+  outline: none;
+}
+
+.cat-choice:focus-visible {
+  outline: 3px solid rgba(123, 102, 255, 0.55);
+  outline-offset: 2px;
+}
+
+.cat-choice.is-active {
+  border-color: #7b66ff;
+  box-shadow: 0 16px 32px rgba(123, 102, 255, 0.3);
+}
+
+.cat-choice-name {
+  font-weight: 700;
+  color: #3d3560;
+}
+
+.cat-sprite-svg {
+  width: 100%;
+  max-width: 120px;
+  display: block;
+}
+
 .catnap-footer {
   display: flex;
   flex-direction: column;
@@ -202,6 +299,10 @@
   font-weight: 600;
 }
 
+.controls .dot {
+  color: #a39bc9;
+}
+
 .tips {
   color: #645b8f;
   font-size: 0.85rem;
@@ -222,5 +323,13 @@
 
   .overlay-card {
     padding: 1.2rem;
+  }
+
+  .overlay-card.selecting {
+    max-width: 100%;
+  }
+
+  .cat-selection-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
