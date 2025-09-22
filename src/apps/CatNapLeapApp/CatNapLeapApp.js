@@ -118,6 +118,9 @@ const SHOP_ITEMS = [
   },
 ];
 
+const COMPACT_HUD_HEIGHT = 44;
+const HUD_SAFE_ZONE = COMPACT_HUD_HEIGHT + 16;
+
 const CatSpritePreview = ({ appearance }) => {
   const { colors, pattern } = appearance;
   const { body, earOuter, earInner, eye, highlight, nose, mouth } = colors;
@@ -198,6 +201,7 @@ const createInitialState = (width, height, highScore, catAppearance, kittenMode 
     phase: 'ready',
     canvasWidth: width,
     canvasHeight: height,
+    hudSafeZone: HUD_SAFE_ZONE,
     time: 0,
     idleTime: 0,
     cat: {
@@ -420,6 +424,7 @@ const CatNapLeapApp = () => {
       const state = stateRef.current;
       state.canvasWidth = adjustedWidth;
       state.canvasHeight = height;
+      state.hudSafeZone = HUD_SAFE_ZONE;
       state.cat.x = adjustedWidth * 0.28;
       state.cat.y = height * 0.5;
       const resizedBaseRadius = Math.max(14, adjustedWidth * 0.035);
@@ -703,6 +708,7 @@ const CatNapLeapApp = () => {
       }
       speedMultiplier = clamp(speedMultiplier, 0.55, 1.6);
       const horizontalSpeed = baseSpeed * speedMultiplier;
+      const hudSafeZone = state.hudSafeZone ?? HUD_SAFE_ZONE;
 
       state.cat.vy += gravity * delta;
       state.cat.y += state.cat.vy * delta;
@@ -716,8 +722,9 @@ const CatNapLeapApp = () => {
       const pillowInterval = clamp(1500 - state.stats.score * 12, 950, 1500);
       if (state.pillowTimer >= pillowInterval) {
         state.pillowTimer = 0;
+        const gapRange = Math.max(0, height - gapHeight - hudSafeZone * 2);
         const gapCenter = clamp(
-          Math.random() * (height - gapHeight - 120) + (gapHeight / 2) + 60,
+          Math.random() * gapRange + gapHeight / 2 + hudSafeZone,
           gapHeight / 2 + 40,
           height - gapHeight / 2 - 40,
         );
@@ -735,7 +742,7 @@ const CatNapLeapApp = () => {
       if (state.powerupTimer >= state.nextPowerupAt) {
         state.powerupTimer = 0;
         state.nextPowerupAt = 7000 + Math.random() * 3200;
-        const spawned = createPowerupSpawn(state);
+        const spawned = createPowerupSpawn(state, undefined, { hudSafeZone });
         if (spawned) {
           state.powerups.push(spawned);
         }
@@ -745,7 +752,7 @@ const CatNapLeapApp = () => {
       if (state.birdTimer >= state.nextBirdAt) {
         state.birdTimer = 0;
         state.nextBirdAt = 10000 + Math.random() * 4500;
-        const bird = createBirdSpawn(state);
+        const bird = createBirdSpawn(state, { hudSafeZone });
         if (bird) {
           state.birds.push(bird);
         }

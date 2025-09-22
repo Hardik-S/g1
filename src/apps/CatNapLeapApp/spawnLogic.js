@@ -55,8 +55,22 @@ const laneIsClear = (lane, radius, state, options = {}) => {
   const referenceX = Number.isFinite(options.x) ? options.x : null;
   const pillowLookback = options.pillowLookback ?? Math.max(120, canvasWidth * 0.18);
   const pillowLookahead = options.pillowLookahead ?? Math.max(140, canvasWidth * 0.22);
+  let hudSafeZone = 0;
+  if (Number.isFinite(options.hudSafeZone)) {
+    hudSafeZone = options.hudSafeZone;
+  } else if (Number.isFinite(state?.hudSafeZone)) {
+    hudSafeZone = state.hudSafeZone;
+  }
+  hudSafeZone = Math.max(0, hudSafeZone);
 
-  if (lane < radius + 60 || lane > canvasHeight - radius - 60) {
+  if (hudSafeZone > 0 && lane < hudSafeZone) {
+    return false;
+  }
+
+  const topLimit = radius + hudSafeZone;
+  const bottomLimit = canvasHeight - radius - hudSafeZone;
+
+  if (lane < topLimit || lane > bottomLimit) {
     return false;
   }
 
@@ -150,10 +164,11 @@ export const getNextPowerupType = () => {
   return POWERUP_TYPES[index];
 };
 
-export const createPowerupSpawn = (state, preferredType) => {
+export const createPowerupSpawn = (state, preferredType, options = {}) => {
   const radius = Math.max(12, state.canvasWidth * 0.025);
   const spawnXBase = state.canvasWidth + radius * 3;
   let spawnX = spawnXBase;
+  const { hudSafeZone } = options;
 
   if (state.pillows?.length) {
     const last = state.pillows[state.pillows.length - 1];
@@ -173,6 +188,7 @@ export const createPowerupSpawn = (state, preferredType) => {
         catStartY: state.canvasHeight * 0.5,
         time: state.time,
         x: spawnX,
+        hudSafeZone,
       })
     ) {
       return {
@@ -187,10 +203,11 @@ export const createPowerupSpawn = (state, preferredType) => {
   return null;
 };
 
-export const createBirdSpawn = (state) => {
+export const createBirdSpawn = (state, options = {}) => {
   const radius = Math.max(14, state.canvasWidth * 0.03);
   const lanes = computeCandidateLanes(state);
   const shuffled = [...lanes].sort(() => Math.random() - 0.5);
+  const { hudSafeZone } = options;
 
   for (let i = 0; i < shuffled.length; i += 1) {
     const lane = shuffled[i];
@@ -200,6 +217,7 @@ export const createBirdSpawn = (state) => {
         catStartY: state.canvasHeight * 0.5,
         time: state.time,
         x: (state.cat?.x ?? state.canvasWidth * 0.3) + (state.cat?.radius ?? 0) * 1.5,
+        hudSafeZone,
       })
     ) {
       // lane isn't safe for a bird; try next option
