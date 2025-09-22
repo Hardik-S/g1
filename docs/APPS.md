@@ -12,6 +12,12 @@ CatPad is a feline-inspired notepad that autosaves to IndexedDB and offers optio
 - Layer in version history so writers can rewind to an earlier meowment or compare drafts.
 - Provide rich-text flourishes like headings or checklists while keeping the editor lightweight.
 
+## Zen Do
+Zen Do cultivates a minimalist to-do garden with pastel calm. Unfinished tasks live beside a seven-day planner where cards drag into day buckets while staying in the main list. Today view promotes the current day’s tasks into Priority and Bonus focus lanes, and Focus Mode reveals a Pomodoro timer with fully expanded subtasks. Every change syncs through an optional public GitHub gist so collections follow you across sessions.
+- Allow per-task color tags or emojis to cluster projects within the zen garden.
+- Surface sync diagnostics so contributors can inspect gist history, last push status, and conflict resolution options.
+- Offer keyboard-first flows for adding tasks, toggling completion, and hopping between landing, today, and focus screens.
+
 ## Cat Typing Speed Test
 Cat Typing Speed Test launches a focused browser-based drill for measuring WPM, CPM, and accuracy across 15 or 30 second sprints. Sentences are assembled on the fly from Kimchi, Rythm, and Siella’s daily antics, while inline highlighting tracks perfect keystrokes versus mischievous typos. A responsive layout, cached corpus fetch, and shareable iframe make it easy to practise in the launcher or pop the experience into a dedicated tab.
 - Offer selectable corpus themes so typists can swap between cats, cosmic voyages, or custom uploads.
