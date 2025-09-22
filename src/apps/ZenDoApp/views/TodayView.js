@@ -39,7 +39,7 @@ const TodayView = ({
         evt.item.remove();
       },
       onRemove: (evt) => {
-        const order = Array.from(evt.to.querySelectorAll('[data-task-id]')).map((el) => el.dataset.taskId);
+        const order = Array.from(evt.from.querySelectorAll('[data-task-id]')).map((el) => el.dataset.taskId);
         onReorderBucket('today', order);
       },
     });
