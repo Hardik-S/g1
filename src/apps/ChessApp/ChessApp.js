@@ -219,14 +219,28 @@ const ChessApp = () => {
     setStatusInfo(describeStatus(manager.game));
   }, []);
 
-  const ensureEngine = useCallback((options = {}) => {
-    if (engineRef.current) {
-      return engineRef.current;
-    }
-    const engineInstance = new StockfishEngine(options);
-    engineRef.current = engineInstance;
-    return engineInstance;
-  }, []);
+  const ensureEngine = useCallback(
+    (options = {}) => {
+      if (engineRef.current) {
+        return engineRef.current;
+      }
+
+      try {
+        const engineInstance = new StockfishEngine(options);
+        engineRef.current = engineInstance;
+        return engineInstance;
+      } catch (err) {
+        console.error('Failed to create Stockfish engine', err);
+        const engineError =
+          err instanceof Error
+            ? err
+            : new Error('Unable to initialize the Stockfish engine.');
+        setError(engineError);
+        return null;
+      }
+    },
+    [setError]
+  );
 
   const triggerEngineMove = useCallback(async () => {
     if (mode !== 'single') {
@@ -242,6 +256,9 @@ const ChessApp = () => {
 
     try {
       const engine = ensureEngine({ workerUrl: STOCKFISH_WORKER_URL });
+      if (!engine) {
+        return;
+      }
       const fen = manager.getFen();
       const move = await engine.requestMove(fen);
 
@@ -316,6 +333,9 @@ const ChessApp = () => {
 
     if (mode === 'single') {
       const engine = ensureEngine({ workerUrl: STOCKFISH_WORKER_URL });
+      if (!engine) {
+        return;
+      }
       engine.setSkillLevel(skill);
       manager.setPlayers({ white: 'human', black: 'engine' });
       triggerEngineMoveRef.current();
@@ -338,6 +358,9 @@ const ChessApp = () => {
     }
 
     const engine = ensureEngine({ workerUrl: STOCKFISH_WORKER_URL });
+    if (!engine) {
+      return;
+    }
     engine.setSkillLevel(skill);
   }, [mode, resourcesReady, skill, ensureEngine]);
 
@@ -369,6 +392,9 @@ const ChessApp = () => {
     manager.reset();
     if (mode === 'single') {
       const engineInstance = ensureEngine({ workerUrl: STOCKFISH_WORKER_URL });
+      if (!engineInstance) {
+        return;
+      }
       engineInstance.setSkillLevel(skill);
       manager.setPlayers({ white: 'human', black: 'engine' });
       triggerEngineMoveRef.current();
