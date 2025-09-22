@@ -62,7 +62,7 @@ Then open http://localhost:3000.
 npm run build
 ```
 
-Artifacts are emitted to `dist/`.
+This composite step first builds the Cache Lab Vite bundle from `apps/cache-lab`, then runs Webpack to emit launcher assets into `dist/`.
 
 ### Deploy (GitHub Pages)
 
@@ -81,7 +81,8 @@ Your site will be available at the `homepage` URL.
 ## Scripts
 
 - `npm start` — Start webpack dev server at `http://localhost:3000`
-- `npm run build` — Create production build in `dist/`
+- `npm run build:cache-lab` — Build the Cache Lab assets within `apps/cache-lab`
+- `npm run build` — Build Cache Lab and create the launcher production bundle in `dist/`
 - `npm run deploy` — Publish `dist/` to `gh-pages`
 
 ## Project structure
