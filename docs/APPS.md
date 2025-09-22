@@ -84,6 +84,12 @@ Zen Go invites quick 9×9 sparring against a lightweight GNU Go engine compiled 
 - Layer SGF export, move history, and review tools for deeper post-game study.
 - Surface AI insight overlays such as win-rate charts or candidate variation summaries.
 
+## Cosmos Simulator
+Cosmos Simulator shrinks the solar system by 1×10⁻⁹ and renders it with Three.js, a velocity Verlet integrator, and lil-gui control panel. Planets load from JSON metadata, trails showcase orbital history, and buttons teleport the camera to any world for close-up inspections.
+- Add moon and asteroid presets to extend the data-driven catalogue beyond the eight planets.
+- Experiment with post-processing bloom for the sun and motion blur for orbital trails.
+- Persist custom gravity and time-speed presets to revisit favourite slow-motion or accelerated scenarios.
+
 ## Cache Lab
 Cache Lab embeds the dedicated cache-learning subapp that lives under `/cache-lab`. Eight mini-modules cover mapping, replacement, parameter sweeps, locality visualisation, miss classification, hierarchy exploration, pipeline impact, and trace loading. Auxiliary tabs (Learn, Experiment, Assess, Dashboard) guide newcomers, let advanced users tinker, and track quiz progress with localStorage persistence.
 - Ship more visualisations (e.g., animated heatmaps) for large traces while maintaining performance.

@@ -35,6 +35,7 @@ Gif coming soon
 
 * **Cat Typing Speed Test**: practise timed drills with Kimchi, Rythm, and Siella.
 * **Cache Lab**: explore cache mapping, replacement, hierarchy, and assessments via `/cache-lab`.
+* **Cosmos Simulator**: orbit a scaled solar system with live Newtonian physics and camera fly-to controls.
 
 ---
 
