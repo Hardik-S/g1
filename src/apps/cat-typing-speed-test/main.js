@@ -1,4 +1,5 @@
 (() => {
+  const loginScreen = document.getElementById('login-screen');
   const startScreen = document.getElementById('start-screen');
   const testScreen = document.getElementById('test-screen');
   const resultsScreen = document.getElementById('results-screen');
@@ -215,7 +216,7 @@
     if (loggedIn) {
       startHint.textContent = defaultStartHint;
     } else {
-      startHint.textContent = 'Log in above to sync your scores to GitHub. You can still practice without signing in.';
+      startHint.textContent = 'Log in above to unlock the typing tests and sync your scores to GitHub.';
     }
   };
 
@@ -486,6 +487,7 @@
       setLoginStatus(`Signed in as ${aliasValue}.`, 'success');
       isLoggedIn = true;
       shareGlobalGistSettings({ gistId, gistToken });
+      setScreen('start-screen');
     } catch (error) {
       console.error(error);
       gistStore = {};
@@ -500,6 +502,7 @@
         tokenInput.focus();
       }
       isLoggedIn = false;
+      setScreen('login-screen');
     } finally {
       if (loginButton) {
         loginButton.disabled = false;
@@ -529,6 +532,7 @@
     updateAliasBadge();
     renderScoreHistory();
     setLoginStatus(statusMessage || 'Signed out. Enter your details to sync scores again.', statusTone || 'info');
+    setScreen('login-screen');
     if (broadcast) {
       shareGlobalGistSettings({ gistId: normalizedGistId, gistToken: '' });
     }
@@ -620,13 +624,89 @@
     return `${mins}:${secs}`;
   };
 
-  const setScreen = (screen) => {
-    const sections = [startScreen, testScreen, resultsScreen];
-    sections.forEach((section) => {
-      const isActive = section === screen;
-      section.classList.toggle('hidden', !isActive);
-      section.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+  const focusableSelector = [
+    'button:not([disabled])',
+    '[href]',
+    'input:not([disabled])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    '[tabindex]:not([tabindex="-1"])',
+  ].join(', ');
+
+  const findFirstFocusable = (container) => {
+    if (!container) return null;
+    return container.querySelector(focusableSelector);
+  };
+
+  const screenRegistry = {
+    'login-screen': {
+      element: loginScreen,
+      getDefaultFocus: () => aliasInput || findFirstFocusable(loginScreen),
+    },
+    'start-screen': {
+      element: startScreen,
+      getDefaultFocus: () =>
+        (startScreen && startScreen.querySelector('.duration-btn')) || findFirstFocusable(startScreen),
+    },
+    'test-screen': {
+      element: testScreen,
+      getDefaultFocus: () => typingInput || findFirstFocusable(testScreen),
+    },
+    'results-screen': {
+      element: resultsScreen,
+      getDefaultFocus: () => resultsRetry || findFirstFocusable(resultsScreen),
+    },
+  };
+
+  const setScreen = (screenId, options = {}) => {
+    const config = screenRegistry[screenId];
+    if (!config || !config.element) {
+      return;
+    }
+
+    Object.values(screenRegistry).forEach(({ element }) => {
+      if (!element) return;
+      const isActive = element === config.element;
+      element.classList.toggle('hidden', !isActive);
+      element.setAttribute('aria-hidden', isActive ? 'false' : 'true');
     });
+
+    if (typeof options.onShow === 'function') {
+      options.onShow(config.element);
+    }
+
+    if (options.focus === false) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      let target = null;
+      if (typeof options.focusTarget === 'function') {
+        target = options.focusTarget();
+      } else if (options.focusTarget) {
+        target = options.focusTarget;
+      }
+
+      if (!target && typeof config.getDefaultFocus === 'function') {
+        target = config.getDefaultFocus();
+      }
+
+      if (!target) {
+        target = findFirstFocusable(config.element);
+      }
+
+      if (target && typeof target.focus === 'function') {
+        target.focus();
+      }
+    });
+  };
+
+  const showAppropriateHomeScreen = (options) => {
+    if (isLoggedIn) {
+      setScreen('start-screen', options);
+    } else {
+      setScreen('login-screen', options);
+    }
   };
 
   const loadCorpus = async () => {
@@ -789,8 +869,7 @@
       accuracy: Number.isFinite(accuracyValue) ? Number(Math.max(0, Math.min(100, accuracyValue)).toFixed(1)) : 0,
     });
 
-    setScreen(resultsScreen);
-    resultsRetry.focus();
+    setScreen('results-screen', { focusTarget: resultsRetry });
     startTimestamp = null;
   };
 
@@ -821,7 +900,7 @@
       updateHighlights('');
       timerEl.textContent = formatTime(countdownSeconds);
 
-      setScreen(testScreen);
+      setScreen('test-screen', { focus: false });
       requestAnimationFrame(() => {
         typingInput.focus();
         typingInput.setSelectionRange(typingInput.value.length, typingInput.value.length);
@@ -833,7 +912,7 @@
       timerEl.textContent = formatTime(countdownSeconds);
     } catch (error) {
       resetTestState();
-      setScreen(startScreen);
+      showAppropriateHomeScreen();
       alert('Unable to load the cat corpus. Please refresh and try again.');
       console.error(error);
     }
@@ -873,20 +952,20 @@
     if (testDuration > 0 && targetText) {
       beginTest(testDuration);
     } else {
-      setScreen(startScreen);
+      showAppropriateHomeScreen();
     }
   });
 
   backBtn.addEventListener('click', () => {
     resetTestState();
-    setScreen(startScreen);
+    showAppropriateHomeScreen();
   });
 
   typingInput.addEventListener('input', handleInput);
 
   resultsRetry.addEventListener('click', () => {
     if (!targetText) {
-      setScreen(startScreen);
+      showAppropriateHomeScreen();
       return;
     }
     beginTest(testDuration || 15);
@@ -894,7 +973,7 @@
 
   resultsMenu.addEventListener('click', () => {
     resetTestState();
-    setScreen(startScreen);
+    showAppropriateHomeScreen();
   });
 
   observeTextPanel();
@@ -947,7 +1026,7 @@
     handleLogin(true);
   }
 
-  setScreen(startScreen);
+  setScreen('login-screen');
 
   window.addEventListener('beforeunload', () => {
     stopTimer();
