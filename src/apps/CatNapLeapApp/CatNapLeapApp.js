@@ -118,8 +118,14 @@ const SHOP_ITEMS = [
   },
 ];
 
+
 const COMPACT_HUD_HEIGHT = 44;
 const HUD_SAFE_ZONE = COMPACT_HUD_HEIGHT + 16;
+const SHOP_ITEM_LABELS = SHOP_ITEMS.reduce((acc, item) => {
+  acc[item.id] = item.name;
+  return acc;
+}, {});
+
 
 const CatSpritePreview = ({ appearance }) => {
   const { colors, pattern } = appearance;
@@ -555,7 +561,7 @@ const CatNapLeapApp = () => {
     publishEffects([]);
 
     setPhase('gameover');
-    setMessage(`${reason} Tap or press space to try again.`);
+    setMessage(`${reason} Choose your next move.`);
   };
 
   const applyJump = () => {
@@ -1643,7 +1649,7 @@ const CatNapLeapApp = () => {
         {phase !== 'playing' && (
           <div className={`catnap-overlay ${phase}`}>
             <div
-              className={`overlay-card ${phase === 'selecting' ? 'selecting' : ''} ${phase === 'shop' ? 'shop' : ''} ${phase === 'start' ? 'start' : ''}`}
+              className={`overlay-card ${phase === 'selecting' ? 'selecting' : ''} ${phase === 'shop' ? 'shop' : ''} ${phase === 'start' ? 'start' : ''} ${phase === 'gameover' ? 'gameover' : ''}`}
             >
               {phase === 'start' && (
                 <>
@@ -1802,10 +1808,45 @@ const CatNapLeapApp = () => {
                 <>
                   <h2>Dream Over</h2>
                   <p>{message}</p>
-                  <p className="treat-summary">Treats this session: {treats}</p>
-                  <div className="overlay-actions">
-                    <button type="button" className="overlay-button" onClick={() => resetGameState({ forcePhase: 'ready' })}>
-                      Restart Dream
+                  <div className="gameover-summary">
+                    <div className="gameover-stats">
+                      <div className="gameover-stat-row">
+                        <span className="gameover-stat-label">Run Score</span>
+                        <span className="gameover-stat-value">{stats.score}</span>
+                      </div>
+                      <div className="gameover-stat-row">
+                        <span className="gameover-stat-label">High Score</span>
+                        <span className="gameover-stat-value">{stats.best}</span>
+                      </div>
+                    </div>
+                    <div className="gameover-treat-summary">
+                      <div className="gameover-treat-header">
+                        <span className="gameover-stat-label">Treats Collected</span>
+                        <span className="gameover-stat-value">{treats}</span>
+                      </div>
+                      {queuedBoosts.length > 0 ? (
+                        <ul className="gameover-treat-list">
+                          {queuedBoosts.map(({ type, count }) => (
+                            <li key={type}>
+                              {SHOP_ITEM_LABELS[type] || type} ×{count}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="gameover-treat-note">No boosts queued yet. Visit the shop to spend treats.</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="overlay-actions gameover-actions">
+                    <button
+                      type="button"
+                      className="overlay-button"
+                      onClick={() => resetGameState({ forcePhase: 'ready' })}
+                    >
+                      Play Again
+                    </button>
+                    <button type="button" className="overlay-button secondary" onClick={() => setPhase('selecting')}>
+                      Customize
                     </button>
                     <button
                       type="button"
@@ -1817,7 +1858,7 @@ const CatNapLeapApp = () => {
                         shopFocusRef.current = 0;
                       }}
                     >
-                      Visit Shop
+                      Shop
                     </button>
                   </div>
                 </>
