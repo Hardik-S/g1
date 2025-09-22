@@ -1,72 +1,87 @@
-## g1 — React Micro Apps Collection
+# g1: React Micro Apps Collection
 
-A small, modular React playground bundling multiple apps behind a simple launcher. Built with Webpack and React 18, and deployable to GitHub Pages.
+A modular collection of React-based micro-apps bundled under a unified launcher.
+Built with **React 18** and **Webpack 5**, with select subapps powered by **Vite + TypeScript**.
+Deployable to **GitHub Pages** for quick sharing and testing.
 
-### Included apps
+---
 
-- Day Switcher — flip through the week with animated transitions.
-- CatPad — jot notes with a cat-themed editor that syncs through GitHub gists.
-- Zen Do — manage a zen-styled task garden with weekly buckets, focus mode, and gist sync.
-- Cat Typing Speed Test — practise timed typing drills with Kimchi, Rythm, and Siella.
-- N-Pomodoro — orchestrate multi-activity pomodoro sessions.
-- Snake — chase high scores across a responsive grid.
-- Hexa-Snake (Bee Edition) — guide a bee across a honeycomb board.
-- Neon Pong — duel classic paddles with a neon glow.
-- Pong Ring — rally inside a circular quartz arena.
-- CatNap Leap — glide between dreamy pillows while keeping a sleepy cat alert.
-- Sudoku Roast — solve handcrafted puzzles in a café setting.
-- Chessboard Summit — play local chess or spar with Stockfish.
-- Zen Go — spar on a 9×9 board against a WebAssembly GNU Go engine with rank presets.
-- Cache Lab — explore cache mapping, replacement, hierarchy, and assessments via the `/cache-lab` subapp.
+## Preview
 
-#### Launcher features
+Gif coming soon
 
-- Universal search trims the app grid to matching titles and descriptions.
-- Category filters narrow the catalog to related experiences.
-- A grid/list toggle lets you switch between compact tiles and detail rows.
-- Featured apps surface in a hero rail for quick discovery.
-- A Toronto time badge keeps the global clock in view.
-- Local favorites pin chosen apps to the top so they are always within reach.
+---
 
-### Notes
+## Included Apps
 
-- CirclePong has been renamed to Pong Ring with a refreshed canvas setup so the match starts reliably in the browser.
-- Favorites persist via `localStorage`; clear browser storage between runs when testing related flows.
+### Productivity
 
-### Project documentation
+* **Day Switcher**: cycle through the week with animated transitions.
+* **CatPad**: cat-themed note editor with GitHub gist syncing.
+* **Zen Do**: manage tasks in a zen-styled weekly garden with focus mode and gist sync.
+* **N-Pomodoro**: orchestrate multi-activity pomodoro sessions.
 
-- [`AGENTS.md`](AGENTS.md) — contributor handbook outlining required checks, code conventions, and documentation expectations.
-- [`APPS.md`](APPS.md) — catalog of bundled micro apps with behaviour notes.
-- [`CHESS.md`](CHESS.md) — reference for chess-specific helpers and utilities.
-- [`GITSTORY.md`](GITSTORY.md) — chronological log of commits, pushes, merges, and key design decisions.
+### Games
 
-## Live demo
+* **Snake**: chase high scores across a responsive grid.
+* **Hexa-Snake (Bee Edition)**: guide a bee across a honeycomb board.
+* **Neon Pong**: duel classic paddles with a neon glow.
+* **Pong Ring**: rally inside a circular quartz arena.
+* **CatNap Leap**: glide between dreamy pillows while keeping a sleepy cat alert.
+* **Sudoku Roast**: solve handcrafted puzzles in a cozy café setting.
+* **Chessboard Summit**: play local chess or spar with Stockfish.
+
+### Learning Tools
+
+* **Cat Typing Speed Test**: practise timed drills with Kimchi, Rythm, and Siella.
+* **Cache Lab**: explore cache mapping, replacement, hierarchy, and assessments via `/cache-lab`.
+
+---
+
+## Launcher Features
+
+* Universal search filters apps by title or description
+* Category filters narrow down experiences
+* Grid/List toggle for compact or detailed views
+* Featured apps surface in a hero rail
+* Toronto time badge keeps global clock visible
+* Favorites pin chosen apps to the top (persisted via `localStorage`)
+
+---
+
+## Documentation
+
+* [`AGENTS.md`](AGENTS.md): contribution workflow, checks, and conventions.
+* [`APPS.md`](APPS.md): catalog of bundled micro-apps with behavior notes.
+* [`CHESS.md`](CHESS.md): chess-specific helpers and utilities.
+* [`GITSTORY.md`](GITSTORY.md): chronological log of commits, merges, and design decisions.
+
+---
+
+## Live Demo
 
 [Open on GitHub Pages](https://hardik-s.github.io/g1)
 
-## Getting started
+---
+
+## Getting Started
 
 ### Prerequisites
 
-- Node.js 16+ (18+ recommended)
-- npm
-- pnpm (required for Cache Lab workspace scripts — [installation guide](https://pnpm.io/installation))
+* Node.js **16+** (18+ recommended)
+* npm
+* pnpm *(required only for Cache Lab workspace scripts: [install guide](https://pnpm.io/installation))*
 
-### Install
+### Quick Start
 
 ```bash
 git clone https://github.com/Hardik-S/g1.git
 cd g1
 npm install
-```
-
-### Develop
-
-```bash
 npm start
 ```
 
-Then open http://localhost:3000.
+Then open [http://localhost:3000](http://localhost:3000).
 
 ### Build
 
@@ -74,127 +89,73 @@ Then open http://localhost:3000.
 npm run build
 ```
 
-This composite step first builds the Cache Lab Vite bundle from `apps/cache-lab`, then runs Webpack to emit launcher assets into `dist/`.
+This step first builds the Cache Lab Vite bundle (`apps/cache-lab`), then runs Webpack to emit launcher assets into `dist/`.
 
 ### Deploy (GitHub Pages)
 
-1) Ensure `homepage` is set in `package.json` to your repo page (e.g. `https://hardik-s.github.io/g1`).
+1. Ensure `homepage` in `package.json` points to your repo page (e.g. `https://hardik-s.github.io/g1`).
+2. Deploy:
 
-2) Deploy:
-
-```bash
-npm run deploy
-```
-
-3) In GitHub → Settings → Pages, set Source to the `gh-pages` branch if not already configured.
+   ```bash
+   npm run deploy
+   ```
+3. In **GitHub → Settings → Pages**, set Source to the `gh-pages` branch.
 
 Your site will be available at the `homepage` URL.
 
+---
+
 ## Scripts
 
-- `npm start` — Start webpack dev server at `http://localhost:3000`
-- `npm test` — Run the Jest suite for launcher React apps
-- `npm run build:cache-lab` — Build the Cache Lab assets within `apps/cache-lab`
-- `npm run build` — Build Cache Lab and create the launcher production bundle in `dist/`
-- `npm run deploy` — Publish `dist/` to `gh-pages`
-- `npm run test:cache-lab` — Run Cache Lab unit tests by invoking the workspace through pnpm
-- `npm run e2e:cache-lab` — Execute Cache Lab Playwright E2E tests via the pnpm workspace
+### Launcher
 
-## Project structure
+* `npm start`: Start webpack dev server at `http://localhost:3000`.
+* `npm run build`: Build Cache Lab and the launcher production bundle into `dist/`.
+* `npm run deploy`: Publish `dist/` to `gh-pages`.
+* `npm test`: Run Jest suite for launcher React apps.
+
+### Cache Lab Workspace
+
+* `npm run build:cache-lab`: Build Cache Lab assets within `apps/cache-lab`.
+* `npm run test:cache-lab`: Run Cache Lab unit tests via pnpm.
+* `npm run e2e:cache-lab`: Run Playwright E2E tests for Cache Lab via pnpm.
+
+---
+
+## Project Structure
 
 ```
 g1/
-├── apps/
-│   ├── cache-lab/
-│   └── cat-typing-speed-test/
-├── docs/
-│   ├── README.md
-│   └── ... (additional guides)
-├── public/
-│   └── index.html
-├── src/
-│   ├── index.js
-│   ├── index.css
-│   ├── App.js
-│   ├── App.css
-│   ├── components/
-│   │   ├── AppContainer.js
-│   │   ├── AppContainer.css
-│   │   ├── AppLauncher.js
-│   │   └── AppLauncher.css
-│   └── apps/
-│       ├── CacheLabApp/
-│       │   ├── index.js
-│       │   └── styles.css
-│       ├── CatNapLeapApp/
-│       │   ├── CatNapLeapApp.js
-│       │   ├── CatNapLeapApp.css
-│       │   └── spawnLogic.js
-│       ├── CatPadApp/
-│       │   ├── CatPadApp.js
-│       │   ├── CatPadApp.css
-│       │   └── index.js
-│       ├── CatTypingSpeedTestApp/
-│       │   ├── CatTypingSpeedTestApp.js
-│       │   ├── CatTypingSpeedTestApp.css
-│       │   └── index.js
-│       ├── ChessApp/
-│       │   ├── ChessApp.js
-│       │   └── index.js
-│       ├── DaySwitcherApp/
-│       │   ├── DaySwitcherApp.js
-│       │   ├── DaySwitcherApp.css
-│       │   └── index.js
-│       ├── HexaSnakeApp/
-│       │   ├── HexaSnakeApp.js
-│       │   ├── HexaSnakeApp.css
-│       │   └── index.js
-│       ├── NPomodoroApp/
-│       │   ├── NPomodoroApp.js
-│       │   ├── NPomodoroApp.css
-│       │   └── index.js
-│       ├── PongApp/
-│       │   ├── PongApp.js
-│       │   ├── PongApp.css
-│       │   └── index.js
-│       ├── PongRingApp/
-│       │   ├── PongRingApp.js
-│       │   ├── PongRingApp.css
-│       │   └── index.js
-│       ├── SnakeApp/
-│       │   ├── SnakeApp.js
-│       │   ├── SnakeApp.css
-│       │   └── index.js
-│       ├── SudokuApp/
-│       │   ├── SudokuApp.js
-│       │   ├── SudokuApp.css
-│       │   └── index.js
-│       ├── ZenDoApp/
-│       │   ├── ZenDoApp.js
-│       │   ├── ZenDoApp.css
-│       │   └── components/
-│       └── registry.js
-├── dist/
-│   └── ... (build output)
+├── apps/         # Independent micro-app workspaces
+├── docs/         # Additional guides and references
+├── public/       # Static assets (root index.html)
+├── src/          # Launcher source code + integrated apps
+│   ├── components/   # Shared UI components
+│   ├── apps/         # Integrated app directories
+│   └── registry.js   # App registration for launcher
+├── dist/         # Build output
 ├── webpack.config.js
 ├── package.json
 └── README.md
 ```
 
-## Tech stack
+---
 
-- React 18
-- Webpack 5 + webpack-dev-server
-- Babel (`@babel/preset-env`, `@babel/preset-react`)
-- SortableJS for drag-and-drop reordering in shared UIs
-- Vite + TypeScript + pnpm toolchain powering `apps/cache-lab`
+## Tech Stack
 
-The Cache Lab workspace also ships with Vitest and Playwright for unit, component, and end-to-end testing flows.
+### Frontend
 
-## Contributing
+* React 18
+* Webpack 5 + webpack-dev-server
+* Babel (`@babel/preset-env`, `@babel/preset-react`)
 
-Pull requests are welcome. For larger changes, please open an issue to discuss the approach first.
+### Utilities
 
-## License
+* SortableJS: drag-and-drop reordering in shared UIs
 
-MIT — see `LICENSE`.
+### Cache Lab Subapp
+
+* Vite + TypeScript + pnpm
+* Vitest: unit & component testing
+* Playwright: end-to-end testing
+
