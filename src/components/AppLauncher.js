@@ -19,6 +19,7 @@ const AppLauncher = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [isFeaturedCollapsed, setIsFeaturedCollapsed] = useState(false);
   const [torontoTime, setTorontoTime] = useState('--:--:--');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [gistSettingsForm, setGistSettingsForm] = useState({
@@ -239,6 +240,10 @@ const AppLauncher = () => {
     closeSettingsModal();
   };
 
+  const toggleFeaturedSection = useCallback(() => {
+    setIsFeaturedCollapsed((prev) => !prev);
+  }, []);
+
   const renderAppCard = (app) => {
     const favorited = isFavorited(app.id);
     return (
@@ -361,10 +366,22 @@ const AppLauncher = () => {
         )}
 
         {selectedCategory === 'All' && featuredApps.length > 0 && (
-          <section className="featured-section">
-            <h2 className="section-title">⭐ Featured Apps</h2>
+          <section
+            className={`featured-section${isFeaturedCollapsed ? ' collapsed' : ''}`}
+          >
+            <div className="section-header">
+              <h2 className="section-title">⭐ Featured Apps</h2>
+              <button
+                type="button"
+                className="section-toggle"
+                aria-expanded={!isFeaturedCollapsed}
+                onClick={toggleFeaturedSection}
+              >
+                {isFeaturedCollapsed ? 'Show' : 'Hide'}
+              </button>
+            </div>
             <div className={`apps-container ${viewMode}`}>
-              {featuredApps.map(renderAppCard)}
+              {!isFeaturedCollapsed && featuredApps.map(renderAppCard)}
             </div>
           </section>
         )}

@@ -43,7 +43,7 @@ export const APP_REGISTRY = {
     id: 'catpad',
     title: 'CatPad',
     description: 'Feline-themed notepad with cloud sync across every browser.',
-    icon: '😺',
+    icon: '🗒️',
     category: 'Productivity',
     component: null,
     loader: () => import('./CatPadApp'),
