@@ -148,9 +148,26 @@ const AppLauncher = () => {
     };
   }, [handleCloseWithoutSaving, isSettingsOpen]);
 
-  const categories = ['All', ...Object.keys(APP_CATEGORIES)];
-
   const allApps = useMemo(() => getAllApps(), []);
+
+  const categories = useMemo(() => {
+    const categoriesFromApps = [];
+
+    allApps.forEach((app) => {
+      if (!app || !app.category) {
+        return;
+      }
+
+      if (!categoriesFromApps.includes(app.category)) {
+        categoriesFromApps.push(app.category);
+      }
+    });
+
+    const knownCategories = categoriesFromApps.filter((category) => APP_CATEGORIES[category]);
+    const customCategories = categoriesFromApps.filter((category) => !APP_CATEGORIES[category]);
+
+    return ['All', ...knownCategories, ...customCategories];
+  }, [allApps]);
 
   const filteredApps = useMemo(() => allApps
     .filter((app) => {
