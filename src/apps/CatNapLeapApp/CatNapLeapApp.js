@@ -1,7 +1,154 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import './CatNapLeapApp.css';
 
 const LOCAL_STORAGE_KEY = 'catnap-leap-highscore';
+
+const CAT_VARIATIONS = [
+  {
+    id: 'blossom',
+    name: 'Blossom Peach',
+    colors: {
+      body: '#f9d6d0',
+      earOuter: '#f6b5b0',
+      earInner: '#ffe1df',
+      eye: '#2f2a45',
+      highlight: '#ffffff',
+      nose: '#f46f94',
+      mouth: '#f59fb7',
+      cheek: '#ffbfd4',
+    },
+    pattern: null,
+  },
+  {
+    id: 'ember',
+    name: 'Ember Tabby',
+    colors: {
+      body: '#f8b77a',
+      earOuter: '#f2915a',
+      earInner: '#ffd3b0',
+      eye: '#2f1f17',
+      highlight: '#ffffff',
+      nose: '#f46f6f',
+      mouth: '#f48a66',
+      cheek: '#ffcf9f',
+    },
+    pattern: { type: 'tabby', color: '#e48a49' },
+  },
+  {
+    id: 'midnight',
+    name: 'Midnight Tux',
+    colors: {
+      body: '#3e3a63',
+      earOuter: '#2c284a',
+      earInner: '#f0b5d2',
+      eye: '#f5f6ff',
+      highlight: '#d7dcff',
+      nose: '#ff8cab',
+      mouth: '#ffb6d2',
+      cheek: '#ff9cc3',
+    },
+    pattern: { type: 'tuxedo', color: '#f9f6fd' },
+  },
+  {
+    id: 'mist',
+    name: 'Misty Cloud',
+    colors: {
+      body: '#e5edff',
+      earOuter: '#c0cbf6',
+      earInner: '#ffffff',
+      eye: '#2f2a45',
+      highlight: '#ffffff',
+      nose: '#ff87ab',
+      mouth: '#d4a4ff',
+      cheek: '#d8e3ff',
+    },
+    pattern: { type: 'mask', color: '#f6f9ff' },
+  },
+  {
+    id: 'mint',
+    name: 'Mint Whisker',
+    colors: {
+      body: '#bff5d3',
+      earOuter: '#87d9af',
+      earInner: '#f2fff8',
+      eye: '#1f3b34',
+      highlight: '#ffffff',
+      nose: '#ff8eb8',
+      mouth: '#ffb4d0',
+      cheek: '#ffe0ef',
+    },
+    pattern: { type: 'patch', color: '#9ae4bd' },
+  },
+  {
+    id: 'violet',
+    name: 'Violet Dream',
+    colors: {
+      body: '#d7c2ff',
+      earOuter: '#bca1ff',
+      earInner: '#f8ebff',
+      eye: '#2e1a3f',
+      highlight: '#ffffff',
+      nose: '#ff9ccf',
+      mouth: '#ffb7e1',
+      cheek: '#ffd8f1',
+    },
+    pattern: { type: 'star', color: '#f4e7ff' },
+  },
+];
+
+const CatSpritePreview = ({ appearance }) => {
+  const { colors, pattern } = appearance;
+  const { body, earOuter, earInner, eye, highlight, nose, mouth } = colors;
+
+  const renderPattern = () => {
+    if (!pattern) return null;
+    switch (pattern.type) {
+      case 'tabby':
+        return (
+          <g fill={pattern.color} opacity="0.65">
+            <path d="M45 6 L55 -18 L35 -18 Z" />
+            <path d="M0 -4 L10 -28 L-10 -28 Z" />
+            <path d="M-45 6 L-35 -18 L-55 -18 Z" />
+          </g>
+        );
+      case 'mask':
+        return <ellipse cx="0" cy="-6" rx="50" ry="38" fill={pattern.color} opacity="0.85" />;
+      case 'patch':
+        return <ellipse cx="-24" cy="-4" rx="30" ry="24" fill={pattern.color} opacity="0.85" />;
+      case 'tuxedo':
+        return <ellipse cx="0" cy="28" rx="42" ry="34" fill={pattern.color} opacity="0.85" />;
+      case 'star':
+        return (
+          <path
+            d="M0 -42 L5 -28 L20 -28 L8 -18 L12 -4 L0 -12 L-12 -4 L-8 -18 L-20 -28 L-5 -28 Z"
+            fill={pattern.color}
+            opacity="0.9"
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <svg className="cat-sprite-svg" viewBox="0 0 120 120" role="img" aria-hidden="true" focusable="false">
+      <g transform="translate(60 70)">
+        <path d="M-34 -14 L-12 -58 L16 -16 Z" fill={earOuter} />
+        <path d="M14 -16 L36 -58 L52 -14 Z" fill={earOuter} />
+        <path d="M-28 -18 L-12 -50 L6 -20 Z" fill={earInner} />
+        <path d="M18 -20 L34 -50 L46 -18 Z" fill={earInner} />
+        <circle cx="0" cy="0" r="46" fill={body} />
+        {renderPattern()}
+        <ellipse cx="-20" cy="-6" rx="12" ry="16" fill={eye} />
+        <ellipse cx="20" cy="-6" rx="12" ry="16" fill={eye} />
+        <circle cx="-25" cy="-12" r="6" fill={highlight} />
+        <circle cx="15" cy="-12" r="6" fill={highlight} />
+        <path d="M0 0 L-10 12 L10 12 Z" fill={nose} />
+        <path d="M-20 18 L20 18" stroke={mouth} strokeWidth="5" strokeLinecap="round" />
+      </g>
+    </svg>
+  );
+};
 
 const mixColor = (startHex, endHex, t) => {
   const clampT = Math.max(0, Math.min(1, t));
@@ -23,7 +170,7 @@ const mixColor = (startHex, endHex, t) => {
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
-const createInitialState = (width, height, highScore) => ({
+const createInitialState = (width, height, highScore, catAppearance, kittenMode = false) => ({
   phase: 'ready',
   canvasWidth: width,
   canvasHeight: height,
@@ -52,6 +199,8 @@ const createInitialState = (width, height, highScore) => ({
     yarnUntil: 0,
     catnipUntil: 0,
   },
+  catAppearance: catAppearance || CAT_VARIATIONS[0],
+  kittenMode,
 });
 
 const CatNapLeapApp = () => {
@@ -65,11 +214,19 @@ const CatNapLeapApp = () => {
   const drowsinessRef = useRef(0);
   const audioContextRef = useRef(null);
 
-  const [phase, setPhase] = useState('ready');
+  const [phase, setPhase] = useState('selecting');
   const [stats, setStats] = useState({ score: 0, perfects: 0, best: 0 });
   const [drowsiness, setDrowsiness] = useState(0);
-  const [message, setMessage] = useState('Tap or press space to wake Noodle the cat.');
+  const [message, setMessage] = useState('Pick your cat to begin the dream.');
   const [effects, setEffects] = useState([]);
+  const [kittenMode, setKittenMode] = useState(false);
+  const [selectedCatId, setSelectedCatId] = useState(CAT_VARIATIONS[0].id);
+  const [hasSelectedCat, setHasSelectedCat] = useState(false);
+
+  const selectedAppearance = useMemo(
+    () => CAT_VARIATIONS.find((cat) => cat.id === selectedCatId) || CAT_VARIATIONS[0],
+    [selectedCatId],
+  );
 
   const ensureAudioContext = () => {
     if (audioContextRef.current) {
@@ -171,7 +328,7 @@ const CatNapLeapApp = () => {
 
     if (!stateRef.current) {
       const storedHigh = Number.parseInt(localStorage.getItem(LOCAL_STORAGE_KEY) || '0', 10) || 0;
-      stateRef.current = createInitialState(adjustedWidth, height, storedHigh);
+      stateRef.current = createInitialState(adjustedWidth, height, storedHigh, selectedAppearance, kittenMode);
       statsSnapshotRef.current = {
         score: 0,
         perfects: 0,
@@ -179,8 +336,8 @@ const CatNapLeapApp = () => {
       };
       setStats({ score: 0, perfects: 0, best: storedHigh });
       setDrowsiness(0);
-      setPhase('ready');
-      setMessage('Tap or press space to wake Noodle the cat.');
+      setPhase(hasSelectedCat ? 'ready' : 'selecting');
+      setMessage(hasSelectedCat ? 'Tap or press space to wake Noodle the cat.' : 'Pick your cat to begin the dream.');
     } else {
       const state = stateRef.current;
       state.canvasWidth = adjustedWidth;
@@ -188,28 +345,39 @@ const CatNapLeapApp = () => {
       state.cat.x = adjustedWidth * 0.28;
       state.cat.y = height * 0.5;
       state.cat.radius = Math.max(14, adjustedWidth * 0.035);
+      state.catAppearance = selectedAppearance;
+      state.kittenMode = kittenMode;
     }
   };
 
-  const resetGameState = () => {
+  const resetGameState = (options = {}) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const state = stateRef.current;
     const highScore = state?.highScore || 0;
-    stateRef.current = createInitialState(canvas.width, canvas.height, highScore);
+    const appearance = options.catAppearance || selectedAppearance;
+    const activeKittenMode = options.kittenMode ?? kittenMode;
+    stateRef.current = createInitialState(canvas.width, canvas.height, highScore, appearance, activeKittenMode);
+    setKittenMode(activeKittenMode);
     statsSnapshotRef.current = { score: 0, perfects: 0, best: highScore };
     effectsSnapshotRef.current = [];
     drowsinessRef.current = 0;
     setStats({ score: 0, perfects: 0, best: highScore });
     setEffects([]);
     setDrowsiness(0);
-    setPhase('ready');
-    setMessage('Tap or press space to wake Noodle the cat.');
+    const targetPhase = options.forcePhase || ((hasSelectedCat || options.catAppearance) ? 'ready' : 'selecting');
+    setPhase(targetPhase);
+    setMessage(targetPhase === 'ready' ? 'Tap or press space to wake Noodle the cat.' : 'Pick your cat to begin the dream.');
   };
 
   const startPlaying = () => {
     const state = stateRef.current;
     if (!state || state.phase === 'playing') return;
+    if (!hasSelectedCat) {
+      setPhase('selecting');
+      setMessage('Pick your cat to begin the dream.');
+      return;
+    }
     state.phase = 'playing';
     state.time = 0;
     state.stats.score = 0;
@@ -218,6 +386,8 @@ const CatNapLeapApp = () => {
     state.lastReason = '';
     state.effects.yarnUntil = 0;
     state.effects.catnipUntil = 0;
+    state.kittenMode = kittenMode;
+    state.catAppearance = selectedAppearance;
     publishStats(0, 0, state.highScore);
     publishDrowsiness(state.drowsiness);
     publishEffects([]);
@@ -253,6 +423,17 @@ const CatNapLeapApp = () => {
     playMeow();
   };
 
+  const toggleKittenMode = () => {
+    const state = stateRef.current;
+    if (!state) return;
+    const next = !state.kittenMode;
+    state.kittenMode = next;
+    setKittenMode(next);
+    if (state.phase !== 'playing') {
+      setMessage(next ? 'Kitten Mode engaged. Leap when you are ready!' : 'Cat Mode ready for action.');
+    }
+  };
+
   const activatePowerup = (powerup, now) => {
     const state = stateRef.current;
     if (!state) return;
@@ -283,6 +464,16 @@ const CatNapLeapApp = () => {
       labels.push('Catnip Slow Motion');
     }
     return labels;
+  };
+
+  const handleSelectCat = (variation) => {
+    setSelectedCatId(variation.id);
+    setHasSelectedCat(true);
+    const state = stateRef.current;
+    if (state) {
+      state.catAppearance = variation;
+    }
+    resetGameState({ catAppearance: variation, forcePhase: 'ready' });
   };
 
   const updateGame = (timestamp) => {
@@ -327,7 +518,7 @@ const CatNapLeapApp = () => {
       state.cat.vy += gravity * delta;
       state.cat.y += state.cat.vy * delta;
 
-      const drowsinessRate = 5.5 + state.stats.score * 0.03;
+      const drowsinessRate = (5.5 + state.stats.score * 0.03) * (state.kittenMode ? 0.2 : 1);
       state.drowsiness = clamp(state.drowsiness + drowsinessRate * delta, 0, 100);
 
       state.pillowTimer += deltaMs;
@@ -377,6 +568,7 @@ const CatNapLeapApp = () => {
           const centerDistance = Math.abs(state.cat.y - pillow.gapCenter);
           if (centerDistance <= pillow.gapHeight * 0.18) {
             state.stats.perfects += 1;
+            state.drowsiness = clamp(state.drowsiness - 7, 0, 100);
           }
         }
 
@@ -589,18 +781,82 @@ const CatNapLeapApp = () => {
     const { x, y, radius, vy } = state.cat;
     const droop = clamp(state.drowsiness / 100, 0, 1);
     const tilt = clamp(vy / 400, -0.5, 0.5);
+    const appearance = state.catAppearance || CAT_VARIATIONS[0];
+    const { colors, pattern } = appearance;
+    const {
+      body,
+      earOuter,
+      earInner,
+      eye,
+      highlight,
+      nose,
+      mouth,
+      cheek,
+    } = colors;
 
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(tilt * 0.3);
 
-    ctx.fillStyle = '#f9d6d0';
+    ctx.fillStyle = body;
     ctx.beginPath();
     ctx.arc(0, 0, radius, 0, Math.PI * 2);
     ctx.fill();
 
+    if (pattern) {
+      ctx.save();
+      ctx.fillStyle = pattern.color;
+      ctx.globalAlpha = pattern.type === 'tabby' ? 0.65 : 0.9;
+      switch (pattern.type) {
+        case 'tabby':
+          for (let i = -1; i <= 1; i += 1) {
+            ctx.beginPath();
+            ctx.moveTo(i * radius * 0.28, -radius * 0.35);
+            ctx.lineTo(i * radius * 0.18 + radius * 0.05, -radius * 0.05);
+            ctx.lineTo(i * radius * 0.18 - radius * 0.05, -radius * 0.05);
+            ctx.closePath();
+            ctx.fill();
+          }
+          break;
+        case 'mask':
+          ctx.beginPath();
+          ctx.ellipse(0, -radius * 0.05, radius * 0.95, radius * 0.75, 0, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+        case 'patch':
+          ctx.beginPath();
+          ctx.ellipse(-radius * 0.35, -radius * 0.1, radius * 0.55, radius * 0.45, Math.PI / 10, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+        case 'tuxedo':
+          ctx.beginPath();
+          ctx.ellipse(0, radius * 0.35, radius * 0.7, radius * 0.6, 0, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+        case 'star':
+          ctx.beginPath();
+          for (let i = 0; i < 10; i += 1) {
+            const angle = (Math.PI / 5) * i - Math.PI / 2;
+            const r = i % 2 === 0 ? radius * 0.32 : radius * 0.15;
+            const px = Math.cos(angle) * r;
+            const py = Math.sin(angle) * r - radius * 0.35;
+            if (i === 0) {
+              ctx.moveTo(px, py);
+            } else {
+              ctx.lineTo(px, py);
+            }
+          }
+          ctx.closePath();
+          ctx.fill();
+          break;
+        default:
+          break;
+      }
+      ctx.restore();
+    }
+
     // Ears
-    ctx.fillStyle = '#f6b5b0';
+    ctx.fillStyle = earOuter;
     ctx.beginPath();
     ctx.moveTo(-radius * 0.4, -radius * 0.6);
     ctx.lineTo(-radius * 0.05, -radius * 1.1);
@@ -615,18 +871,33 @@ const CatNapLeapApp = () => {
     ctx.closePath();
     ctx.fill();
 
+    ctx.fillStyle = earInner;
+    ctx.beginPath();
+    ctx.moveTo(-radius * 0.32, -radius * 0.55);
+    ctx.lineTo(-radius * 0.08, -radius * 0.98);
+    ctx.lineTo(radius * 0.18, -radius * 0.58);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(radius * 0.18, -radius * 0.55);
+    ctx.lineTo(radius * 0.4, -radius * 0.95);
+    ctx.lineTo(radius * 0.6, -radius * 0.48);
+    ctx.closePath();
+    ctx.fill();
+
     // Eyes
     const eyeOffsetX = radius * 0.45;
     const eyeOffsetY = -radius * 0.1;
     const eyeRadius = radius * 0.25;
 
-    ctx.fillStyle = '#2f2a45';
+    ctx.fillStyle = eye;
     ctx.beginPath();
     ctx.ellipse(-eyeOffsetX, eyeOffsetY, eyeRadius, eyeRadius * (0.75 - droop * 0.35), 0, 0, Math.PI * 2);
     ctx.ellipse(eyeOffsetX, eyeOffsetY, eyeRadius, eyeRadius * (0.75 - droop * 0.35), 0, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = highlight;
     ctx.beginPath();
     ctx.arc(-eyeOffsetX - eyeRadius * 0.1, eyeOffsetY - eyeRadius * 0.1, eyeRadius * 0.35, 0, Math.PI * 2);
     ctx.arc(eyeOffsetX - eyeRadius * 0.1, eyeOffsetY - eyeRadius * 0.1, eyeRadius * 0.35, 0, Math.PI * 2);
@@ -634,13 +905,25 @@ const CatNapLeapApp = () => {
 
     const eyelidHeight = eyeRadius * droop * 0.9;
     if (eyelidHeight > 0.5) {
-      ctx.fillStyle = '#f9d6d0';
+      ctx.fillStyle = body;
       ctx.fillRect(-eyeOffsetX - eyeRadius, eyeOffsetY - eyeRadius, eyeRadius * 2, eyelidHeight);
       ctx.fillRect(eyeOffsetX - eyeRadius, eyeOffsetY - eyeRadius, eyeRadius * 2, eyelidHeight);
     }
 
+    if (cheek) {
+      ctx.fillStyle = cheek;
+      ctx.globalAlpha = 0.7;
+      ctx.beginPath();
+      ctx.ellipse(-radius * 0.45, radius * 0.28, radius * 0.3, radius * 0.2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(radius * 0.45, radius * 0.28, radius * 0.3, radius * 0.2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
     // Nose
-    ctx.fillStyle = '#f46f94';
+    ctx.fillStyle = nose;
     ctx.beginPath();
     ctx.moveTo(0, radius * 0.05);
     ctx.lineTo(-radius * 0.12, radius * 0.2);
@@ -648,7 +931,7 @@ const CatNapLeapApp = () => {
     ctx.closePath();
     ctx.fill();
 
-    ctx.strokeStyle = '#f59fb7';
+    ctx.strokeStyle = mouth;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(-radius * 0.25, radius * 0.25);
@@ -688,6 +971,9 @@ const CatNapLeapApp = () => {
       if (event.code === 'Space') {
         event.preventDefault();
         handlePrimaryAction();
+      } else if (event.code === 'KeyK') {
+        event.preventDefault();
+        toggleKittenMode();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -742,6 +1028,9 @@ const CatNapLeapApp = () => {
             <span>Drowsiness</span>
             <span>{Math.round(drowsiness)}%</span>
           </div>
+          <div className={`mode-indicator ${kittenMode ? 'active' : ''}`} aria-live="polite">
+            {kittenMode ? 'Kitten Mode · Cozy pacing' : 'Cat Mode · Classic challenge'}
+          </div>
           <div className="meter-track" role="progressbar" aria-valuenow={Math.round(drowsiness)} aria-valuemin="0" aria-valuemax="100">
             <div className="meter-fill" style={{ width: `${clamp(drowsiness, 0, 100)}%` }} />
           </div>
@@ -759,24 +1048,53 @@ const CatNapLeapApp = () => {
         <canvas ref={canvasRef} className="catnap-canvas" />
         {phase !== 'playing' && (
           <div className={`catnap-overlay ${phase}`}>
-            <div className="overlay-card">
-              <h2>
-                {phase === 'ready' && 'CatNap Leap'}
-                {phase === 'gameover' && 'Dream Over'}
-              </h2>
-              <p>{message}</p>
+            <div className={`overlay-card ${phase === 'selecting' ? 'selecting' : ''}`}>
+              {phase === 'selecting' && (
+                <>
+                  <h2>Choose Your Dreamer</h2>
+                  <p>Tap a sprite to pick your leaping companion. You can swap cats from the lobby later.</p>
+                  <div className="cat-selection-grid">
+                    {CAT_VARIATIONS.map((variation) => (
+                      <button
+                        type="button"
+                        key={variation.id}
+                        className={`cat-choice ${selectedCatId === variation.id ? 'is-active' : ''}`}
+                        onClick={() => handleSelectCat(variation)}
+                        aria-label={`Select ${variation.name}`}
+                      >
+                        <CatSpritePreview appearance={variation} />
+                        <span className="cat-choice-name">{variation.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
               {phase === 'ready' && (
-                <ul className="overlay-list">
-                  <li>Space, click, or tap to leap.</li>
-                  <li>Thread pillows, avoid the ground and ceiling.</li>
-                  <li>Collect coffee to reset drowsiness.</li>
-                  <li>Yarn speeds time, catnip slows it.</li>
-                </ul>
+                <>
+                  <h2>CatNap Leap</h2>
+                  <p>{message}</p>
+                  <ul className="overlay-list">
+                    <li>Space, click, or tap to leap.</li>
+                    <li>Thread pillows, avoid the ground and ceiling.</li>
+                    <li>Collect coffee to reset drowsiness.</li>
+                    <li>Yarn speeds time, catnip slows it.</li>
+                    <li>Press <kbd>K</kbd> anytime for Kitten Mode.</li>
+                  </ul>
+                  <div className="overlay-actions">
+                    <button type="button" className="overlay-button secondary" onClick={() => { setPhase('selecting'); setMessage('Pick your cat to begin the dream.'); }}>
+                      Choose Another Cat
+                    </button>
+                  </div>
+                </>
               )}
               {phase === 'gameover' && (
-                <button type="button" className="overlay-button" onClick={resetGameState}>
-                  Restart Dream
-                </button>
+                <>
+                  <h2>Dream Over</h2>
+                  <p>{message}</p>
+                  <button type="button" className="overlay-button" onClick={() => resetGameState({ forcePhase: hasSelectedCat ? 'ready' : 'selecting' })}>
+                    Restart Dream
+                  </button>
+                </>
               )}
             </div>
           </div>
@@ -785,10 +1103,11 @@ const CatNapLeapApp = () => {
 
       <div className="catnap-footer">
         <div className="controls">
-          <span>Controls:</span> <kbd>Space</kbd> / Tap / Click
+          <span>Controls:</span> <kbd>Space</kbd> / Tap / Click <span className="dot">·</span>{' '}
+          <span>Kitten Mode: <kbd>K</kbd></span>
         </div>
         <div className="tips">
-          Perfect leaps earn bonus points when centered on pillows.
+          Perfect leaps now perk Noodle up—each one drains 7% drowsiness.
         </div>
       </div>
     </div>
