@@ -41,17 +41,79 @@ const computeCandidateLanes = (state) => {
 };
 
 const laneIsClear = (lane, radius, state, options = {}) => {
-  const { pillows = [], powerups = [], birds = [], canvasHeight, cat } = state;
+  const {
+    pillows = [],
+    powerups = [],
+    birds = [],
+    canvasHeight,
+    canvasWidth = 800,
+    cat,
+  } = state;
   const margin = options.margin ?? 18;
   const catStartY = options.catStartY ?? (state.canvasHeight * 0.5);
   const time = options.time ?? 0;
+  const referenceX = Number.isFinite(options.x) ? options.x : null;
+  const pillowLookback = options.pillowLookback ?? Math.max(120, canvasWidth * 0.18);
+  const pillowLookahead = options.pillowLookahead ?? Math.max(140, canvasWidth * 0.22);
 
   if (lane < radius + 60 || lane > canvasHeight - radius - 60) {
     return false;
   }
 
-  for (let i = 0; i < pillows.length; i += 1) {
-    const pillow = pillows[i];
+  let relevantPillows = pillows;
+
+  if (referenceX !== null && pillows.length) {
+    const everyHasPosition = pillows.every(
+      (pillow) => Number.isFinite(pillow.x) && Number.isFinite(pillow.width),
+    );
+
+    if (everyHasPosition) {
+      let closestBehind = null;
+      let closestAhead = null;
+
+      for (let i = 0; i < pillows.length; i += 1) {
+        const pillow = pillows[i];
+        const start = pillow.x;
+        const end = pillow.x + pillow.width;
+
+        if (referenceX >= end) {
+          if (
+            referenceX - end <= pillowLookback &&
+            (!closestBehind || end > closestBehind.x + closestBehind.width)
+          ) {
+            closestBehind = pillow;
+          }
+        } else if (referenceX <= start) {
+          if (
+            start - referenceX <= pillowLookahead &&
+            (!closestAhead || start < closestAhead.x)
+          ) {
+            closestAhead = pillow;
+          }
+        } else {
+          closestBehind = pillow;
+          closestAhead = pillow;
+          break;
+        }
+      }
+
+      const filtered = [];
+      if (closestBehind) {
+        filtered.push(closestBehind);
+      }
+      if (closestAhead && closestAhead !== closestBehind) {
+        filtered.push(closestAhead);
+      }
+      if (!filtered.length && pillows.length) {
+        filtered.push(pillows[pillows.length - 1]);
+      }
+
+      relevantPillows = filtered;
+    }
+  }
+
+  for (let i = 0; i < relevantPillows.length; i += 1) {
+    const pillow = relevantPillows[i];
     const gapTop = pillow.gapCenter - pillow.gapHeight / 2;
     const gapBottom = pillow.gapCenter + pillow.gapHeight / 2;
     if (lane < gapTop + radius + margin || lane > gapBottom - radius - margin) {
@@ -106,7 +168,13 @@ export const createPowerupSpawn = (state, preferredType) => {
 
   for (let i = 0; i < shuffled.length; i += 1) {
     const lane = shuffled[i];
-    if (laneIsClear(lane, radius, state, { catStartY: state.canvasHeight * 0.5, time: state.time })) {
+    if (
+      laneIsClear(lane, radius, state, {
+        catStartY: state.canvasHeight * 0.5,
+        time: state.time,
+        x: spawnX,
+      })
+    ) {
       return {
         type,
         x: spawnX,
@@ -126,7 +194,14 @@ export const createBirdSpawn = (state) => {
 
   for (let i = 0; i < shuffled.length; i += 1) {
     const lane = shuffled[i];
-    if (!laneIsClear(lane, radius, state, { margin: 22, catStartY: state.canvasHeight * 0.5, time: state.time })) {
+    if (
+      !laneIsClear(lane, radius, state, {
+        margin: 22,
+        catStartY: state.canvasHeight * 0.5,
+        time: state.time,
+        x: (state.cat?.x ?? state.canvasWidth * 0.3) + (state.cat?.radius ?? 0) * 1.5,
+      })
+    ) {
       // lane isn't safe for a bird; try next option
       // eslint-disable-next-line no-continue
       continue;
