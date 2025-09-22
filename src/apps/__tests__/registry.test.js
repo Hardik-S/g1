@@ -9,7 +9,7 @@ describe('app registry', () => {
     expect(catpad).toBeTruthy();
     expect(catpad.title).toBe('CatPad');
     expect(catpad.category).toBe('Productivity');
-    expect(catpad.icon).toBe('😺');
+    expect(catpad.icon).toBe('🗒️');
     expect(catpad.path).toBe('/apps/catpad');
   });
 
@@ -21,6 +21,22 @@ describe('app registry', () => {
     expect(typingTest.category).toBe('Education');
     expect(typingTest.icon).toBe('⌨️');
     expect(typingTest.path).toBe('/apps/cat-typing-speed-test');
+  });
+
+  it('registers the Quantum Playground metadata', () => {
+    const quantum = getAppById('quantum-playground');
+
+    expect(quantum).toBeTruthy();
+    expect(quantum.title).toBe('Quantum Playground');
+    expect(quantum.category).toBe('Education');
+    expect(quantum.icon).toBe('⚛️');
+    expect(quantum.path).toBe('/apps/quantum-playground');
+    expect(quantum.tags).toEqual(
+      expect.arrayContaining(['quantum', 'simulator', 'visualization', 'education'])
+    );
+    expect(quantum.description).toBe(
+      'Design circuits, run a four-qubit simulator, and visualize state-vector measurements.'
+    );
   });
 
   it('assigns default versions that match the x.yz.dd format', () => {

@@ -17,6 +17,13 @@ jest.mock('../../apps/registry', () => {
   };
 });
 
+jest.mock('../../state/globalGistSettings', () => ({
+  __esModule: true,
+  readGlobalGistSettings: jest.fn(() => ({ gistId: '', gistToken: '' })),
+  subscribeToGlobalGistSettings: jest.fn(() => jest.fn()),
+  writeGlobalGistSettings: jest.fn(),
+}));
+
 const createApp = (overrides = {}) => ({
   id: 'test-app',
   title: 'Test App',
@@ -31,50 +38,74 @@ const createApp = (overrides = {}) => ({
   ...overrides,
 });
 
-describe('AppLauncher categories', () => {
+const renderAppLauncher = () => render(
+  <MemoryRouter>
+    <AppLauncher />
+  </MemoryRouter>,
+);
+
+describe('AppLauncher', () => {
   beforeEach(() => {
     localStorage.clear();
+    jest.clearAllMocks();
     getAllApps.mockReset();
   });
 
-  it('renders categories derived from available apps', () => {
+  it('renders favorite apps before non-favorites', () => {
     getAllApps.mockReturnValue([
-      createApp({ id: 'game-app', title: 'Game App', category: 'Games' }),
-      createApp({ id: 'custom-app', title: 'Space Magic', category: 'Space Magic' }),
+      createApp({ id: 'alpha-app', title: 'Alpha App', tags: ['alpha'], category: 'Productivity' }),
+      createApp({ id: 'beta-app', title: 'Beta App', tags: ['beta'], category: 'Productivity' }),
+      createApp({ id: 'gamma-app', title: 'Gamma App', tags: ['gamma'], category: 'Productivity' }),
     ]);
 
-    render(
-      <MemoryRouter>
-        <AppLauncher />
-      </MemoryRouter>,
-    );
+    localStorage.setItem('favoriteAppIds', JSON.stringify(['beta-app']));
 
-    expect(screen.getByRole('button', { name: 'All' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Games/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Space Magic' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Utilities/i })).not.toBeInTheDocument();
+    renderAppLauncher();
+
+    const appsSection = screen.getByText(/All Apps/).closest('section');
+    expect(appsSection).not.toBeNull();
+
+    const titles = within(appsSection).getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent);
+
+    expect(titles).toEqual(['Beta App', 'Alpha App', 'Gamma App']);
   });
 
-  it('keeps the All category active when toggled with no apps', async () => {
-    getAllApps.mockReturnValue([]);
-    const user = userEvent.setup();
+  describe('categories', () => {
+    beforeEach(() => {
+      getAllApps.mockReset();
+    });
 
-    const { container } = render(
-      <MemoryRouter>
-        <AppLauncher />
-      </MemoryRouter>,
-    );
+    it('renders categories derived from available apps', () => {
+      getAllApps.mockReturnValue([
+        createApp({ id: 'game-app', title: 'Game App', category: 'Games' }),
+        createApp({ id: 'custom-app', title: 'Space Magic', category: 'Space Magic' }),
+      ]);
 
-    const nav = container.querySelector('.category-nav');
-    expect(nav).not.toBeNull();
+      renderAppLauncher();
 
-    const allButton = within(nav).getByRole('button', { name: 'All' });
-    expect(allButton).toHaveClass('active');
+      expect(screen.getByRole('button', { name: 'All' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Games/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Space Magic' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Utilities/i })).not.toBeInTheDocument();
+    });
 
-    await user.click(allButton);
+    it('keeps the All category active when toggled with no apps', async () => {
+      getAllApps.mockReturnValue([]);
+      const user = userEvent.setup();
 
-    expect(allButton).toHaveClass('active');
-    expect(within(nav).queryByRole('button', { name: /Games/i })).toBeNull();
-    expect(screen.getByText(/No apps found/i)).toBeInTheDocument();
+      const { container } = renderAppLauncher();
+
+      const nav = container.querySelector('.category-nav');
+      expect(nav).not.toBeNull();
+
+      const allButton = within(nav).getByRole('button', { name: 'All' });
+      expect(allButton).toHaveClass('active');
+
+      await user.click(allButton);
+
+      expect(allButton).toHaveClass('active');
+      expect(within(nav).queryByRole('button', { name: /Games/i })).toBeNull();
+      expect(screen.getByText(/No apps found/i)).toBeInTheDocument();
+    });
   });
 });

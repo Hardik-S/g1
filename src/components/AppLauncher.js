@@ -12,6 +12,7 @@ import {
   subscribeToGlobalGistSettings,
   writeGlobalGistSettings,
 } from '../state/globalGistSettings';
+import { verifyGistConnection } from '../global/verifyGistConnection';
 import './AppLauncher.css';
 
 const AppLauncher = () => {
@@ -19,11 +20,16 @@ const AppLauncher = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [isFeaturedCollapsed, setIsFeaturedCollapsed] = useState(false);
   const [torontoTime, setTorontoTime] = useState('--:--:--');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [gistSettingsForm, setGistSettingsForm] = useState({
     gistId: '',
     gistToken: '',
+  });
+  const [gistSettingsStatus, setGistSettingsStatus] = useState({
+    type: null,
+    message: '',
   });
   const [favoriteIds, setFavoriteIds] = useState(() => {
     try {
@@ -39,6 +45,34 @@ const AppLauncher = () => {
   const gistTokenInputRef = useRef(null);
   const cancelButtonRef = useRef(null);
   const saveButtonRef = useRef(null);
+  const gistStatusTimerRef = useRef(null);
+
+  const clearGistStatus = useCallback(() => {
+    if (gistStatusTimerRef.current) {
+      clearTimeout(gistStatusTimerRef.current);
+      gistStatusTimerRef.current = null;
+    }
+    setGistSettingsStatus({ type: null, message: '' });
+  }, []);
+
+  const scheduleGistStatusDismissal = useCallback(() => {
+    if (gistStatusTimerRef.current) {
+      clearTimeout(gistStatusTimerRef.current);
+    }
+
+    gistStatusTimerRef.current = setTimeout(() => {
+      setGistSettingsStatus({ type: null, message: '' });
+      gistStatusTimerRef.current = null;
+    }, 6000);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (gistStatusTimerRef.current) {
+        clearTimeout(gistStatusTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const formatter = new Intl.DateTimeFormat('en-CA', {
@@ -70,6 +104,12 @@ const AppLauncher = () => {
       unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    if (isSettingsOpen) {
+      clearGistStatus();
+    }
+  }, [clearGistStatus, isSettingsOpen]);
 
   const closeSettingsModal = useCallback(() => {
     setIsSettingsOpen(false);
@@ -169,19 +209,71 @@ const AppLauncher = () => {
     return ['All', ...knownCategories, ...customCategories];
   }, [allApps]);
 
-  const filteredApps = useMemo(() => allApps
-    .filter((app) => {
-      const matchesCategory = selectedCategory === 'All' || app.category === selectedCategory;
-      const matchesSearch = app.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         app.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         app.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-      return matchesCategory && matchesSearch && !app.disabled;
-    })
-    .sort((a, b) => a.title.localeCompare(b.title)), [allApps, selectedCategory, searchQuery]);
+  const filteredApps = useMemo(() => {
+    const favoriteSet = new Set(favoriteIds);
+    const searchLower = searchQuery.toLowerCase();
+
+    return allApps
+      .filter((app) => {
+        const matchesCategory = selectedCategory === 'All' || app.category === selectedCategory;
+        const matchesSearch = app.title.toLowerCase().includes(searchLower) ||
+          app.description.toLowerCase().includes(searchLower) ||
+          app.tags.some((tag) => tag.toLowerCase().includes(searchLower));
+        return matchesCategory && matchesSearch && !app.disabled;
+      })
+      .sort((a, b) => {
+        const aFavorited = favoriteSet.has(a.id);
+        const bFavorited = favoriteSet.has(b.id);
+        if (aFavorited && !bFavorited) {
+          return -1;
+        }
+        if (!aFavorited && bFavorited) {
+          return 1;
+        }
+        return a.title.localeCompare(b.title);
+      });
+  }, [allApps, favoriteIds, searchQuery, selectedCategory]);
 
   const featuredApps = useMemo(() => allApps
     .filter((app) => app.featured && !app.disabled)
     .sort((a, b) => a.title.localeCompare(b.title)), [allApps]);
+
+  const favoriteApps = useMemo(() => allApps
+    .filter((app) => favoriteIds.includes(app.id) && !app.disabled)
+    .filter((app) => {
+      const matchesCategory = selectedCategory === 'All' || app.category === selectedCategory;
+      const matchesSearch = app.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        app.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        app.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+      return matchesCategory && matchesSearch;
+    })
+    .sort((a, b) => a.title.localeCompare(b.title)), [allApps, favoriteIds, searchQuery, selectedCategory]);
+
+  const hasHiddenFavoritesInCategory = useMemo(() => {
+    if (selectedCategory === 'All' || favoriteIds.length === 0) {
+      return false;
+    }
+
+    const searchLower = searchQuery.toLowerCase();
+
+    return favoriteIds.some((favoriteId) => {
+      const app = allApps.find((candidate) => candidate.id === favoriteId);
+
+      if (!app || app.disabled) {
+        return false;
+      }
+
+      const matchesSearch = app.title.toLowerCase().includes(searchLower) ||
+        app.description.toLowerCase().includes(searchLower) ||
+        app.tags.some((tag) => tag.toLowerCase().includes(searchLower));
+
+      if (!matchesSearch) {
+        return false;
+      }
+
+      return app.category !== selectedCategory;
+    });
+  }, [allApps, favoriteIds, searchQuery, selectedCategory]);
 
   const isFavorited = (appId) => favoriteIds.includes(appId);
 
@@ -210,14 +302,49 @@ const AppLauncher = () => {
     }));
   };
 
-  const handleSaveSettings = (event) => {
+  const handleSaveSettings = useCallback(async (event) => {
     event.preventDefault();
-    writeGlobalGistSettings({
-      gistId: gistSettingsForm.gistId,
-      gistToken: gistSettingsForm.gistToken,
-    });
-    closeSettingsModal();
-  };
+    clearGistStatus();
+
+    try {
+      const savedSettings = writeGlobalGistSettings({
+        gistId: gistSettingsForm.gistId,
+        gistToken: gistSettingsForm.gistToken,
+      });
+
+      if (savedSettings.gistId) {
+        await verifyGistConnection({
+          gistId: savedSettings.gistId,
+          gistToken: savedSettings.gistToken,
+        });
+      }
+
+      setGistSettingsStatus({
+        type: 'success',
+        message: savedSettings.gistId
+          ? 'Gist connection verified successfully.'
+          : 'Gist settings saved.',
+      });
+      closeSettingsModal();
+      scheduleGistStatusDismissal();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setGistSettingsStatus({
+        type: 'error',
+        message: `Failed to verify gist settings: ${errorMessage}`,
+      });
+      scheduleGistStatusDismissal();
+    }
+  }, [
+    clearGistStatus,
+    closeSettingsModal,
+    gistSettingsForm,
+    scheduleGistStatusDismissal,
+  ]);
+
+  const toggleFeaturedSection = useCallback(() => {
+    setIsFeaturedCollapsed((prev) => !prev);
+  }, []);
 
   const renderAppCard = (app) => {
     const favorited = isFavorited(app.id);
@@ -309,6 +436,19 @@ const AppLauncher = () => {
         </div>
       </header>
 
+      {gistSettingsStatus.type && (
+        <div
+          className={`gist-status-banner ${gistSettingsStatus.type}`}
+          aria-live="polite"
+          role="status"
+        >
+          <span className="gist-status-icon" aria-hidden="true">
+            {gistSettingsStatus.type === 'success' ? '✅' : '⚠️'}
+          </span>
+          <span className="gist-status-message">{gistSettingsStatus.message}</span>
+        </div>
+      )}
+
       <div className="launcher-content">
         <nav className="category-nav">
           {categories.map((category) => (
@@ -327,11 +467,36 @@ const AppLauncher = () => {
           ))}
         </nav>
 
-        {selectedCategory === 'All' && featuredApps.length > 0 && (
-          <section className="featured-section">
-            <h2 className="section-title">⭐ Featured Apps</h2>
+        {favoriteApps.length > 0 && (
+          <section className="favorites-section">
+            <h2 className="section-title">★ Favorite Apps</h2>
             <div className={`apps-container ${viewMode}`}>
-              {featuredApps.map(renderAppCard)}
+              {favoriteApps.map(renderAppCard)}
+            </div>
+          </section>
+        )}
+
+        {favoriteApps.length === 0 && favoriteIds.length > 0 && hasHiddenFavoritesInCategory && (
+          <div className="favorites-empty-message">Mark apps as ★ to see them here</div>
+        )}
+
+        {selectedCategory === 'All' && featuredApps.length > 0 && (
+          <section
+            className={`featured-section${isFeaturedCollapsed ? ' collapsed' : ''}`}
+          >
+            <div className="section-header">
+              <h2 className="section-title">⭐ Featured Apps</h2>
+              <button
+                type="button"
+                className="section-toggle"
+                aria-expanded={!isFeaturedCollapsed}
+                onClick={toggleFeaturedSection}
+              >
+                {isFeaturedCollapsed ? 'Show' : 'Hide'}
+              </button>
+            </div>
+            <div className={`apps-container ${viewMode}`}>
+              {!isFeaturedCollapsed && featuredApps.map(renderAppCard)}
             </div>
           </section>
         )}
