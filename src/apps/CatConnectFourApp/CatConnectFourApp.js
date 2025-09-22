@@ -483,7 +483,8 @@ const CatConnectFourApp = () => {
   );
 
   const publicUrl = (process.env.PUBLIC_URL || '').replace(/\/$/, '');
-  const backgroundImagePath = `${publicUrl}/cat-connect-four/cat-cafe-illustration.svg`;
+  const catConnectFourAssetBasePath = `${publicUrl}/cat-connect-four`;
+  const backgroundImagePath = `${catConnectFourAssetBasePath}/cat-cafe-illustration.svg`;
 
   return (
     <div
