@@ -16,7 +16,7 @@ import {
   readGlobalGistSettings,
   subscribeToGlobalGistSettings,
   writeGlobalGistSettings,
-} from '../../global/gistSettings';
+} from '../../state/globalGistSettings';
 import {
   DEFAULT_SYNC_FILENAME,
   mergeNoteCollections,

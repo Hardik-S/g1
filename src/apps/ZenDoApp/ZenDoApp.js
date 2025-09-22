@@ -8,7 +8,7 @@ import TaskEditorModal from './modals/TaskEditorModal';
 import useZenDoState from './useZenDoState';
 import { DAY_ORDER } from './constants';
 import { flattenTasks, sortTasksByDueDate } from './taskUtils';
-import { writeGlobalGistSettings } from '../globalGistSettings';
+import { writeGlobalGistSettings } from '../../state/globalGistSettings';
 
 const VIEW_TABS = [
   { id: 'landing', label: 'Landing' },
