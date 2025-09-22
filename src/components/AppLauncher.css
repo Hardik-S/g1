@@ -258,11 +258,27 @@
   color: #333;
 }
 
+.favorites-section {
+  margin-bottom: 40px;
+  padding-bottom: 30px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
 .featured-section {
   margin-bottom: 40px;
   padding-bottom: 30px;
   border-bottom: 2px solid #f0f0f0;
 }
+
+
+.favorites-empty-message {
+  margin-bottom: 30px;
+  padding: 18px 24px;
+  border-radius: 12px;
+  border: 2px dashed rgba(102, 126, 234, 0.4);
+  background: rgba(102, 126, 234, 0.08);
+  color: #4a4a4a;
+  font-weight: 500;
 
 .featured-section.collapsed {
   padding-bottom: 0;
@@ -272,6 +288,7 @@
 
 .featured-section.collapsed .apps-container {
   display: none;
+
 }
 
 .apps-container {
