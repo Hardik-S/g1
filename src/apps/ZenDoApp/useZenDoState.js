@@ -9,6 +9,11 @@ import {
   saveState,
 } from './storage';
 import {
+  readGlobalGistSettings,
+  subscribeToGlobalGistSettings,
+  GLOBAL_GIST_SETTINGS_CLIENT_ID,
+} from '../globalGistSettings';
+import {
   assignFocusBucket,
   assignTaskToDay,
   normalizeTaskCollection,
@@ -37,7 +42,7 @@ export const useZenDoState = () => {
   const [lastUpdatedAt, setLastUpdatedAt] = useState(null);
   const [isReady, setIsReady] = useState(false);
   const [syncStatus, setSyncStatus] = useState(defaultSyncStatus);
-  const [gistConfig, setGistConfig] = useState({
+  const [gistConfigState, setGistConfigState] = useState({
     gistId: '',
     gistToken: '',
     filename: undefined,
@@ -51,6 +56,39 @@ export const useZenDoState = () => {
   const initializingRef = useRef(true);
   const pullingRef = useRef(false);
   const pushingRef = useRef(false);
+  const gistConfigRef = useRef(gistConfigState);
+  const isReadyRef = useRef(false);
+  const initialPullGistIdRef = useRef(null);
+  const skipNextGlobalPullRef = useRef(false);
+
+  const setGistConfig = useCallback((updater) => {
+    setGistConfigState((prev) => {
+      const nextValue = typeof updater === 'function' ? updater(prev) : updater;
+      if (!nextValue || typeof nextValue !== 'object') {
+        gistConfigRef.current = prev;
+        return prev;
+      }
+      const merged = { ...prev, ...nextValue };
+      gistConfigRef.current = merged;
+      return merged;
+    });
+  }, []);
+
+  const gistConfig = gistConfigState;
+
+  const persistSettings = useCallback((config) => {
+    const nextSettings = {
+      gistId: config?.gistId || '',
+      gistToken: config?.gistToken || '',
+      filename: config?.filename,
+      lastSyncedAt: config?.lastSyncedAt || null,
+    };
+    saveSettings(nextSettings);
+  }, [saveSettings]);
+
+  const markLocalGlobalSettingsUpdate = useCallback(() => {
+    skipNextGlobalPullRef.current = true;
+  }, []);
 
   const setTasks = useCallback((nextTasks, { updatedAt, markDirty = true, preserveTimestamp = false } = {}) => {
     const normalized = normalizeTasks(nextTasks);
@@ -82,21 +120,22 @@ export const useZenDoState = () => {
   }, [gistConfig.gistId, gistConfig.gistToken]);
 
   const pushToGist = useCallback(async () => {
-    if (!gistConfig.gistId || !gistConfig.gistToken) return;
+    const currentConfig = gistConfigRef.current;
+    if (!currentConfig.gistId || !currentConfig.gistToken) return;
     if (pushingRef.current) return;
     try {
       pushingRef.current = true;
       setIsSyncing(true);
       setSyncStatus({ type: 'syncing', message: 'Syncing with gist…' });
       const snapshot = createSnapshot(tasksRef.current);
-      await pushGistSnapshot({ gistId: gistConfig.gistId, token: gistConfig.gistToken, filename: gistConfig.filename }, snapshot);
+      await pushGistSnapshot({ gistId: currentConfig.gistId, token: currentConfig.gistToken, filename: currentConfig.filename }, snapshot);
       const now = new Date().toISOString();
       setSyncStatus({ type: 'success', message: 'Synced' });
       setGistConfig((prev) => ({
         ...prev,
         lastSyncedAt: now,
       }));
-      saveSettings({ ...gistConfig, lastSyncedAt: now });
+      persistSettings({ ...currentConfig, lastSyncedAt: now });
     } catch (pushError) {
       setSyncStatus({ type: 'error', message: pushError.message });
       setError(pushError);
@@ -104,21 +143,26 @@ export const useZenDoState = () => {
       pushingRef.current = false;
       setIsSyncing(false);
     }
-  }, [gistConfig]);
+  }, [persistSettings, setGistConfig]);
 
   const pullFromGist = useCallback(async () => {
-    if (!gistConfig.gistId) {
+    const currentConfig = gistConfigRef.current;
+    if (!currentConfig.gistId) {
       setSyncStatus({ type: 'error', message: 'Configure a gist ID first' });
+      return;
+    }
+    if (pullingRef.current) {
       return;
     }
     try {
       pullingRef.current = true;
       setIsSyncing(true);
       setSyncStatus({ type: 'syncing', message: 'Fetching gist…' });
+      initialPullGistIdRef.current = currentConfig.gistId;
       const remote = await fetchGistSnapshot({
-        gistId: gistConfig.gistId,
-        token: gistConfig.gistToken,
-        filename: gistConfig.filename,
+        gistId: currentConfig.gistId,
+        token: currentConfig.gistToken,
+        filename: currentConfig.filename,
       });
       const remoteUpdated = remote.lastUpdatedAt ? Date.parse(remote.lastUpdatedAt) : 0;
       const localUpdated = lastUpdatedAt ? Date.parse(lastUpdatedAt) : 0;
@@ -135,6 +179,10 @@ export const useZenDoState = () => {
         ...prev,
         lastSyncedAt: remote.lastUpdatedAt || prev.lastSyncedAt,
       }));
+      persistSettings({
+        ...currentConfig,
+        lastSyncedAt: remote.lastUpdatedAt || currentConfig.lastSyncedAt,
+      });
     } catch (pullError) {
       setSyncStatus({ type: 'error', message: pullError.message });
       setError(pullError);
@@ -142,20 +190,27 @@ export const useZenDoState = () => {
       pullingRef.current = false;
       setIsSyncing(false);
     }
-  }, [gistConfig, lastUpdatedAt, setTasks]);
+  }, [lastUpdatedAt, persistSettings, setGistConfig, setTasks]);
 
   useEffect(() => {
     const init = () => {
       const localState = loadState();
       const storedSettings = loadSettings();
+      const globalSettings = readGlobalGistSettings();
+      const mergedSettings = {
+        ...storedSettings,
+        ...globalSettings,
+      };
       setTasks(localState.tasks || [], { updatedAt: localState.lastUpdatedAt, markDirty: false, preserveTimestamp: true });
       setGistConfig((prev) => ({
         ...prev,
         ...storedSettings,
+        ...globalSettings,
       }));
       initializingRef.current = false;
+      setSyncStatus(mergedSettings?.gistId ? { type: 'idle', message: 'Ready to sync' } : defaultSyncStatus);
+      isReadyRef.current = true;
       setIsReady(true);
-      setSyncStatus(storedSettings?.gistId ? { type: 'idle', message: 'Ready to sync' } : defaultSyncStatus);
     };
     init();
     return () => {
@@ -173,8 +228,49 @@ export const useZenDoState = () => {
 
   useEffect(() => {
     if (!isReady) return;
-    saveSettings(gistConfig);
-  }, [gistConfig, isReady]);
+    persistSettings(gistConfig);
+  }, [gistConfig, isReady, persistSettings]);
+
+  useEffect(() => {
+    if (!isReady || !gistConfig.gistId) return;
+    if (initialPullGistIdRef.current === gistConfig.gistId) return;
+    initialPullGistIdRef.current = gistConfig.gistId;
+    pullFromGist();
+  }, [gistConfig.gistId, isReady, pullFromGist]);
+
+  useEffect(() => {
+    if (gistConfig.gistId) return;
+    initialPullGistIdRef.current = null;
+  }, [gistConfig.gistId]);
+
+  useEffect(() => {
+    isReadyRef.current = isReady;
+  }, [isReady]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToGlobalGistSettings((nextSettings, meta = {}) => {
+      if (!nextSettings || typeof nextSettings !== 'object') {
+        return;
+      }
+      setGistConfig((prev) => ({
+        ...prev,
+        ...nextSettings,
+      }));
+      if (!isReadyRef.current || !nextSettings.gistId) {
+        skipNextGlobalPullRef.current = false;
+        return;
+      }
+      const sameClient = meta?.clientId && meta.clientId === GLOBAL_GIST_SETTINGS_CLIENT_ID;
+      if (sameClient && skipNextGlobalPullRef.current) {
+        skipNextGlobalPullRef.current = false;
+        return;
+      }
+      skipNextGlobalPullRef.current = false;
+      initialPullGistIdRef.current = nextSettings.gistId;
+      pullFromGist();
+    });
+    return unsubscribe;
+  }, [pullFromGist, setGistConfig]);
 
   const updateTasks = useCallback((updater) => {
     setTasksState((prev) => {
@@ -232,6 +328,7 @@ export const useZenDoState = () => {
     lastUpdatedAt,
     gistConfig,
     setGistConfig,
+    markLocalGlobalSettingsUpdate,
     syncStatus,
     error,
     isReady,
