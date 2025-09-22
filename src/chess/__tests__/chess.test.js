@@ -106,9 +106,9 @@ describe('StockfishEngine', () => {
 });
 
 describe('Chess HTML integration', () => {
-  test('references the CDN hosted Stockfish script', () => {
+  test('omits the CDN hosted Stockfish script tag', () => {
     const htmlPath = path.resolve(__dirname, '../../../html/chess.html');
     const html = fs.readFileSync(htmlPath, 'utf8');
-    expect(html).toMatch(/cdn.jsdelivr.net\/npm\/stockfish/);
+    expect(html).not.toMatch(/cdn.jsdelivr.net\/npm\/stockfish/);
   });
 });

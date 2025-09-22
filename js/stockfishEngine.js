@@ -19,11 +19,18 @@
         thinkTime = DEFAULT_THINK_TIME,
         skillLevel = DEFAULT_SKILL,
         stockfishFactory,
+        workerUrl,
       } = options;
 
       const factory =
         stockfishFactory ||
         (() => {
+          if (workerUrl) {
+            if (typeof Worker === 'undefined') {
+              throw new Error('Web Workers are not supported in this environment');
+            }
+            return new Worker(workerUrl);
+          }
           if (typeof global.Stockfish === 'function') {
             return global.Stockfish();
           }

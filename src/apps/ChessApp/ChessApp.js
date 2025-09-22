@@ -12,7 +12,7 @@ const CHESSBOARD_SCRIPT_URL =
   'https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js';
 const CHESS_RULES_SCRIPT_URL =
   'https://cdn.jsdelivr.net/npm/chess.js@0.13.4/chess.min.js';
-const STOCKFISH_SCRIPT_URL =
+const STOCKFISH_WORKER_URL =
   'https://cdn.jsdelivr.net/npm/stockfish@16.0.0/src/stockfish-nnue-16.js';
 
 const resourcePromises = new Map();
@@ -136,7 +136,6 @@ function loadChessResources() {
     loadStylesheet('chessboard-style', CHESSBOARD_STYLE_URL),
     loadScript('chessboard-script', CHESSBOARD_SCRIPT_URL),
     loadScript('chess-rules-script', CHESS_RULES_SCRIPT_URL),
-    loadScript('stockfish-script', STOCKFISH_SCRIPT_URL),
   ]);
 }
 
@@ -220,14 +219,28 @@ const ChessApp = () => {
     setStatusInfo(describeStatus(manager.game));
   }, []);
 
-  const ensureEngine = useCallback(() => {
-    if (engineRef.current) {
-      return engineRef.current;
-    }
-    const engineInstance = new StockfishEngine();
-    engineRef.current = engineInstance;
-    return engineInstance;
-  }, []);
+  const ensureEngine = useCallback(
+    (options = {}) => {
+      if (engineRef.current) {
+        return engineRef.current;
+      }
+
+      try {
+        const engineInstance = new StockfishEngine(options);
+        engineRef.current = engineInstance;
+        return engineInstance;
+      } catch (err) {
+        console.error('Failed to create Stockfish engine', err);
+        const engineError =
+          err instanceof Error
+            ? err
+            : new Error('Unable to initialize the Stockfish engine.');
+        setError(engineError);
+        return null;
+      }
+    },
+    [setError]
+  );
 
   const triggerEngineMove = useCallback(async () => {
     if (mode !== 'single') {
@@ -242,7 +255,10 @@ const ChessApp = () => {
     const requestId = ++engineRequestIdRef.current;
 
     try {
-      const engine = ensureEngine();
+      const engine = ensureEngine({ workerUrl: STOCKFISH_WORKER_URL });
+      if (!engine) {
+        return;
+      }
       const fen = manager.getFen();
       const move = await engine.requestMove(fen);
 
@@ -316,7 +332,10 @@ const ChessApp = () => {
     }
 
     if (mode === 'single') {
-      const engine = ensureEngine();
+      const engine = ensureEngine({ workerUrl: STOCKFISH_WORKER_URL });
+      if (!engine) {
+        return;
+      }
       engine.setSkillLevel(skill);
       manager.setPlayers({ white: 'human', black: 'engine' });
       triggerEngineMoveRef.current();
@@ -338,7 +357,10 @@ const ChessApp = () => {
       return;
     }
 
-    const engine = ensureEngine();
+    const engine = ensureEngine({ workerUrl: STOCKFISH_WORKER_URL });
+    if (!engine) {
+      return;
+    }
     engine.setSkillLevel(skill);
   }, [mode, resourcesReady, skill, ensureEngine]);
 
@@ -369,7 +391,10 @@ const ChessApp = () => {
 
     manager.reset();
     if (mode === 'single') {
-      const engineInstance = ensureEngine();
+      const engineInstance = ensureEngine({ workerUrl: STOCKFISH_WORKER_URL });
+      if (!engineInstance) {
+        return;
+      }
       engineInstance.setSkillLevel(skill);
       manager.setPlayers({ white: 'human', black: 'engine' });
       triggerEngineMoveRef.current();

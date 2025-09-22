@@ -1,4 +1,6 @@
 (function (global) {
+  const STOCKFISH_WORKER_URL =
+    'https://cdn.jsdelivr.net/npm/stockfish@16.0.0/src/stockfish-nnue-16.js';
   function ready(callback) {
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', callback, { once: true });
@@ -59,7 +61,9 @@
         if (!StockfishEngineCtor) {
           throw new Error('StockfishEngine must be loaded before enabling single player mode');
         }
-        engineInstance = new StockfishEngineCtor();
+        engineInstance = new global.StockfishEngine({
+          workerUrl: STOCKFISH_WORKER_URL,
+        });
       }
       return engineInstance;
     }
