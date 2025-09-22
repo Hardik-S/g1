@@ -26,6 +26,9 @@ export default defineConfig({
       reporter: ['text', 'lcov'],
       lines: 0.9,
       branches: 0.9
+    },
+    typecheck: {
+      tsconfig: './tsconfig.json'
     }
   }
 });
