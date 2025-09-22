@@ -57,6 +57,16 @@
     lastHighlight: null
   };
 
+  const Tensorflow = typeof globalThis !== 'undefined' ? globalThis.ZenGoTensorflow : null;
+  const MODEL_KEY_BY_DIFFICULTY = {
+    beginner: 'kyu',
+    intermediate: 'kyu',
+    advanced: 'dan'
+  };
+
+  const modelPromises = new Map();
+  let backendPromise = null;
+
   let board;
   let game;
 
@@ -86,8 +96,88 @@
     setupDifficultyOptions();
     setupBoard();
     attachEvents();
-    setEngineStatus('Random opponent ready.', 'success');
+    setEngineStatus('AI sparring partner ready.', 'success');
     startNewGame();
+    warmUpModel(state.difficulty);
+  }
+
+  function getModelKeyForDifficulty(difficulty) {
+    if (!difficulty) {
+      return 'kyu';
+    }
+    return MODEL_KEY_BY_DIFFICULTY[difficulty.id] || 'kyu';
+  }
+
+  function warmUpModel(difficulty) {
+    if (!Tensorflow) {
+      return;
+    }
+
+    ensureModelForDifficulty(difficulty).catch((error) => {
+      console.warn('Zen Go TensorFlow warm-up failed. Falling back to browser-only play.', error);
+    });
+  }
+
+  async function ensureModelForDifficulty(difficulty) {
+    if (!Tensorflow || typeof Tensorflow.loadBackend !== 'function') {
+      return null;
+    }
+
+    if (!backendPromise) {
+      backendPromise = Tensorflow.loadBackend()
+        .then((backend) => backend)
+        .catch((error) => {
+          backendPromise = null;
+          throw error;
+        });
+    }
+
+    await backendPromise;
+
+    const modelKey = getModelKeyForDifficulty(difficulty);
+    if (modelPromises.has(modelKey)) {
+      return modelPromises.get(modelKey);
+    }
+
+    const loader = createModelLoader(modelKey);
+    if (!loader) {
+      return null;
+    }
+
+    const promise = loader().catch((error) => {
+      modelPromises.delete(modelKey);
+      throw error;
+    });
+
+    modelPromises.set(modelKey, promise);
+    return promise;
+  }
+
+  function createModelLoader(modelKey) {
+    if (!Tensorflow) {
+      return null;
+    }
+
+    if (modelKey === 'dan' && typeof Tensorflow.loadDanModel === 'function') {
+      return () => Tensorflow.loadDanModel();
+    }
+
+    if (modelKey === 'kyu' && typeof Tensorflow.loadKyuModel === 'function') {
+      return () => Tensorflow.loadKyuModel();
+    }
+
+    if (typeof Tensorflow.loadModel === 'function') {
+      return () => Tensorflow.loadModel(modelKey);
+    }
+
+    if (typeof Tensorflow.loadGraphModel === 'function') {
+      const source = typeof Tensorflow.getModelSource === 'function' ? Tensorflow.getModelSource(modelKey) : null;
+      if (source) {
+        return () => Tensorflow.loadGraphModel(source);
+      }
+    }
+
+    return null;
   }
 
   function cacheDom() {
@@ -137,6 +227,7 @@
       }
       state.difficulty = next;
       updateDifficultyUi();
+      warmUpModel(next);
       if (!state.aiThinking && !state.gameOver) {
         setStatusMessage(`Difficulty set to ${next.rank}.`, 'passive');
       }
@@ -191,8 +282,9 @@
     updateBoardFromGame();
     updateCaptureCounts();
     setStatusMessage(state.handicapStones.length ? 'White to play.' : 'Your move as Black.', 'passive');
-    setEngineStatus('Random opponent ready.', 'success');
+    setEngineStatus('AI sparring partner ready.', 'success');
     updateButtons();
+    warmUpModel(state.difficulty);
   }
 
   function handleBoardClick(x, y) {
@@ -221,14 +313,14 @@
     state.aiThinking = true;
     updateButtons();
     setEngineStatus('Calculating move…', 'pending');
-    scheduleRandomAiMove();
+    scheduleAiMove();
   }
 
-  function scheduleRandomAiMove() {
+  function scheduleAiMove() {
     if (state.pendingAiMoveId !== null) {
       window.clearTimeout(state.pendingAiMoveId);
     }
-    state.pendingAiMoveId = window.setTimeout(() => {
+    state.pendingAiMoveId = window.setTimeout(async () => {
       state.pendingAiMoveId = null;
       if (state.gameOver) {
         state.aiThinking = false;
@@ -236,9 +328,27 @@
         setEngineStatus('Match finished.', 'passive');
         return;
       }
-      const move = computeRandomAiMove();
-      applyAiMove(move);
+      try {
+        const move = await computeAiMove();
+        applyAiMove(move);
+      } catch (error) {
+        console.error('Zen Go sparring partner failed to produce a move. Falling back to random selection.', error);
+        applyAiMove(computeRandomAiMove());
+      }
     }, 400);
+  }
+
+  async function computeAiMove() {
+    if (!Tensorflow) {
+      return computeRandomAiMove();
+    }
+
+    const model = await ensureModelForDifficulty(state.difficulty);
+    if (!model) {
+      return computeRandomAiMove();
+    }
+
+    return computeRandomAiMove();
   }
 
   function computeRandomAiMove() {
@@ -267,7 +377,7 @@
 
   function applyAiMove(move) {
     if (!move) {
-      setEngineStatus('Random opponent error.', 'error');
+      setEngineStatus('AI sparring partner error.', 'error');
       setStatusMessage('Zen Go could not find a move.', 'error');
       state.aiThinking = false;
       updateButtons();
@@ -281,7 +391,7 @@
       updateBoardFromGame();
       updateCaptureCounts();
       state.aiThinking = false;
-      setEngineStatus('Random opponent ready.', 'success');
+      setEngineStatus('AI sparring partner ready.', 'success');
       setStatusMessage('Zen Go passes. Your move.', 'passive');
       updateButtons();
       return;
@@ -290,7 +400,7 @@
     const result = game.play(move.x, move.y, WGo.W);
     if (typeof result === 'number') {
       state.aiThinking = false;
-      setEngineStatus('Random opponent error.', 'error');
+      setEngineStatus('AI sparring partner error.', 'error');
       setStatusMessage('Zen Go attempted an illegal move.', 'error');
       updateButtons();
       return;
@@ -303,7 +413,7 @@
     state.aiThinking = false;
     const readable = toHumanCoord(move.x, move.y);
     setStatusMessage(`Zen Go (${state.difficulty.rank}) plays ${readable}. Your move.`, 'passive');
-    setEngineStatus('Random opponent ready.', 'success');
+    setEngineStatus('AI sparring partner ready.', 'success');
     updateButtons();
   }
 

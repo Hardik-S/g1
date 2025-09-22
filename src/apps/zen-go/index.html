@@ -83,11 +83,11 @@
           </section>
           <section class="control-group">
             <h2>Engine status</h2>
-            <div id="engineStatus" class="engine-status">Random opponent ready.</div>
+            <div id="engineStatus" class="engine-status">AI sparring partner ready.</div>
             <p class="control-help">
-              This prototype uses a simple random move generator for all
-              difficulties. A proper AI sparring partner will return in a future
-              update.
+              TensorFlow.js models warm up in the background while gameplay
+              continues to fall back to the original random move generator until
+              full inference is available.
             </p>
           </section>
           <section class="control-group future-note">
@@ -102,6 +102,7 @@
       </section>
     </main>
     <script src="vendor/wgo.min.js"></script>
+    <script src="js/tensorflow.js"></script>
     <script src="main.js"></script>
   </body>
 </html>
