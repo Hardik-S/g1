@@ -24,6 +24,12 @@ Cat Typing Speed Test launches a focused browser-based drill for measuring WPM, 
 - Surface progress charts that compare recent runs and highlight improvements over time.
 - Add keyboard shortcuts for restarting, toggling durations, and switching to a zen full-screen mode.
 
+## Quantum Playground
+Quantum Playground invites curious learners to assemble drag-and-drop circuits on a four-qubit state-vector simulator. The interface pairs a persistent circuit editor with live probability and measurement visualisations so experiments stay grounded in the math while remaining approachable.
+- Introduce guided tours that explain entanglement, measurement masks, and step execution to new explorers.
+- Add Bloch sphere snapshots for each qubit to reveal how amplitudes evolve during runs.
+- Support exporting circuits to OpenQASM or JSON for sharing and importing beyond the playground.
+
 ## N-Pomodoro Timer
 N-Pomodoro Timer choreographs customizable work cycles within a cosmic interface. Users pick multi-activity presets, monitor progress through animated rings, and toggle configuration panels without losing context. Timers persist across states, enabling focused sprints, reflective breaks, and celebratory completions through ambient stars, all tailored to evolving productivity rituals and team rhythms.
 - Enable user-defined activity presets with saved profiles synchronized across devices.
