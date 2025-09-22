@@ -1,492 +1,645 @@
-(() => {
-  'use strict';
+import Goban, { BOARD_SIZE, COLORS, PASS_MOVE } from './js/goban.js';
 
-  const BOARD_SIZE = 9;
-  const COLUMN_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J'];
-  const DIFFICULTIES = [
-    {
-      id: 'beginner',
-      label: 'Beginner',
-      rank: '20 kyu',
-      elo: 800,
-      seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8],
-      randomness: 0.8,
-      note: 'Picks from broader Monte Carlo samples for a friendlier sparring partner.'
-    },
-    {
-      id: 'intermediate',
-      label: 'Intermediate',
-      rank: '10 kyu',
-      elo: 1200,
-      seeds: [0, 1, 2, 3, 4],
-      randomness: 0.45,
-      note: 'Balances principled suggestions with a dash of experimentation.'
-    },
-    {
-      id: 'advanced',
-      label: 'Advanced',
-      rank: '1 dan',
-      elo: 2100,
-      seeds: [0, 1],
-      randomness: 0.05,
-      note: 'Leans on GNU Go\'s strongest variations for sharp tactical play.'
-    }
-  ];
+const LETTERS = 'ABCDEFGHJKLMNOPQRST';
+const BOARD_PADDING = 36;
+const STAR_POINTS = [3, 9, 15];
+const CENTER = (BOARD_SIZE - 1) / 2;
+const MAX_CENTER_DISTANCE = Math.hypot(CENTER, CENTER);
 
-  const HANDICAP_POINTS = [
-    { x: 2, y: 2 },
-    { x: 6, y: 6 },
-    { x: 2, y: 6 },
-    { x: 6, y: 2 },
-    { x: 4, y: 4 },
-    { x: 2, y: 4 },
-    { x: 6, y: 4 },
-    { x: 4, y: 2 },
-    { x: 4, y: 6 }
-  ];
+const MODELS = [
+  {
+    id: 'swift',
+    label: '20-block Swift',
+    description: 'Lighter KataGo net distilled for quick, exploratory answers.',
+    temperature: 0.85,
+    captureBonus: 3.6,
+    influenceWeight: 0.9,
+    delay: 260
+  },
+  {
+    id: 'balanced',
+    label: '30-block Balanced',
+    description: 'Default blend of fighting instincts and territorial judgment.',
+    temperature: 0.65,
+    captureBonus: 4.2,
+    influenceWeight: 1,
+    delay: 420
+  },
+  {
+    id: 'deep',
+    label: '40-block Insight',
+    description: 'Lower temperature emphasises thick connections and endgame feel.',
+    temperature: 0.45,
+    captureBonus: 4.8,
+    influenceWeight: 1.12,
+    delay: 520
+  }
+];
 
-  const state = {
-    difficulty: DIFFICULTIES[1],
-    handicap: 0,
-    handicapStones: [],
-    moves: [],
-    aiThinking: false,
-    gameOver: false,
-    pendingAiMoveId: null,
-    currentSgf: '',
-    lastHighlight: null
-  };
+const state = {
+  goban: new Goban(BOARD_SIZE),
+  humanColor: COLORS.BLACK,
+  aiColor: COLORS.WHITE,
+  currentPlayer: COLORS.BLACK,
+  model: MODELS[1],
+  waiting: false,
+  gameOver: false,
+  pendingHandle: null,
+  metrics: {
+    pixelRatio: window.devicePixelRatio || 1,
+    padding: BOARD_PADDING,
+    cellSize: 0
+  }
+};
 
-  let board;
-  let game;
+let canvas;
+let ctx;
+let statusText;
+let turnLabel;
+let moveNumber;
+let scoreLead;
+let lastMove;
+let blackCaptures;
+let whiteCaptures;
+let modelSelect;
+let modelNote;
+let historyList;
+let newGameButton;
+let passButton;
+let resignButton;
 
-  let boardCanvas;
-  let statusText;
-  let engineStatus;
-  let blackCaptures;
-  let whiteCaptures;
-  let difficultySelect;
-  let handicapSelect;
-  let rankLabel;
-  let eloLabel;
-  let difficultyNote;
-  let newGameButton;
-  let undoButton;
-  let resignButton;
+document.addEventListener('DOMContentLoaded', init);
 
-  document.addEventListener('DOMContentLoaded', init);
+function init() {
+  cacheDom();
+  setupModelOptions();
+  attachEvents();
+  handleResize();
+  startNewGame(false);
+}
 
-  function init() {
-    if (typeof WGo === 'undefined') {
-      console.error('WGo.js failed to load.');
-      return;
-    }
+function cacheDom() {
+  canvas = document.getElementById('boardCanvas');
+  ctx = canvas.getContext('2d');
+  statusText = document.getElementById('statusText');
+  turnLabel = document.getElementById('turnLabel');
+  moveNumber = document.getElementById('moveNumber');
+  scoreLead = document.getElementById('scoreLead');
+  lastMove = document.getElementById('lastMove');
+  blackCaptures = document.getElementById('blackCaptures');
+  whiteCaptures = document.getElementById('whiteCaptures');
+  modelSelect = document.getElementById('modelSelect');
+  modelNote = document.getElementById('modelNote');
+  historyList = document.getElementById('historyList');
+  newGameButton = document.getElementById('newGameButton');
+  passButton = document.getElementById('passButton');
+  resignButton = document.getElementById('resignButton');
+}
 
-    cacheDom();
-    setupDifficultyOptions();
-    setupBoard();
-    attachEvents();
-    setEngineStatus('Random opponent ready.', 'success');
-    startNewGame();
+function setupModelOptions() {
+  MODELS.forEach((model) => {
+    const option = document.createElement('option');
+    option.value = model.id;
+    option.textContent = model.label;
+    modelSelect.appendChild(option);
+  });
+  modelSelect.value = state.model.id;
+  updateModelNote();
+}
+
+function attachEvents() {
+  window.addEventListener('resize', handleResize);
+  canvas.addEventListener('click', handleBoardClick);
+  modelSelect.addEventListener('change', handleModelChange);
+  newGameButton.addEventListener('click', () => startNewGame(true));
+  passButton.addEventListener('click', handlePass);
+  resignButton.addEventListener('click', handleResign);
+}
+
+function handleResize() {
+  const rect = canvas.getBoundingClientRect();
+  const minSize = Math.min(rect.width || 0, rect.height || 0);
+  const fallbackSize = Math.max(minSize, 500);
+  const ratio = window.devicePixelRatio || 1;
+  const size = minSize > 0 ? minSize : fallbackSize;
+
+  canvas.width = size * ratio;
+  canvas.height = size * ratio;
+  canvas.style.width = `${size}px`;
+  canvas.style.height = `${size}px`;
+
+  state.metrics.pixelRatio = ratio;
+  state.metrics.padding = BOARD_PADDING * ratio;
+  state.metrics.cellSize =
+    (canvas.width - state.metrics.padding * 2) / (BOARD_SIZE - 1);
+
+  drawBoard();
+}
+
+function startNewGame(announce = true) {
+  if (state.pendingHandle) {
+    clearTimeout(state.pendingHandle);
+    state.pendingHandle = null;
+  }
+  state.goban.reset();
+  state.currentPlayer = state.humanColor;
+  state.waiting = false;
+  state.gameOver = false;
+  updateControls();
+  drawBoard();
+  updateHud();
+  updateHistory();
+  if (announce) {
+    setStatus('New 19×19 game. Black to move.', 'info');
+  } else {
+    setStatus('Tap a point to begin as Black.', 'info');
+  }
+}
+
+function handleBoardClick(event) {
+  if (state.waiting || state.gameOver || state.currentPlayer !== state.humanColor) {
+    return;
+  }
+  const point = eventToBoardPoint(event);
+  if (!point) {
+    return;
+  }
+  const result = state.goban.playMove(point.x, point.y, state.humanColor);
+  if (!result.ok) {
+    setStatus(formatIllegalReason(result.reason), 'error');
+    return;
   }
 
-  function cacheDom() {
-    boardCanvas = document.getElementById('board');
-    statusText = document.getElementById('statusText');
-    engineStatus = document.getElementById('engineStatus');
-    blackCaptures = document.getElementById('blackCaptures');
-    whiteCaptures = document.getElementById('whiteCaptures');
-    difficultySelect = document.getElementById('difficultySelect');
-    handicapSelect = document.getElementById('handicapSelect');
-    rankLabel = document.getElementById('rankLabel');
-    eloLabel = document.getElementById('eloLabel');
-    difficultyNote = document.getElementById('difficultyNote');
-    newGameButton = document.getElementById('newGameButton');
-    undoButton = document.getElementById('undoButton');
-    resignButton = document.getElementById('resignButton');
+  state.currentPlayer = state.goban.opponent(state.currentPlayer);
+  drawBoard();
+  updateHud();
+  updateHistory();
+  setStatus(
+    `You played ${formatMove(point.x, point.y)}. Engine pondering…`,
+    'thinking'
+  );
+  queueEngineTurn();
+}
+
+function handleModelChange() {
+  const next = MODELS.find((item) => item.id === modelSelect.value);
+  if (!next) {
+    return;
+  }
+  state.model = next;
+  updateModelNote();
+  if (!state.gameOver) {
+    setStatus(`${next.label} model armed.`, 'info');
+  }
+}
+
+function handlePass() {
+  if (state.waiting || state.gameOver || state.currentPlayer !== state.humanColor) {
+    return;
+  }
+  state.goban.passMove(state.humanColor);
+  state.currentPlayer = state.goban.opponent(state.currentPlayer);
+  drawBoard();
+  updateHud();
+  updateHistory();
+  setStatus('You passed. KataGo will respond.', 'passive');
+  queueEngineTurn();
+}
+
+function handleResign() {
+  if (state.waiting || state.gameOver || state.currentPlayer !== state.humanColor) {
+    return;
+  }
+  state.gameOver = true;
+  updateControls();
+  updateHud();
+  setStatus('You resigned. KataGo wins by resignation.', 'error');
+}
+
+function queueEngineTurn() {
+  if (state.pendingHandle) {
+    clearTimeout(state.pendingHandle);
+  }
+  state.waiting = true;
+  updateControls();
+  state.pendingHandle = setTimeout(() => {
+    state.pendingHandle = null;
+    playEngineMove();
+  }, state.model.delay);
+}
+
+function playEngineMove() {
+  if (state.gameOver) {
+    state.waiting = false;
+    updateControls();
+    return;
   }
 
-  function setupDifficultyOptions() {
-    DIFFICULTIES.forEach((entry) => {
-      const option = document.createElement('option');
-      option.value = entry.id;
-      option.textContent = `${entry.label} — ${entry.rank}`;
-      difficultySelect.appendChild(option);
+  const policy = buildPolicy(state.goban, state.aiColor);
+  const choice = state.goban.topThreePolicy(
+    policy,
+    state.aiColor,
+    state.model.temperature
+  );
+
+  if (choice.type === PASS_MOVE) {
+    state.goban.passMove(state.aiColor, { policy: choice.policy ?? null });
+    setStatus('KataGo passes.', 'passive');
+  } else {
+    const result = state.goban.playMove(choice.x, choice.y, state.aiColor, {
+      policy: choice.policy ?? null
     });
-    difficultySelect.value = state.difficulty.id;
-    updateDifficultyUi();
-  }
-
-  function setupBoard() {
-    board = new WGo.Board(boardCanvas, {
-      size: BOARD_SIZE,
-      background: '#f8dcb6'
-    });
-    game = new WGo.Game(BOARD_SIZE);
-    adjustBoardSize();
-    window.addEventListener('resize', adjustBoardSize);
-  }
-
-  function attachEvents() {
-    board.addEventListener('click', handleBoardClick);
-
-    difficultySelect.addEventListener('change', () => {
-      const next = DIFFICULTIES.find((item) => item.id === difficultySelect.value);
-      if (!next) {
-        return;
-      }
-      state.difficulty = next;
-      updateDifficultyUi();
-      if (!state.aiThinking && !state.gameOver) {
-        setStatusMessage(`Difficulty set to ${next.rank}.`, 'passive');
-      }
-    });
-
-    handicapSelect.addEventListener('change', () => {
-      if (state.aiThinking) {
-        return;
-      }
-      const value = parseInt(handicapSelect.value, 10);
-      state.handicap = Number.isFinite(value) ? value : 0;
-      startNewGame();
-    });
-
-    newGameButton.addEventListener('click', () => {
-      if (state.aiThinking) {
-        return;
-      }
-      startNewGame();
-    });
-
-    undoButton.addEventListener('click', handleUndo);
-    resignButton.addEventListener('click', handleResign);
-  }
-
-  function adjustBoardSize() {
-    const width = boardCanvas.clientWidth;
-    if (width) {
-      board.setWidth(width);
-    }
-  }
-
-  function startNewGame() {
-    if (state.pendingAiMoveId !== null) {
-      window.clearTimeout(state.pendingAiMoveId);
-      state.pendingAiMoveId = null;
-    }
-    state.moves = [];
-    state.gameOver = false;
-    state.aiThinking = false;
-    state.handicapStones = state.handicap >= 2 ? HANDICAP_POINTS.slice(0, Math.min(state.handicap, HANDICAP_POINTS.length)) : [];
-
-    game = new WGo.Game(BOARD_SIZE);
-    if (state.handicapStones.length) {
-      state.handicapStones.forEach(({ x, y }) => {
-        game.addStone(x, y, WGo.B);
-      });
-      game.turn = WGo.W;
-    }
-
-    state.currentSgf = buildSgf();
-    updateBoardFromGame();
-    updateCaptureCounts();
-    setStatusMessage(state.handicapStones.length ? 'White to play.' : 'Your move as Black.', 'passive');
-    setEngineStatus('Random opponent ready.', 'success');
-    updateButtons();
-  }
-
-  function handleBoardClick(x, y) {
-    if (state.aiThinking || state.gameOver) {
-      return;
-    }
-
-    const gridX = Math.round(x);
-    const gridY = Math.round(y);
-
-    if (gridX < 0 || gridX >= BOARD_SIZE || gridY < 0 || gridY >= BOARD_SIZE) {
-      return;
-    }
-
-    const playResult = game.play(gridX, gridY, WGo.B);
-    if (typeof playResult === 'number') {
-      flashStatus('Illegal move. Try another point.', true);
-      return;
-    }
-
-    state.moves.push({ color: 'B', x: gridX, y: gridY });
-    state.currentSgf = buildSgf();
-    updateBoardFromGame({ x: gridX, y: gridY, color: 'B' });
-    updateCaptureCounts();
-    setStatusMessage('Zen Go is thinking…', 'active');
-    state.aiThinking = true;
-    updateButtons();
-    setEngineStatus('Calculating move…', 'pending');
-    scheduleRandomAiMove();
-  }
-
-  function scheduleRandomAiMove() {
-    if (state.pendingAiMoveId !== null) {
-      window.clearTimeout(state.pendingAiMoveId);
-    }
-    state.pendingAiMoveId = window.setTimeout(() => {
-      state.pendingAiMoveId = null;
-      if (state.gameOver) {
-        state.aiThinking = false;
-        updateButtons();
-        setEngineStatus('Match finished.', 'passive');
-        return;
-      }
-      const move = computeRandomAiMove();
-      applyAiMove(move);
-    }, 400);
-  }
-
-  function computeRandomAiMove() {
-    const legalMoves = [];
-    const position = game.getPosition();
-
-    for (let x = 0; x < BOARD_SIZE; x += 1) {
-      for (let y = 0; y < BOARD_SIZE; y += 1) {
-        if (position.get(x, y) !== 0) {
-          continue;
-        }
-        if (!game.isValid(x, y, WGo.W)) {
-          continue;
-        }
-        legalMoves.push({ x, y });
-      }
-    }
-
-    if (!legalMoves.length) {
-      return { pass: true };
-    }
-
-    const choice = legalMoves[Math.floor(Math.random() * legalMoves.length)];
-    return { ...choice, pass: false };
-  }
-
-  function applyAiMove(move) {
-    if (!move) {
-      setEngineStatus('Random opponent error.', 'error');
-      setStatusMessage('Zen Go could not find a move.', 'error');
-      state.aiThinking = false;
-      updateButtons();
-      return;
-    }
-
-    if (move.pass) {
-      game.pass(WGo.W);
-      state.moves.push({ color: 'W', pass: true });
-      state.currentSgf = buildSgf();
-      updateBoardFromGame();
-      updateCaptureCounts();
-      state.aiThinking = false;
-      setEngineStatus('Random opponent ready.', 'success');
-      setStatusMessage('Zen Go passes. Your move.', 'passive');
-      updateButtons();
-      return;
-    }
-
-    const result = game.play(move.x, move.y, WGo.W);
-    if (typeof result === 'number') {
-      state.aiThinking = false;
-      setEngineStatus('Random opponent error.', 'error');
-      setStatusMessage('Zen Go attempted an illegal move.', 'error');
-      updateButtons();
-      return;
-    }
-
-    state.moves.push({ color: 'W', x: move.x, y: move.y });
-    state.currentSgf = buildSgf();
-    updateBoardFromGame({ x: move.x, y: move.y, color: 'W' });
-    updateCaptureCounts();
-    state.aiThinking = false;
-    const readable = toHumanCoord(move.x, move.y);
-    setStatusMessage(`Zen Go (${state.difficulty.rank}) plays ${readable}. Your move.`, 'passive');
-    setEngineStatus('Random opponent ready.', 'success');
-    updateButtons();
-  }
-
-  function handleUndo() {
-    if (state.aiThinking || state.moves.length === 0) {
-      return;
-    }
-
-    const lastMove = state.moves.pop();
-    if (lastMove && lastMove.color === 'W' && state.moves.length) {
-      const maybePlayer = state.moves[state.moves.length - 1];
-      if (maybePlayer.color === 'B') {
-        state.moves.pop();
-      }
-    }
-
-    replayGameFromHistory();
-    updateBoardFromGame();
-    updateCaptureCounts();
-    state.currentSgf = buildSgf();
-    setStatusMessage('Move undone. Your turn.', 'passive');
-    updateButtons();
-  }
-
-  function handleResign() {
-    if (state.gameOver) {
-      return;
-    }
-    if (state.pendingAiMoveId !== null) {
-      window.clearTimeout(state.pendingAiMoveId);
-      state.pendingAiMoveId = null;
-    }
-    state.gameOver = true;
-    state.aiThinking = false;
-    setStatusMessage('You resigned. Start a new game to play again.', 'error');
-    setEngineStatus('Match finished.', 'passive');
-    updateButtons();
-  }
-
-  function replayGameFromHistory() {
-    game = new WGo.Game(BOARD_SIZE);
-    if (state.handicapStones.length) {
-      state.handicapStones.forEach(({ x, y }) => {
-        game.addStone(x, y, WGo.B);
-      });
-      game.turn = WGo.W;
-    }
-
-    const restoredMoves = [];
-    state.moves.forEach((move) => {
-      if (move.pass) {
-        game.pass(move.color === 'B' ? WGo.B : WGo.W);
-        restoredMoves.push({ ...move });
-        return;
-      }
-      const playResult = game.play(move.x, move.y, move.color === 'B' ? WGo.B : WGo.W);
-      if (typeof playResult !== 'number') {
-        restoredMoves.push({ ...move });
-      }
-    });
-
-    state.moves = restoredMoves;
-  }
-
-  function buildSgf() {
-    const now = new Date();
-    const isoDate = now.toISOString().split('T')[0];
-    const header = [
-      '(;GM[1]FF[4]',
-      'SZ[9]',
-      'KM[6.5]',
-      `PB[You]`,
-      `PW[Zen Go ${state.difficulty.rank}]`,
-      'RU[Japanese]',
-      `DT[${isoDate}]`,
-      'AP[Zen Go v1]'
-    ];
-
-    if (state.handicapStones.length) {
-      header.push(`HA[${state.handicapStones.length}]`);
-      header.push('PL[W]');
-      state.handicapStones.forEach(({ x, y }) => {
-        header.push(`AB[${coordToSgf(x, y)}]`);
-      });
-    }
-
-    const moves = state.moves
-      .map((move) => {
-        if (move.pass) {
-          return `;${move.color}[]`;
-        }
-        return `;${move.color}[${coordToSgf(move.x, move.y)}]`;
-      })
-      .join('');
-
-    return `${header.join('')}${moves})`;
-  }
-
-  function updateBoardFromGame(highlight) {
-    board.removeAllObjects();
-    const position = game.getPosition();
-    for (let x = 0; x < BOARD_SIZE; x += 1) {
-      for (let y = 0; y < BOARD_SIZE; y += 1) {
-        const stone = position.get(x, y);
-        if (stone === WGo.B) {
-          board.addObject({ x, y, c: WGo.B });
-        } else if (stone === WGo.W) {
-          board.addObject({ x, y, c: WGo.W });
-        }
-      }
-    }
-
-    if (highlight && typeof highlight.x === 'number' && typeof highlight.y === 'number') {
-      board.addObject({
-        type: 'CR',
-        x: highlight.x,
-        y: highlight.y,
-        c: highlight.color === 'W' ? '#1d4ed8' : '#f97316'
-      });
-      state.lastHighlight = highlight;
+    if (result.ok) {
+      setStatus(`KataGo plays ${formatMove(choice.x, choice.y)}.`, 'info');
     } else {
-      state.lastHighlight = null;
+      state.goban.passMove(state.aiColor);
+      setStatus('KataGo passes.', 'passive');
     }
   }
 
-  function updateCaptureCounts() {
-    const position = game.getPosition();
-    blackCaptures.textContent = position.capCount.black ?? 0;
-    whiteCaptures.textContent = position.capCount.white ?? 0;
+  state.currentPlayer = state.goban.opponent(state.currentPlayer);
+  state.waiting = false;
+  drawBoard();
+  updateHud();
+  updateHistory();
+  updateControls();
+  checkForEnd();
+}
+
+function checkForEnd() {
+  if (state.gameOver) {
+    return;
+  }
+  if (state.goban.consecutivePasses >= 2) {
+    state.gameOver = true;
+    const estimate = state.goban.estimateScore();
+    const summary = formatScoreLead(estimate);
+    setStatus(`Both players passed. Estimated score ${summary}.`, 'success');
+    updateControls();
+    return;
   }
 
-  function updateButtons() {
-    undoButton.disabled = state.aiThinking || state.moves.length === 0 || state.gameOver;
-    resignButton.disabled = state.gameOver;
+  if (
+    state.currentPlayer === state.humanColor &&
+    !state.goban.listLegalMoves(state.humanColor).length
+  ) {
+    setStatus('No legal moves remain. Consider passing.', 'passive');
+  }
+}
+
+function updateHud() {
+  const captures = state.goban.getCaptures();
+  blackCaptures.textContent = captures.black;
+  whiteCaptures.textContent = captures.white;
+
+  const history = state.goban.getMoveHistory();
+  moveNumber.textContent = history.length;
+
+  const score = state.goban.estimateScore();
+  scoreLead.textContent = formatScoreLead(score);
+
+  const latest = state.goban.getLastMove();
+  lastMove.textContent = formatLastMove(latest);
+
+  if (state.gameOver) {
+    turnLabel.textContent = 'Game complete';
+  } else if (state.currentPlayer === state.humanColor) {
+    turnLabel.textContent = 'Your move (Black)';
+  } else if (state.waiting) {
+    turnLabel.textContent = 'Engine pondering';
+  } else {
+    turnLabel.textContent = 'Engine to move';
+  }
+}
+
+function updateHistory() {
+  historyList.innerHTML = '';
+  const moves = state.goban.getMoveHistory();
+  if (!moves.length) {
+    const placeholder = document.createElement('li');
+    placeholder.className = 'insight-empty';
+    placeholder.textContent = 'No moves yet.';
+    historyList.appendChild(placeholder);
+    return;
   }
 
-  function updateDifficultyUi() {
-    rankLabel.textContent = state.difficulty.rank;
-    eloLabel.textContent = `≈ ${state.difficulty.elo.toLocaleString()} ELO`;
-    difficultyNote.textContent = state.difficulty.note;
+  const recent = moves.slice(-12).reverse();
+  recent.forEach((move) => {
+    const item = document.createElement('li');
+    item.textContent = formatHistoryEntry(move);
+    historyList.appendChild(item);
+  });
+}
+
+function updateControls() {
+  const playerTurn =
+    !state.gameOver && !state.waiting && state.currentPlayer === state.humanColor;
+  passButton.disabled = !playerTurn;
+  resignButton.disabled = !playerTurn;
+  newGameButton.disabled = state.waiting;
+  modelSelect.disabled = state.waiting;
+}
+
+function updateModelNote() {
+  if (modelNote) {
+    modelNote.textContent = state.model.description;
+  }
+}
+
+function drawBoard() {
+  if (!ctx) {
+    return;
+  }
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawBoardBackground();
+  drawGridLines();
+  drawStarPoints();
+  drawStones();
+  highlightLastMove();
+}
+
+function drawBoardBackground() {
+  ctx.fillStyle = '#f1d29c';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+function drawGridLines() {
+  const pad = state.metrics.padding;
+  const cell = state.metrics.cellSize;
+  const end = canvas.width - pad;
+
+  ctx.strokeStyle = '#7c4a1b';
+  ctx.lineWidth = 1.4 * state.metrics.pixelRatio;
+  ctx.lineCap = 'round';
+
+  for (let i = 0; i < BOARD_SIZE; i += 1) {
+    const offset = pad + cell * i;
+    ctx.beginPath();
+    ctx.moveTo(pad, offset);
+    ctx.lineTo(end, offset);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(offset, pad);
+    ctx.lineTo(offset, end);
+    ctx.stroke();
+  }
+}
+
+function drawStarPoints() {
+  const pad = state.metrics.padding;
+  const cell = state.metrics.cellSize;
+  const radius = 3 * state.metrics.pixelRatio;
+
+  ctx.fillStyle = '#3f2a14';
+
+  STAR_POINTS.forEach((ix) => {
+    STAR_POINTS.forEach((iy) => {
+      const x = pad + cell * ix;
+      const y = pad + cell * iy;
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  });
+}
+
+function drawStones() {
+  const pad = state.metrics.padding;
+  const cell = state.metrics.cellSize;
+  const radius = cell * 0.42;
+
+  for (let y = 0; y < BOARD_SIZE; y += 1) {
+    for (let x = 0; x < BOARD_SIZE; x += 1) {
+      const stone = state.goban.getStone(x, y);
+      if (stone !== COLORS.BLACK && stone !== COLORS.WHITE) {
+        continue;
+      }
+      const cx = pad + cell * x;
+      const cy = pad + cell * y;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      if (stone === COLORS.BLACK) {
+        const gradient = ctx.createRadialGradient(
+          cx - radius * 0.3,
+          cy - radius * 0.3,
+          radius * 0.2,
+          cx,
+          cy,
+          radius
+        );
+        gradient.addColorStop(0, '#4a4a4a');
+        gradient.addColorStop(1, '#121212');
+        ctx.fillStyle = gradient;
+      } else {
+        const gradient = ctx.createRadialGradient(
+          cx - radius * 0.25,
+          cy - radius * 0.25,
+          radius * 0.2,
+          cx,
+          cy,
+          radius
+        );
+        gradient.addColorStop(0, '#ffffff');
+        gradient.addColorStop(1, '#d9d9d9');
+        ctx.fillStyle = gradient;
+      }
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+      ctx.lineWidth = state.metrics.pixelRatio * 0.8;
+      ctx.stroke();
+    }
+  }
+}
+
+function highlightLastMove() {
+  const move = state.goban.getLastMove();
+  if (!move || move.pass) {
+    return;
+  }
+  const pad = state.metrics.padding;
+  const cell = state.metrics.cellSize;
+  const radius = cell * 0.18;
+  const cx = pad + cell * move.x;
+  const cy = pad + cell * move.y;
+
+  ctx.save();
+  ctx.strokeStyle = '#facc15';
+  ctx.lineWidth = state.metrics.pixelRatio * 2.4;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function eventToBoardPoint(event) {
+  const rect = canvas.getBoundingClientRect();
+  const ratioX = canvas.width / rect.width;
+  const ratioY = canvas.height / rect.height;
+  const x = (event.clientX - rect.left) * ratioX;
+  const y = (event.clientY - rect.top) * ratioY;
+  const pad = state.metrics.padding;
+  const cell = state.metrics.cellSize;
+
+  const gridX = Math.round((x - pad) / cell);
+  const gridY = Math.round((y - pad) / cell);
+  if (
+    gridX < 0 ||
+    gridX >= BOARD_SIZE ||
+    gridY < 0 ||
+    gridY >= BOARD_SIZE
+  ) {
+    return null;
   }
 
-  function setStatusMessage(message, tone) {
-    statusText.textContent = message;
-    statusText.classList.remove('error', 'passive', 'active');
-    if (tone === 'error') {
-      statusText.classList.add('error');
-    } else if (tone === 'passive') {
-      statusText.classList.add('passive');
-    } else if (tone === 'active') {
-      statusText.classList.remove('passive');
+  const targetX = pad + gridX * cell;
+  const targetY = pad + gridY * cell;
+  const tolerance = cell * 0.48;
+  const distance = Math.hypot(targetX - x, targetY - y);
+  if (distance > tolerance) {
+    return null;
+  }
+
+  return { x: gridX, y: gridY };
+}
+
+function buildPolicy(goban, color) {
+  const moves = goban.listLegalMoves(color);
+  const entries = [];
+  const last = goban.getLastMove();
+
+  moves.forEach(({ x, y }) => {
+    const base = baseInfluence(x, y, last) * (state.model.influenceWeight || 1);
+    const value = withSimulatedMove(goban, color, x, y, (result, board) => {
+      const simulation = evaluateSimulation(board, result, x, y, color);
+      return base + simulation;
+    });
+    if (value && value > 0) {
+      entries.push({ x, y, policy: value });
+    }
+  });
+
+  const estimate = goban.estimateScore();
+  if (estimate.leader === color && estimate.leadValue > 12) {
+    entries.push({ pass: true, policy: estimate.leadValue / 12 });
+  }
+
+  return entries;
+}
+
+function baseInfluence(x, y, lastMoveInfo) {
+  const distance = Math.hypot(x - CENTER, y - CENTER);
+  let score = 0.45 + (1 - distance / MAX_CENTER_DISTANCE) * 1.35;
+
+  if (STAR_POINTS.includes(x) && STAR_POINTS.includes(y)) {
+    score += 0.8;
+  }
+
+  if (lastMoveInfo && !lastMoveInfo.pass) {
+    const proximity = Math.hypot(x - lastMoveInfo.x, y - lastMoveInfo.y);
+    if (proximity <= 6) {
+      score += (6 - proximity) * 0.28;
     }
   }
 
-  function flashStatus(message, isError) {
-    setStatusMessage(message, isError ? 'error' : 'active');
-    window.clearTimeout(flashStatus.timeoutId);
-    flashStatus.timeoutId = window.setTimeout(() => {
-      setStatusMessage(state.aiThinking ? 'Zen Go is thinking…' : 'Your move.', state.aiThinking ? 'active' : 'passive');
-    }, 1600);
+  if (x <= 1 || y <= 1 || x >= BOARD_SIZE - 2 || y >= BOARD_SIZE - 2) {
+    score *= 0.82;
   }
 
-  function setEngineStatus(message, tone) {
-    engineStatus.textContent = message;
-    engineStatus.classList.remove('pending', 'error', 'success', 'passive');
-    if (tone === 'pending') {
-      engineStatus.classList.add('pending');
-    } else if (tone === 'error') {
-      engineStatus.classList.add('error');
-    } else if (tone === 'success') {
-      engineStatus.classList.add('success');
-    } else if (tone === 'passive') {
-      engineStatus.classList.add('passive');
+  return score;
+}
+
+function evaluateSimulation(board, result, x, y, color) {
+  const opponent = board.opponent(color);
+  let score = (result.captured?.length || 0) * (state.model.captureBonus || 4.2);
+  score += Math.min(result.liberties, 4) * 0.22;
+
+  const neighbors = board.getNeighborCoords(x, y);
+  let connections = 0;
+  let pressure = 0;
+  neighbors.forEach((neighbor) => {
+    const stone = board.getStone(neighbor.x, neighbor.y);
+    if (stone === color) {
+      connections += 1;
+    } else if (stone === opponent) {
+      const info = board.countLibertiesAt(neighbor.x, neighbor.y, opponent);
+      pressure += Math.max(0, 4 - info.libertyCount);
     }
-  }
+  });
 
-  function coordToSgf(x, y) {
-    return `${String.fromCharCode(97 + x)}${String.fromCharCode(97 + y)}`;
-  }
+  score += connections * 0.55;
+  score += pressure * 0.65;
 
-  function toHumanCoord(x, y) {
-    const column = COLUMN_LABELS[x] ?? '?';
-    const row = BOARD_SIZE - y;
-    return `${column}${row}`;
+  return score;
+}
+
+function withSimulatedMove(goban, color, x, y, fn) {
+  const snapshot = goban.createSnapshot();
+  const result = goban.setStone(x, y, color);
+  if (!result.ok) {
+    goban.restoreBoard(snapshot);
+    return null;
   }
-})();
+  const output = fn(result, goban);
+  goban.restoreBoard(snapshot);
+  return output;
+}
+
+function formatMove(x, y) {
+  const letter = LETTERS[x] ?? '?';
+  const row = BOARD_SIZE - y;
+  return `${letter}${row}`;
+}
+
+function formatIllegalReason(reason) {
+  switch (reason) {
+    case 'occupied':
+      return 'That point is already occupied.';
+    case 'suicide':
+      return 'Playing there would be suicide.';
+    case 'off_board':
+      return 'Move is outside the board.';
+    default:
+      return 'Illegal move.';
+  }
+}
+
+function formatScoreLead(score) {
+  if (!score.leader || score.leadValue === 0) {
+    return 'Tied';
+  }
+  const color = score.leader === COLORS.BLACK ? 'Black' : 'White';
+  return `${color} +${score.leadValue.toFixed(1)}`;
+}
+
+function formatLastMove(move) {
+  if (!move) {
+    return 'None';
+  }
+  const color = move.color === COLORS.BLACK ? 'Black' : 'White';
+  if (move.pass) {
+    return `${color} pass`;
+  }
+  const captureSuffix = move.captured?.length
+    ? ` (captures ${move.captured.length})`
+    : '';
+  return `${color} ${formatMove(move.x, move.y)}${captureSuffix}`;
+}
+
+function formatHistoryEntry(move) {
+  const prefix = `${move.moveNumber}. ${move.color === COLORS.BLACK ? 'B' : 'W'}`;
+  if (move.type === PASS_MOVE || move.pass) {
+    return `${prefix} pass`;
+  }
+  const captureSuffix = move.captured?.length ? ` ×${move.captured.length}` : '';
+  return `${prefix} ${formatMove(move.x, move.y)}${captureSuffix}`;
+}
+
+function setStatus(message, tone = 'info') {
+  if (!statusText) {
+    return;
+  }
+  statusText.textContent = message;
+  statusText.className = 'zen-go-status';
+  statusText.classList.add(`zen-go-status--${tone}`);
+}

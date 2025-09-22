@@ -11,15 +11,15 @@ const ZenGoApp = ({ onBack }) => {
         <div>
           <h1>Zen Go</h1>
           <p>
-            Sharpen your corner instincts on a focused 9×9 board. Pick a rank,
-            add handicap stones, and duel a GNU Go engine compiled to
-            WebAssembly.
+            Take on a KataGo-trained sparring partner across a full 19×19
+            goban. Sample different policy heads, trace score swings, and follow
+            a running move log without leaving the browser.
           </p>
         </div>
         <ul className="zen-go-highlights">
-          <li>WGo.js renders captures, ko, and coordinates crisply.</li>
-          <li>Difficulty maps to Go ranks with an approximate ELO readout.</li>
-          <li>Handicap presets (2–9 stones) follow standard star-point layouts.</li>
+          <li>Canvas renderer highlights star points, captures, and last-move halos.</li>
+          <li>KataGo policy sampling picks among the top three moves for human-like flow.</li>
+          <li>Model selector swaps between swift, balanced, and deep KataGo nets.</li>
         </ul>
       </section>
 
