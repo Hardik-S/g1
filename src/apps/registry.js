@@ -36,7 +36,7 @@ export const APP_REGISTRY = {
     loader: () => import('./DaySwitcherApp'),
     path: '/apps/day-switcher',
     tags: ['react', 'ui', 'interactive'],
-    created: '2024-01-01',
+    created: '2025-09-16',
     featured: true
   }),
   catpad: withDefaults({
@@ -49,7 +49,7 @@ export const APP_REGISTRY = {
     loader: () => import('./CatPadApp'),
     path: '/apps/catpad',
     tags: ['notes', 'editor', 'sync', 'cats'],
-    created: '2024-06-01',
+    created: '2025-09-21',
     featured: true,
   }),
   'cat-connect-four': withDefaults({
@@ -62,7 +62,7 @@ export const APP_REGISTRY = {
     loader: () => import('./CatConnectFourApp'),
     path: '/apps/cat-connect-four',
     tags: ['game', 'board', 'connect-four', 'cats'],
-    created: '2024-11-01',
+    created: '2025-09-22',
     featured: true,
   }),
   'zen-do': withDefaults({
@@ -75,7 +75,7 @@ export const APP_REGISTRY = {
     loader: () => import('./ZenDoApp'),
     path: '/apps/zen-do',
     tags: ['tasks', 'productivity', 'gist', 'drag-and-drop'],
-    created: '2024-10-05',
+    created: '2025-09-21',
     featured: true,
   }),
   'cat-typing-speed-test': withDefaults({
@@ -88,7 +88,7 @@ export const APP_REGISTRY = {
     loader: () => import('./CatTypingSpeedTestApp'),
     path: '/apps/cat-typing-speed-test',
     tags: ['typing', 'speed', 'practice', 'cats'],
-    created: '2024-09-23',
+    created: '2025-09-21',
     featured: true,
   }),
   'quantum-playground': withDefaults({
@@ -101,7 +101,7 @@ export const APP_REGISTRY = {
     loader: () => import('./quantum-playground'),
     path: '/apps/quantum-playground',
     tags: ['quantum', 'physics', 'circuits', 'visualization'],
-    created: '2025-01-15',
+    created: '2025-09-22',
     featured: true,
   }),
   // Placeholder for future apps
@@ -115,7 +115,7 @@ export const APP_REGISTRY = {
     loader: () => import('./NPomodoroApp'),
     path: '/apps/n-pomodoro',
     tags: ['productivity', 'timer', 'space', 'customizable'],
-    created: '2024-01-01',
+    created: '2025-09-16',
     featured: true
   }),
   'snake': withDefaults({
@@ -128,7 +128,7 @@ export const APP_REGISTRY = {
     loader: () => import('./SnakeApp'),
     path: '/apps/snake',
     tags: ['game', 'classic', 'keyboard', 'arcade'],
-    created: '2024-01-01',
+    created: '2025-09-17',
     featured: true
   }),
   'hexa-snake-bee': withDefaults({
@@ -141,7 +141,7 @@ export const APP_REGISTRY = {
     loader: () => import('./HexaSnakeApp'),
     path: '/apps/hexa-snake',
     tags: ['game', 'python', 'pygame', 'hex', 'arcade'],
-    created: '2024-03-01',
+    created: '2025-09-17',
     featured: true
   }),
   'pong': withDefaults({
@@ -154,7 +154,7 @@ export const APP_REGISTRY = {
     loader: () => import('./PongApp'),
     path: '/apps/pong',
     tags: ['game', 'arcade', 'canvas', 'retro'],
-    created: '2024-01-01',
+    created: '2025-09-17',
     featured: true
   }),
   'pong-ring': withDefaults({
@@ -167,7 +167,7 @@ export const APP_REGISTRY = {
     loader: () => import('./PongRingApp'),
     path: '/apps/pong-ring',
     tags: ['game', 'canvas', 'futuristic'],
-    created: '2024-05-01',
+    created: '2025-09-17',
     featured: true
   }),
   'sudoku-coffee': withDefaults({
@@ -180,7 +180,7 @@ export const APP_REGISTRY = {
     loader: () => import('./SudokuApp'),
     path: '/apps/sudoku-coffee',
     tags: ['game', 'puzzle', 'canvas', 'tailwind'],
-    created: '2024-04-01',
+    created: '2025-09-17',
     featured: true
   }),
   'zen-go': withDefaults({
@@ -206,7 +206,7 @@ export const APP_REGISTRY = {
     loader: () => import('./CosmosApp'),
     path: '/apps/cosmos',
     tags: ['three.js', 'simulation', 'space', 'physics'],
-    created: '2024-11-19',
+    created: '2025-09-22',
     featured: true,
   }),
   'catnap-leap': withDefaults({
@@ -220,7 +220,7 @@ export const APP_REGISTRY = {
     loader: () => import('./CatNapLeapApp'),
     path: '/apps/catnap-leap',
     tags: ['game', 'canvas', 'flappy', 'cat'],
-    created: '2024-06-01',
+    created: '2025-09-21',
     featured: true
   }),
   'cache-lab': withDefaults({
@@ -233,7 +233,7 @@ export const APP_REGISTRY = {
     loader: () => import('./CacheLabApp'),
     path: '/cache-lab',
     tags: ['cache', 'education', 'react', 'interactive'],
-    created: '2024-07-01',
+    created: '2025-09-21',
     featured: true
   }),
   'quantum-playground': withDefaults({
@@ -246,7 +246,7 @@ export const APP_REGISTRY = {
     loader: () => import('./quantum-playground'),
     path: '/apps/quantum-playground',
     tags: ['quantum', 'simulator', 'visualization', 'education'],
-    created: '2024-12-01',
+    created: '2025-09-22',
     featured: true,
   }),
   'app-3': withDefaults({
@@ -259,7 +259,7 @@ export const APP_REGISTRY = {
     loader: null,
     path: '/apps/app-3',
     tags: ['coming-soon'],
-    created: '2024-01-01',
+    created: '2025-09-16',
     featured: false,
     disabled: true
   }),
