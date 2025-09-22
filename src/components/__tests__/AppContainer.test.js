@@ -26,4 +26,16 @@ describe('App routing', () => {
     renderAtPath(appPath);
     expect(await screen.findByText(/Day 1 of 7/i)).toBeInTheDocument();
   });
+
+  it('loads Cat Connect Four with the café background asset', async () => {
+    renderAtPath('/apps/cat-connect-four');
+
+    await screen.findByRole('heading', { name: /Cat Connect Four/i });
+
+    await screen.findByText(/Relax at the cat café/i);
+
+    const appElement = document.querySelector('.cat-connect-four-app');
+    expect(appElement).not.toBeNull();
+    expect(appElement.style.backgroundImage).toContain('/cat-connect-four/cat-cafe-illustration.svg');
+  });
 });

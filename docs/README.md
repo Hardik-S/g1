@@ -90,7 +90,7 @@ Then open [http://localhost:3000](http://localhost:3000).
 npm run build
 ```
 
-This step first builds the Cache Lab Vite bundle (`apps/cache-lab`), then runs Webpack to emit launcher assets into `dist/`.
+This step first builds the Cache Lab Vite bundle (`src/apps/cache-lab`), then runs Webpack to emit launcher assets into `dist/`.
 
 ### Deploy (GitHub Pages)
 
@@ -117,7 +117,7 @@ Your site will be available at the `homepage` URL.
 
 ### Cache Lab Workspace
 
-* `npm run build:cache-lab`: Build Cache Lab assets within `apps/cache-lab`.
+* `npm run build:cache-lab`: Build Cache Lab assets within `src/apps/cache-lab`.
 * `npm run test:cache-lab`: Run Cache Lab unit tests via pnpm.
 * `npm run e2e:cache-lab`: Run Playwright E2E tests for Cache Lab via pnpm.
 
@@ -127,13 +127,16 @@ Your site will be available at the `homepage` URL.
 
 ```
 g1/
-├── apps/         # Independent micro-app workspaces
+├── apps/         # Other independent micro-app workspaces
 ├── docs/         # Additional guides and references
 ├── public/       # Static assets (root index.html)
 ├── src/          # Launcher source code + integrated apps
-│   ├── components/   # Shared UI components
-│   ├── apps/         # Integrated app directories
-│   └── registry.js   # App registration for launcher
+│   ├── components/        # Shared UI components
+│   ├── apps/
+│   │   ├── CacheLabApp/   # Launcher wrapper that embeds the lab
+│   │   ├── cache-lab/     # Cache Lab pnpm workspace (Vite + TS)
+│   │   └── ...            # Other integrated apps
+│   └── registry.js        # App registration for launcher
 ├── dist/         # Build output
 ├── webpack.config.js
 ├── package.json
