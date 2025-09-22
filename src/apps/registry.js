@@ -1,8 +1,43 @@
 import React from 'react';
 
+const DEFAULT_AUTHOR = 'Hardik-s';
+const VERSION_RANGE = {
+  min: { major: 1, minor: 1, patch: 0 },
+  max: { major: 7, minor: 8, patch: 5 },
+};
+
+const versionToNumber = ({ major, minor, patch }) => (major * 10000) + (minor * 100) + patch;
+
+const numberToVersion = (value) => {
+  const major = Math.floor(value / 10000);
+  const minor = Math.floor((value % 10000) / 100);
+  const patch = value % 100;
+  return `${major}.${minor}.${patch}`;
+};
+
+const MIN_VERSION_VALUE = versionToNumber(VERSION_RANGE.min);
+const MAX_VERSION_VALUE = versionToNumber(VERSION_RANGE.max);
+
+const generateRandomVersion = () => {
+  const availableRange = MAX_VERSION_VALUE - MIN_VERSION_VALUE - 1;
+
+  if (availableRange <= 0) {
+    throw new Error('Version range must contain at least one valid version');
+  }
+
+  const randomValue = Math.floor(Math.random() * availableRange) + MIN_VERSION_VALUE + 1;
+  return numberToVersion(randomValue);
+};
+
+const withDefaults = (app) => ({
+  ...app,
+  version: generateRandomVersion(),
+  author: DEFAULT_AUTHOR,
+});
+
 // App Registry - Central place to manage all 64 apps
 export const APP_REGISTRY = {
-  'day-switcher': {
+  'day-switcher': withDefaults({
     id: 'day-switcher',
     title: 'Day Switcher',
     description: 'Switch between days of the week with beautiful animations',
@@ -12,12 +47,10 @@ export const APP_REGISTRY = {
     loader: () => import('./DaySwitcherApp'),
     path: '/apps/day-switcher',
     tags: ['react', 'ui', 'interactive'],
-    version: '1.0.0',
-    author: 'Hardik-S',
     created: '2024-01-01',
     featured: true
-  },
-  catpad: {
+  }),
+  catpad: withDefaults({
     id: 'catpad',
     title: 'CatPad',
     description: 'Feline-themed notepad with cloud sync across every browser.',
@@ -27,12 +60,10 @@ export const APP_REGISTRY = {
     loader: () => import('./CatPadApp'),
     path: '/apps/catpad',
     tags: ['notes', 'editor', 'sync', 'cats'],
-    version: '1.0.0',
-    author: 'OpenAI Assistant',
     created: '2024-06-01',
     featured: true,
-  },
-  'zen-do': {
+  }),
+  'zen-do': withDefaults({
     id: 'zen-do',
     title: 'Zen Do',
     description: 'Minimalist to-do garden with weekly buckets, focus mode, and gist sync.',
@@ -42,12 +73,10 @@ export const APP_REGISTRY = {
     loader: () => import('./ZenDoApp'),
     path: '/apps/zen-do',
     tags: ['tasks', 'productivity', 'gist', 'drag-and-drop'],
-    version: '1.0.0',
-    author: 'OpenAI Assistant',
     created: '2024-10-05',
     featured: true,
-  },
-  'cat-typing-speed-test': {
+  }),
+  'cat-typing-speed-test': withDefaults({
     id: 'cat-typing-speed-test',
     title: 'Cat Typing Speed Test',
     description: 'Sprint through cat-themed sentences to measure WPM, CPM, and accuracy.',
@@ -57,13 +86,11 @@ export const APP_REGISTRY = {
     loader: () => import('./CatTypingSpeedTestApp'),
     path: '/apps/cat-typing-speed-test',
     tags: ['typing', 'speed', 'practice', 'cats'],
-    version: '1.0.0',
-    author: 'OpenAI Assistant',
     created: '2024-09-23',
     featured: true,
-  },
+  }),
   // Placeholder for future apps
-  'n-pomodoro': {
+  'n-pomodoro': withDefaults({
     id: 'n-pomodoro',
     title: 'N-Pomodoro Timer',
     description: 'Customizable Pomodoro timer with N activities and deep space theme',
@@ -73,12 +100,10 @@ export const APP_REGISTRY = {
     loader: () => import('./NPomodoroApp'),
     path: '/apps/n-pomodoro',
     tags: ['productivity', 'timer', 'space', 'customizable'],
-    version: '1.0.0',
-    author: 'Hardik-S',
     created: '2024-01-01',
     featured: true
-  },
-  'snake': {
+  }),
+  'snake': withDefaults({
     id: 'snake',
     title: 'Snake Game',
     description: 'Classic Snake game with keyboard controls and modern design',
@@ -88,12 +113,10 @@ export const APP_REGISTRY = {
     loader: () => import('./SnakeApp'),
     path: '/apps/snake',
     tags: ['game', 'classic', 'keyboard', 'arcade'],
-    version: '1.0.0',
-    author: 'Hardik-S',
     created: '2024-01-01',
     featured: true
-  },
-  'hexa-snake-bee': {
+  }),
+  'hexa-snake-bee': withDefaults({
     id: 'hexa-snake-bee',
     title: 'Hexa-Snake (Bee Edition)',
     description: 'Guide a bee through a honeycomb hex-grid and collect golden nectar',
@@ -103,12 +126,10 @@ export const APP_REGISTRY = {
     loader: () => import('./HexaSnakeApp'),
     path: '/apps/hexa-snake',
     tags: ['game', 'python', 'pygame', 'hex', 'arcade'],
-    version: '1.0.0',
-    author: 'OpenAI Assistant',
     created: '2024-03-01',
     featured: true
-  },
-  'pong': {
+  }),
+  'pong': withDefaults({
     id: 'pong',
     title: 'Neon Pong',
     description: 'Fast-paced neon Pong with solo and versus modes plus session history',
@@ -118,12 +139,10 @@ export const APP_REGISTRY = {
     loader: () => import('./PongApp'),
     path: '/apps/pong',
     tags: ['game', 'arcade', 'canvas', 'retro'],
-    version: '1.0.0',
-    author: 'OpenAI Assistant',
     created: '2024-01-01',
     featured: true
-  },
-  'pong-ring': {
+  }),
+  'pong-ring': withDefaults({
     id: 'pong-ring',
     title: 'Pong Ring',
     description: 'Circular quartz arena pong with marble glow and solo/versus modes',
@@ -133,12 +152,10 @@ export const APP_REGISTRY = {
     loader: () => import('./PongRingApp'),
     path: '/apps/pong-ring',
     tags: ['game', 'canvas', 'futuristic'],
-    version: '1.0.0',
-    author: 'OpenAI Assistant',
     created: '2024-05-01',
     featured: true
-  },
-  'sudoku-coffee': {
+  }),
+  'sudoku-coffee': withDefaults({
     id: 'sudoku-coffee',
     title: 'Sudoku Roast',
     description: 'A cozy coffeehouse Sudoku with handcrafted generator, solver, and notes',
@@ -148,12 +165,10 @@ export const APP_REGISTRY = {
     loader: () => import('./SudokuApp'),
     path: '/apps/sudoku-coffee',
     tags: ['game', 'puzzle', 'canvas', 'tailwind'],
-    version: '1.0.0',
-    author: 'OpenAI Assistant',
     created: '2024-04-01',
     featured: true
-  },
-  chess: {
+  }),
+  chess: withDefaults({
     id: 'chess',
     title: 'Chessboard Summit',
     description: 'Challenge a friend locally or face Stockfish with adjustable strength.',
@@ -163,12 +178,10 @@ export const APP_REGISTRY = {
     loader: () => import('./ChessApp'),
     path: '/apps/chess',
     tags: ['game', 'board', 'stockfish', 'ai'],
-    version: '1.0.0',
-    author: 'OpenAI Assistant',
     created: '2024-05-01',
     featured: true
-  },
-  'catnap-leap': {
+  }),
+  'catnap-leap': withDefaults({
     id: 'catnap-leap',
     title: 'CatNap Leap',
     description: 'Guide a drowsy cat through floating pillows, chase scores, and sip dreamy powerups.',
@@ -178,12 +191,10 @@ export const APP_REGISTRY = {
     loader: () => import('./CatNapLeapApp'),
     path: '/apps/catnap-leap',
     tags: ['game', 'canvas', 'flappy', 'cat'],
-    version: '1.0.0',
-    author: 'OpenAI Assistant',
     created: '2024-06-01',
     featured: true
-  },
-  'cache-lab': {
+  }),
+  'cache-lab': withDefaults({
     id: 'cache-lab',
     title: 'Cache Lab',
     description: 'Interactive cache memory learning lab with mapping, replacement, hierarchy, and assessments.',
@@ -193,12 +204,10 @@ export const APP_REGISTRY = {
     loader: () => import('./CacheLabApp'),
     path: '/cache-lab',
     tags: ['cache', 'education', 'react', 'interactive'],
-    version: '1.0.0',
-    author: 'OpenAI Assistant',
     created: '2024-07-01',
     featured: true
-  },
-  'app-3': {
+  }),
+  'app-3': withDefaults({
     id: 'app-3',
     title: 'Coming Soon',
     description: 'This app is under development',
@@ -208,12 +217,10 @@ export const APP_REGISTRY = {
     loader: null,
     path: '/apps/app-3',
     tags: ['coming-soon'],
-    version: '0.0.0',
-    author: 'Hardik-S',
     created: '2024-01-01',
     featured: false,
     disabled: true
-  },
+  }),
   // Add more apps here as we build them...
 };
 
