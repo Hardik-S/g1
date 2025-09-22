@@ -12,6 +12,7 @@ import {
   subscribeToGlobalGistSettings,
   writeGlobalGistSettings,
 } from '../state/globalGistSettings';
+import { verifyGistConnection } from '../global/verifyGistConnection';
 import './AppLauncher.css';
 
 const AppLauncher = () => {
@@ -25,6 +26,10 @@ const AppLauncher = () => {
   const [gistSettingsForm, setGistSettingsForm] = useState({
     gistId: '',
     gistToken: '',
+  });
+  const [gistSettingsStatus, setGistSettingsStatus] = useState({
+    type: null,
+    message: '',
   });
   const [favoriteIds, setFavoriteIds] = useState(() => {
     try {
@@ -40,6 +45,34 @@ const AppLauncher = () => {
   const gistTokenInputRef = useRef(null);
   const cancelButtonRef = useRef(null);
   const saveButtonRef = useRef(null);
+  const gistStatusTimerRef = useRef(null);
+
+  const clearGistStatus = useCallback(() => {
+    if (gistStatusTimerRef.current) {
+      clearTimeout(gistStatusTimerRef.current);
+      gistStatusTimerRef.current = null;
+    }
+    setGistSettingsStatus({ type: null, message: '' });
+  }, []);
+
+  const scheduleGistStatusDismissal = useCallback(() => {
+    if (gistStatusTimerRef.current) {
+      clearTimeout(gistStatusTimerRef.current);
+    }
+
+    gistStatusTimerRef.current = setTimeout(() => {
+      setGistSettingsStatus({ type: null, message: '' });
+      gistStatusTimerRef.current = null;
+    }, 6000);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (gistStatusTimerRef.current) {
+        clearTimeout(gistStatusTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const formatter = new Intl.DateTimeFormat('en-CA', {
@@ -71,6 +104,12 @@ const AppLauncher = () => {
       unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    if (isSettingsOpen) {
+      clearGistStatus();
+    }
+  }, [clearGistStatus, isSettingsOpen]);
 
   const closeSettingsModal = useCallback(() => {
     setIsSettingsOpen(false);
@@ -231,14 +270,45 @@ const AppLauncher = () => {
     }));
   };
 
-  const handleSaveSettings = (event) => {
+  const handleSaveSettings = useCallback(async (event) => {
     event.preventDefault();
-    writeGlobalGistSettings({
-      gistId: gistSettingsForm.gistId,
-      gistToken: gistSettingsForm.gistToken,
-    });
-    closeSettingsModal();
-  };
+    clearGistStatus();
+
+    try {
+      const savedSettings = writeGlobalGistSettings({
+        gistId: gistSettingsForm.gistId,
+        gistToken: gistSettingsForm.gistToken,
+      });
+
+      if (savedSettings.gistId) {
+        await verifyGistConnection({
+          gistId: savedSettings.gistId,
+          gistToken: savedSettings.gistToken,
+        });
+      }
+
+      setGistSettingsStatus({
+        type: 'success',
+        message: savedSettings.gistId
+          ? 'Gist connection verified successfully.'
+          : 'Gist settings saved.',
+      });
+      closeSettingsModal();
+      scheduleGistStatusDismissal();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setGistSettingsStatus({
+        type: 'error',
+        message: `Failed to verify gist settings: ${errorMessage}`,
+      });
+      scheduleGistStatusDismissal();
+    }
+  }, [
+    clearGistStatus,
+    closeSettingsModal,
+    gistSettingsForm,
+    scheduleGistStatusDismissal,
+  ]);
 
   const toggleFeaturedSection = useCallback(() => {
     setIsFeaturedCollapsed((prev) => !prev);
@@ -333,6 +403,19 @@ const AppLauncher = () => {
           </div>
         </div>
       </header>
+
+      {gistSettingsStatus.type && (
+        <div
+          className={`gist-status-banner ${gistSettingsStatus.type}`}
+          aria-live="polite"
+          role="status"
+        >
+          <span className="gist-status-icon" aria-hidden="true">
+            {gistSettingsStatus.type === 'success' ? '✅' : '⚠️'}
+          </span>
+          <span className="gist-status-message">{gistSettingsStatus.message}</span>
+        </div>
+      )}
 
       <div className="launcher-content">
         <nav className="category-nav">

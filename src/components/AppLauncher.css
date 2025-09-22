@@ -16,6 +16,39 @@
   backdrop-filter: blur(10px);
 }
 
+.gist-status-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: var(--spacing-medium);
+  padding: 14px 18px;
+  border-radius: 16px;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid transparent;
+}
+
+.gist-status-banner.success {
+  background: rgba(76, 175, 80, 0.15);
+  color: #1b5e20;
+  border-color: rgba(76, 175, 80, 0.35);
+}
+
+.gist-status-banner.error {
+  background: rgba(244, 67, 54, 0.15);
+  color: #b71c1c;
+  border-color: rgba(244, 67, 54, 0.35);
+}
+
+.gist-status-icon {
+  font-size: 1.3rem;
+}
+
+.gist-status-message {
+  flex: 1;
+  line-height: 1.4;
+}
+
 .launcher-header-top {
   display: flex;
   justify-content: space-between;
