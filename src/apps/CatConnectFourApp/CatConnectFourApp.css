@@ -2,7 +2,10 @@
   position: relative;
   min-height: 100%;
   padding: 2rem 1rem 3rem;
-  background: url('/cat-connect-four/cat-cafe-illustration.svg') center/cover no-repeat fixed;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   display: flex;
   justify-content: center;
   align-items: stretch;
