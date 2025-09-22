@@ -3,5 +3,5 @@ export {
   writeGlobalGistSettings,
   subscribeToGlobalGistSettings,
   clearGlobalGistSettings,
-} from './globalGistSettings';
+} from '../state/globalGistSettings';
 

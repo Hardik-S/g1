@@ -12,7 +12,7 @@ import {
   readGlobalGistSettings,
   subscribeToGlobalGistSettings,
   GLOBAL_GIST_SETTINGS_CLIENT_ID,
-} from '../globalGistSettings';
+} from '../../state/globalGistSettings';
 import {
   assignFocusBucket,
   assignTaskToDay,
