@@ -67,10 +67,9 @@ body {
   color: var(--muted);
 }
 
-.login-grid {
+#login-form {
   display: grid;
   gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
 .field {
@@ -82,7 +81,7 @@ body {
   font-weight: 600;
 }
 
-.login-grid input {
+#login-form input {
   border-radius: 0.85rem;
   border: 2px solid rgba(236, 72, 153, 0.18);
   background: rgba(255, 255, 255, 0.85);
@@ -91,7 +90,7 @@ body {
   transition: border 0.2s ease, box-shadow 0.2s ease;
 }
 
-.login-grid input:focus-visible {
+#login-form input:focus-visible {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.25);
   outline: none;
@@ -472,10 +471,6 @@ textarea:disabled {
 
   .actions button {
     flex: 1;
-  }
-
-  .login-grid {
-    grid-template-columns: 1fr;
   }
 
   .login-actions {
