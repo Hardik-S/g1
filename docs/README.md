@@ -118,6 +118,10 @@ Your site will be available at the `homepage` URL.
 * `npm run deploy`: Publish `dist/` to `gh-pages`.
 * `npm test`: Run Jest suite for launcher React apps.
 
+### Engine utilities
+
+* `node gtp/gtp.js`: Launch the Zen Go Go Text Protocol (GTP) loop backed by the shared board logic. Useful for piping `genmove`, `play`, and `showboard` commands during testing.
+
 ### Cache Lab Workspace
 
 * `npm run build:cache-lab`: Build Cache Lab assets within `src/apps/cache-lab`.
