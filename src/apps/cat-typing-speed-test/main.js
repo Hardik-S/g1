@@ -629,6 +629,84 @@
     });
   };
 
+  const isScreenActive = (screen) => {
+    if (!screen) return false;
+    const isHidden = screen.classList.contains('hidden');
+    const ariaHidden = screen.getAttribute('aria-hidden');
+    return !isHidden && ariaHidden !== 'true';
+  };
+
+  const scheduleNextFrame = (callback) => {
+    if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+      window.requestAnimationFrame(callback);
+    } else {
+      setTimeout(callback, 0);
+    }
+  };
+
+  const focusTypingInput = ({ selectEnd = true } = {}) => {
+    if (!typingInput || !isScreenActive(testScreen)) {
+      return;
+    }
+
+    scheduleNextFrame(() => {
+      if (!typingInput || typingInput.disabled || !isScreenActive(testScreen)) {
+        return;
+      }
+
+      if (typeof typingInput.focus === 'function') {
+        try {
+          typingInput.focus({ preventScroll: true });
+        } catch (error) {
+          typingInput.focus();
+        }
+      }
+
+      if (selectEnd && typeof typingInput.setSelectionRange === 'function') {
+        const end = typingInput.value.length;
+        try {
+          typingInput.setSelectionRange(end, end);
+        } catch (error) {
+          // Ignore selection errors in unsupported environments.
+        }
+      }
+    });
+  };
+
+  const focusStartScreenControl = () => {
+    if (!isScreenActive(startScreen)) {
+      return;
+    }
+
+    const aliasTarget = !isLoggedIn && aliasInput && !aliasInput.disabled ? aliasInput : null;
+    if (aliasTarget) {
+      if (typeof aliasTarget.focus === 'function') {
+        aliasTarget.focus({ preventScroll: true });
+      }
+      return;
+    }
+
+    const desiredDuration = Number.isFinite(testDuration) && testDuration > 0 ? testDuration : null;
+    const activeButton = durationButtons.find((button) => {
+      if (!button || button.disabled || desiredDuration === null) {
+        return false;
+      }
+      const value = Number(button.dataset.duration);
+      return Number.isFinite(value) && value === desiredDuration;
+    });
+
+    const fallbackButton = activeButton || durationButtons.find((button) => button && !button.disabled);
+
+    if (fallbackButton && typeof fallbackButton.focus === 'function') {
+      fallbackButton.focus({ preventScroll: true });
+      return;
+    }
+
+    if (aliasInput && typeof aliasInput.focus === 'function' && !aliasInput.disabled) {
+      aliasInput.focus({ preventScroll: true });
+    }
+  };
+
   const loadCorpus = async () => {
     if (corpusCache) return corpusCache;
     if (!corpusPromise) {
@@ -822,9 +900,8 @@
       timerEl.textContent = formatTime(countdownSeconds);
 
       setScreen(testScreen);
-      requestAnimationFrame(() => {
-        typingInput.focus();
-        typingInput.setSelectionRange(typingInput.value.length, typingInput.value.length);
+      focusTypingInput();
+      scheduleNextFrame(() => {
         applyInputWidth();
       });
 
@@ -834,6 +911,7 @@
     } catch (error) {
       resetTestState();
       setScreen(startScreen);
+      focusStartScreenControl();
       alert('Unable to load the cat corpus. Please refresh and try again.');
       console.error(error);
     }
@@ -874,12 +952,14 @@
       beginTest(testDuration);
     } else {
       setScreen(startScreen);
+      focusStartScreenControl();
     }
   });
 
   backBtn.addEventListener('click', () => {
     resetTestState();
     setScreen(startScreen);
+    focusStartScreenControl();
   });
 
   typingInput.addEventListener('input', handleInput);
@@ -887,6 +967,7 @@
   resultsRetry.addEventListener('click', () => {
     if (!targetText) {
       setScreen(startScreen);
+      focusStartScreenControl();
       return;
     }
     beginTest(testDuration || 15);
@@ -895,6 +976,7 @@
   resultsMenu.addEventListener('click', () => {
     resetTestState();
     setScreen(startScreen);
+    focusStartScreenControl();
   });
 
   observeTextPanel();
@@ -948,6 +1030,10 @@
   }
 
   setScreen(startScreen);
+  focusStartScreenControl();
+  scheduleNextFrame(() => {
+    focusTypingInput();
+  });
 
   window.addEventListener('beforeunload', () => {
     stopTimer();
