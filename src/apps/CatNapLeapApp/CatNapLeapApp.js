@@ -192,41 +192,51 @@ const mixColor = (startHex, endHex, t) => {
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
-const createInitialState = (width, height, highScore, catAppearance, kittenMode = false) => ({
-  phase: 'ready',
-  canvasWidth: width,
-  canvasHeight: height,
-  time: 0,
-  idleTime: 0,
-  cat: {
-    x: width * 0.28,
-    y: height * 0.5,
-    radius: Math.max(14, width * 0.035),
-    vy: 0,
-  },
-  pillows: [],
-  powerups: [],
-  birds: [],
-  pillowTimer: 0,
-  pillowInterval: 1500,
-  powerupTimer: 0,
-  nextPowerupAt: 8500,
-  birdTimer: 0,
-  nextBirdAt: 10500,
-  stats: {
-    score: 0,
-    perfects: 0,
-  },
-  drowsiness: 0,
-  lastReason: 'Tap or press space to wake Noodle the cat.',
-  highScore,
-  effects: {
-    yarnUntil: 0,
-    catnipUntil: 0,
-  },
-  catAppearance: catAppearance || CAT_VARIATIONS[0],
-  kittenMode,
-});
+const createInitialState = (width, height, highScore, catAppearance, kittenMode = false) => {
+  const baseRadius = Math.max(14, width * 0.035);
+  return {
+    phase: 'ready',
+    canvasWidth: width,
+    canvasHeight: height,
+    time: 0,
+    idleTime: 0,
+    cat: {
+      x: width * 0.28,
+      y: height * 0.5,
+      baseRadius,
+      radius: baseRadius,
+      scale: 1,
+      scaleTarget: 1,
+      vy: 0,
+      blinkCountdown: 1.2 + Math.random() * 2.6,
+      blinkDuration: 0,
+      blinkTime: 0,
+      tailPhase: Math.random() * Math.PI * 2,
+    },
+    pillows: [],
+    powerups: [],
+    birds: [],
+    pillowTimer: 0,
+    pillowInterval: 1500,
+    powerupTimer: 0,
+    nextPowerupAt: 8500,
+    birdTimer: 0,
+    nextBirdAt: 10500,
+    stats: {
+      score: 0,
+      perfects: 0,
+    },
+    drowsiness: 0,
+    lastReason: 'Tap or press space to wake Noodle the cat.',
+    highScore,
+    effects: {
+      yarnUntil: 0,
+      catnipUntil: 0,
+    },
+    catAppearance: catAppearance || CAT_VARIATIONS[0],
+    kittenMode,
+  };
+};
 
 const CatNapLeapApp = () => {
   const containerRef = useRef(null);
@@ -412,7 +422,15 @@ const CatNapLeapApp = () => {
       state.canvasHeight = height;
       state.cat.x = adjustedWidth * 0.28;
       state.cat.y = height * 0.5;
-      state.cat.radius = Math.max(14, adjustedWidth * 0.035);
+      const resizedBaseRadius = Math.max(14, adjustedWidth * 0.035);
+      state.cat.baseRadius = resizedBaseRadius;
+      if (typeof state.cat.scale !== 'number') {
+        state.cat.scale = 1;
+      }
+      if (typeof state.cat.scaleTarget !== 'number') {
+        state.cat.scaleTarget = state.cat.scale;
+      }
+      state.cat.radius = resizedBaseRadius * state.cat.scale;
       state.catAppearance = selectedAppearance;
       state.kittenMode = kittenMode;
     }
@@ -467,6 +485,16 @@ const CatNapLeapApp = () => {
     state.nextBirdAt = 9000 + Math.random() * 4200;
     state.kittenMode = kittenMode;
     state.catAppearance = selectedAppearance;
+    if (state.cat) {
+      state.cat.vy = 0;
+      state.cat.scale = 1;
+      state.cat.scaleTarget = 1;
+      state.cat.radius = state.cat.baseRadius;
+      state.cat.blinkCountdown = 0.8 + Math.random() * 1.8;
+      state.cat.blinkDuration = 0;
+      state.cat.blinkTime = 0;
+      state.cat.tailPhase = Math.random() * Math.PI * 2;
+    }
 
     const loadout = pendingLoadoutRef.current;
     const loadoutSummary = summarizeLoadout(loadout);
@@ -621,6 +649,40 @@ const CatNapLeapApp = () => {
 
     state.time += deltaMs;
 
+    const cat = state.cat;
+    if (cat) {
+      const baseRadius = Math.max(14, width * 0.035);
+      cat.baseRadius = baseRadius;
+      if (typeof cat.scale !== 'number') {
+        cat.scale = 1;
+      }
+      if (typeof cat.scaleTarget !== 'number') {
+        cat.scaleTarget = cat.scale;
+      }
+      const easeRate = 6;
+      const easeT = 1 - Math.exp(-easeRate * delta);
+      cat.scale += (cat.scaleTarget - cat.scale) * easeT;
+      cat.radius = cat.baseRadius * cat.scale;
+
+      const tailSpeed = state.phase === 'playing' ? 3.6 : 2.4;
+      cat.tailPhase = (cat.tailPhase + delta * tailSpeed) % (Math.PI * 2);
+
+      if (cat.blinkDuration > 0) {
+        cat.blinkTime += delta;
+        if (cat.blinkTime >= cat.blinkDuration) {
+          cat.blinkDuration = 0;
+          cat.blinkTime = 0;
+          cat.blinkCountdown = 1.8 + Math.random() * 2.6;
+        }
+      } else {
+        cat.blinkCountdown -= delta;
+        if (cat.blinkCountdown <= 0) {
+          cat.blinkDuration = 0.12 + Math.random() * 0.06;
+          cat.blinkTime = 0;
+        }
+      }
+    }
+
     if (state.phase === 'ready') {
       state.idleTime += delta;
       const idleOffset = Math.sin(state.idleTime * 2) * 10;
@@ -738,6 +800,10 @@ const CatNapLeapApp = () => {
           treatsRef.current += 1;
           setTreats(treatsRef.current);
           playChime();
+          if (state.cat) {
+            const nextTarget = (state.cat.scaleTarget || 1) + 0.05;
+            state.cat.scaleTarget = clamp(nextTarget, 1, 1.25);
+          }
           return false;
         }
 
@@ -974,7 +1040,7 @@ const CatNapLeapApp = () => {
   };
 
   const drawCat = (ctx, state) => {
-    const { x, y, radius, vy } = state.cat;
+    const { x, y, radius, vy, tailPhase = 0, blinkDuration = 0, blinkTime = 0 } = state.cat;
     const droop = clamp(state.drowsiness / 100, 0, 1);
     const tilt = clamp(vy / 400, -0.5, 0.5);
     const appearance = state.catAppearance || CAT_VARIATIONS[0];
@@ -990,14 +1056,50 @@ const CatNapLeapApp = () => {
       cheek,
     } = colors;
 
+    const blinkProgress = blinkDuration > 0 ? Math.min(1, blinkTime / blinkDuration) : 0;
+    const blinkEase = blinkDuration > 0 ? Math.sin(blinkProgress * Math.PI) : 0;
+    const eyeOpenFactor = 1 - blinkEase;
+    const tailAngle = -Math.PI / 6 - droop * 0.5 + Math.sin(tailPhase) * 0.3 + tilt * 0.25;
+
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(tilt * 0.3);
+
+    ctx.save();
+    ctx.shadowColor = 'rgba(34, 18, 58, 0.35)';
+    ctx.shadowBlur = radius * 0.55;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = radius * 0.2;
+
+    ctx.save();
+    ctx.translate(-radius * 0.75, radius * 0.25);
+    ctx.rotate(tailAngle);
+    const tailLength = radius * 1.45;
+    const tailWidth = radius * 0.45;
+    ctx.fillStyle = body;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(-tailLength * 0.25, -tailWidth * 0.7, -tailLength * 0.7, -tailWidth * 0.2);
+    ctx.quadraticCurveTo(-tailLength * 1.05, tailWidth * 0.1, -tailLength * 0.65, tailWidth * 0.36);
+    ctx.quadraticCurveTo(-tailLength * 0.2, tailWidth * 0.56, 0, tailWidth * 0.28);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
 
     ctx.fillStyle = body;
     ctx.beginPath();
     ctx.arc(0, 0, radius, 0, Math.PI * 2);
     ctx.fill();
+
+    ctx.globalAlpha = 0.6;
+    ctx.lineWidth = Math.max(1.5, radius * 0.12);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+    ctx.beginPath();
+    ctx.arc(0, 0, radius * 1.03, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    ctx.restore();
 
     if (pattern) {
       ctx.save();
@@ -1086,24 +1188,65 @@ const CatNapLeapApp = () => {
     const eyeOffsetX = radius * 0.45;
     const eyeOffsetY = -radius * 0.1;
     const eyeRadius = radius * 0.25;
+    const baseEyeHeight = eyeRadius * (0.75 - droop * 0.35);
+    const verticalRadius = baseEyeHeight * eyeOpenFactor;
+    const isEyeOpen = verticalRadius > radius * 0.02;
 
-    ctx.fillStyle = eye;
-    ctx.beginPath();
-    ctx.ellipse(-eyeOffsetX, eyeOffsetY, eyeRadius, eyeRadius * (0.75 - droop * 0.35), 0, 0, Math.PI * 2);
-    ctx.ellipse(eyeOffsetX, eyeOffsetY, eyeRadius, eyeRadius * (0.75 - droop * 0.35), 0, 0, Math.PI * 2);
-    ctx.fill();
+    if (isEyeOpen) {
+      ctx.fillStyle = eye;
+      ctx.beginPath();
+      ctx.ellipse(-eyeOffsetX, eyeOffsetY, eyeRadius, verticalRadius, 0, 0, Math.PI * 2);
+      ctx.ellipse(eyeOffsetX, eyeOffsetY, eyeRadius, verticalRadius, 0, 0, Math.PI * 2);
+      ctx.fill();
 
-    ctx.fillStyle = highlight;
-    ctx.beginPath();
-    ctx.arc(-eyeOffsetX - eyeRadius * 0.1, eyeOffsetY - eyeRadius * 0.1, eyeRadius * 0.35, 0, Math.PI * 2);
-    ctx.arc(eyeOffsetX - eyeRadius * 0.1, eyeOffsetY - eyeRadius * 0.1, eyeRadius * 0.35, 0, Math.PI * 2);
-    ctx.fill();
+      if (eyeOpenFactor > 0.3) {
+        ctx.fillStyle = highlight;
+        ctx.beginPath();
+        ctx.arc(
+          -eyeOffsetX - eyeRadius * 0.1,
+          eyeOffsetY - eyeRadius * 0.1,
+          eyeRadius * 0.35,
+          0,
+          Math.PI * 2,
+        );
+        ctx.arc(
+          eyeOffsetX - eyeRadius * 0.1,
+          eyeOffsetY - eyeRadius * 0.1,
+          eyeRadius * 0.35,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
 
-    const eyelidHeight = eyeRadius * droop * 0.9;
-    if (eyelidHeight > 0.5) {
-      ctx.fillStyle = body;
-      ctx.fillRect(-eyeOffsetX - eyeRadius, eyeOffsetY - eyeRadius, eyeRadius * 2, eyelidHeight);
-      ctx.fillRect(eyeOffsetX - eyeRadius, eyeOffsetY - eyeRadius, eyeRadius * 2, eyelidHeight);
+      const eyelidHeight = eyeRadius * droop * 0.9 * Math.max(0.3, eyeOpenFactor);
+      if (eyelidHeight > 0.5) {
+        ctx.fillStyle = body;
+        ctx.fillRect(
+          -eyeOffsetX - eyeRadius,
+          eyeOffsetY - eyeRadius,
+          eyeRadius * 2,
+          eyelidHeight,
+        );
+        ctx.fillRect(
+          eyeOffsetX - eyeRadius,
+          eyeOffsetY - eyeRadius,
+          eyeRadius * 2,
+          eyelidHeight,
+        );
+      }
+    } else {
+      ctx.save();
+      ctx.strokeStyle = eye;
+      ctx.lineWidth = Math.max(2, radius * 0.12);
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(-eyeOffsetX - eyeRadius * 0.55, eyeOffsetY);
+      ctx.lineTo(-eyeOffsetX + eyeRadius * 0.55, eyeOffsetY);
+      ctx.moveTo(eyeOffsetX - eyeRadius * 0.55, eyeOffsetY);
+      ctx.lineTo(eyeOffsetX + eyeRadius * 0.55, eyeOffsetY);
+      ctx.stroke();
+      ctx.restore();
     }
 
     if (cheek) {
