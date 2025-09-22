@@ -1,26 +1,7 @@
 import React, { useState, Suspense } from 'react';
 import AppLauncher from './AppLauncher';
 import './AppContainer.css';
-
-// Lazy load individual apps
-const DaySwitcherApp = React.lazy(() => import('../apps/DaySwitcherApp'));
-const NPomodoroApp = React.lazy(() => import('../apps/NPomodoroApp'));
-const SnakeApp = React.lazy(() => import('../apps/SnakeApp'));
-const HexaSnakeApp = React.lazy(() => import('../apps/HexaSnakeApp'));
-const PongApp = React.lazy(() => import('../apps/PongApp'));
-const PongRingApp = React.lazy(() => import('../apps/PongRingApp'));
-const SudokuApp = React.lazy(() => import('../apps/SudokuApp'));
-const ChessApp = React.lazy(() => import('../apps/ChessApp'));
-
-const CatNapLeapApp = React.lazy(() => import('../apps/CatNapLeapApp'));
-
-const CatPadApp = React.lazy(() => import('../apps/CatPadApp'));
-
-const CacheLabApp = React.lazy(() => import('../apps/CacheLabApp'));
-
-const CatTypingSpeedTestApp = React.lazy(() => import('../apps/CatTypingSpeedTestApp'));
-
-const ZenDoApp = React.lazy(() => import('../apps/ZenDoApp'));
+import { getAppLoader } from '../apps/registry';
 
 
 const AppContainer = () => {
@@ -40,56 +21,27 @@ const AppContainer = () => {
   const renderCurrentApp = () => {
     if (!currentApp) return null;
 
-    switch (currentApp.id) {
-      case 'day-switcher':
-        return <DaySwitcherApp onBack={handleBackToLauncher} />;
-      case 'n-pomodoro':
-        return <NPomodoroApp onBack={handleBackToLauncher} />;
-      case 'snake':
-        return <SnakeApp onBack={handleBackToLauncher} />;
-      case 'hexa-snake-bee':
-        return <HexaSnakeApp onBack={handleBackToLauncher} />;
-      case 'pong':
-        return <PongApp onBack={handleBackToLauncher} />;
-      case 'pong-ring':
-        return <PongRingApp onBack={handleBackToLauncher} />;
-      case 'sudoku-coffee':
-        return <SudokuApp onBack={handleBackToLauncher} />;
-      case 'chess':
-        return <ChessApp onBack={handleBackToLauncher} />;
+    const LazyAppComponent = getAppLoader(currentApp.id);
 
-      case 'catnap-leap':
-        return <CatNapLeapApp onBack={handleBackToLauncher} />;
-
-      case 'catpad':
-        return <CatPadApp onBack={handleBackToLauncher} />;
-
-      case 'cache-lab':
-        return <CacheLabApp onBack={handleBackToLauncher} />;
-
-      case 'cat-typing-speed-test':
-        return <CatTypingSpeedTestApp onBack={handleBackToLauncher} />;
-
-      case 'zen-do':
-        return <ZenDoApp onBack={handleBackToLauncher} />;
-
-      default:
-        return (
-          <div className="app-placeholder">
-            <div className="placeholder-content">
-              <div className="placeholder-icon">🚧</div>
-              <h2>App Coming Soon</h2>
-              <p>This app is under development and will be available soon!</p>
-              <button 
-                className="back-btn"
-                onClick={handleBackToLauncher}
-              >
-                ← Back to Apps
-              </button>
-            </div>
+    if (!LazyAppComponent) {
+      return (
+        <div className="app-placeholder">
+          <div className="placeholder-content">
+            <div className="placeholder-icon">🚧</div>
+            <h2>App Coming Soon</h2>
+            <p>This app is under development and will be available soon!</p>
+            <button
+              className="back-btn"
+              onClick={handleBackToLauncher}
+            >
+              ← Back to Apps
+            </button>
           </div>
-        );
+        </div>
+      );
     }
+
+    return <LazyAppComponent onBack={handleBackToLauncher} />;
   };
 
   return (
