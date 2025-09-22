@@ -33,10 +33,14 @@ jest.mock('../sudokuLogic', () => {
   const actual = jest.requireActual('../sudokuLogic');
   return {
     ...actual,
-    generateSudoku: jest.fn((level = 'easy') => ({
+    generateSudoku: jest.fn((level = 'latte') => ({
       puzzle: cloneBoard(basePuzzle),
       solution: cloneBoard(baseSolution),
       difficulty: level,
+      label: level.charAt(0).toUpperCase() + level.slice(1),
+      gridSize: 9,
+      subgridSize: 3,
+      symbols: null,
     })),
   };
 });
@@ -59,6 +63,10 @@ beforeEach(() => {
     fillStyle: '',
     arc: jest.fn(),
     fill: jest.fn(),
+    strokeRect: jest.fn(),
+    save: jest.fn(),
+    restore: jest.fn(),
+    closePath: jest.fn(),
     font: '',
     textAlign: 'center',
     textBaseline: 'middle',
@@ -117,9 +125,9 @@ describe('SudokuApp component', () => {
 
   it('requests new puzzles when difficulty changes', () => {
     render(<SudokuApp onBack={jest.fn()} />);
-    const mediumButton = screen.getByTestId('difficulty-medium');
-    fireEvent.click(mediumButton);
-    expect(generateSudoku).toHaveBeenLastCalledWith('medium');
+    const cappuccinoButton = screen.getByTestId('difficulty-cappuccino');
+    fireEvent.click(cappuccinoButton);
+    expect(generateSudoku).toHaveBeenLastCalledWith('cappuccino');
   });
 
   it('reveals the full solution when the Solution button is clicked', async () => {
