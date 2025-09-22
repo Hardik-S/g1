@@ -1,3 +1,5 @@
+import React from 'react';
+
 // App Registry - Central place to manage all 64 apps
 export const APP_REGISTRY = {
   'day-switcher': {
@@ -7,6 +9,7 @@ export const APP_REGISTRY = {
     icon: '📅',
     category: 'Utilities',
     component: null, // Will be lazy loaded
+    loader: () => import('./DaySwitcherApp'),
     path: '/apps/day-switcher',
     tags: ['react', 'ui', 'interactive'],
     version: '1.0.0',
@@ -21,6 +24,7 @@ export const APP_REGISTRY = {
     icon: '😺',
     category: 'Productivity',
     component: null,
+    loader: () => import('./CatPadApp'),
     path: '/apps/catpad',
     tags: ['notes', 'editor', 'sync', 'cats'],
     version: '1.0.0',
@@ -35,6 +39,7 @@ export const APP_REGISTRY = {
     icon: '🌿',
     category: 'Productivity',
     component: null,
+    loader: () => import('./ZenDoApp'),
     path: '/apps/zen-do',
     tags: ['tasks', 'productivity', 'gist', 'drag-and-drop'],
     version: '1.0.0',
@@ -49,6 +54,7 @@ export const APP_REGISTRY = {
     icon: '⌨️',
     category: 'Education',
     component: null,
+    loader: () => import('./CatTypingSpeedTestApp'),
     path: '/apps/cat-typing-speed-test',
     tags: ['typing', 'speed', 'practice', 'cats'],
     version: '1.0.0',
@@ -64,6 +70,7 @@ export const APP_REGISTRY = {
     icon: '🍅',
     category: 'Productivity',
     component: null,
+    loader: () => import('./NPomodoroApp'),
     path: '/apps/n-pomodoro',
     tags: ['productivity', 'timer', 'space', 'customizable'],
     version: '1.0.0',
@@ -78,6 +85,7 @@ export const APP_REGISTRY = {
     icon: '🐍',
     category: 'Games',
     component: null,
+    loader: () => import('./SnakeApp'),
     path: '/apps/snake',
     tags: ['game', 'classic', 'keyboard', 'arcade'],
     version: '1.0.0',
@@ -92,6 +100,7 @@ export const APP_REGISTRY = {
     icon: '🐝',
     category: 'Games',
     component: null,
+    loader: () => import('./HexaSnakeApp'),
     path: '/apps/hexa-snake',
     tags: ['game', 'python', 'pygame', 'hex', 'arcade'],
     version: '1.0.0',
@@ -106,6 +115,7 @@ export const APP_REGISTRY = {
     icon: '🏓',
     category: 'Games',
     component: null,
+    loader: () => import('./PongApp'),
     path: '/apps/pong',
     tags: ['game', 'arcade', 'canvas', 'retro'],
     version: '1.0.0',
@@ -120,6 +130,7 @@ export const APP_REGISTRY = {
     icon: '🪩',
     category: 'Games',
     component: null,
+    loader: () => import('./PongRingApp'),
     path: '/apps/pong-ring',
     tags: ['game', 'canvas', 'futuristic'],
     version: '1.0.0',
@@ -134,6 +145,7 @@ export const APP_REGISTRY = {
     icon: '☕',
     category: 'Games',
     component: null,
+    loader: () => import('./SudokuApp'),
     path: '/apps/sudoku-coffee',
     tags: ['game', 'puzzle', 'canvas', 'tailwind'],
     version: '1.0.0',
@@ -148,6 +160,7 @@ export const APP_REGISTRY = {
     icon: '♟️',
     category: 'Games',
     component: null,
+    loader: () => import('./ChessApp'),
     path: '/apps/chess',
     tags: ['game', 'board', 'stockfish', 'ai'],
     version: '1.0.0',
@@ -162,6 +175,7 @@ export const APP_REGISTRY = {
     icon: '🐱',
     category: 'Games',
     component: null,
+    loader: () => import('./CatNapLeapApp'),
     path: '/apps/catnap-leap',
     tags: ['game', 'canvas', 'flappy', 'cat'],
     version: '1.0.0',
@@ -176,6 +190,7 @@ export const APP_REGISTRY = {
     icon: '💾',
     category: 'Education',
     component: null,
+    loader: () => import('./CacheLabApp'),
     path: '/cache-lab',
     tags: ['cache', 'education', 'react', 'interactive'],
     version: '1.0.0',
@@ -190,6 +205,7 @@ export const APP_REGISTRY = {
     icon: '🚧',
     category: 'Development',
     component: null,
+    loader: null,
     path: '/apps/app-3',
     tags: ['coming-soon'],
     version: '0.0.0',
@@ -213,6 +229,33 @@ export const APP_CATEGORIES = {
   'Entertainment': { icon: '🎭', color: '#54a0ff' }
 };
 
+const appLoaderCache = new Map();
+
+const resolveAppLoader = (app) => {
+  if (!app) {
+    return null;
+  }
+
+  if (typeof app.loader === 'function') {
+    return app.loader;
+  }
+
+  if (typeof app.importPath === 'string' && app.importPath.length > 0) {
+    const importPath = app.importPath;
+    return () => import(importPath);
+  }
+
+  return null;
+};
+
+const normalizeModule = (module) => {
+  if (module && typeof module === 'object' && 'default' in module) {
+    return module;
+  }
+
+  return { default: module };
+};
+
 // Helper functions
 export const getAppsByCategory = (category) => {
   return Object.values(APP_REGISTRY).filter(app => app.category === category);
@@ -232,4 +275,21 @@ export const getAllApps = () => {
 
 export const getAppsCount = () => {
   return Object.keys(APP_REGISTRY).length;
+};
+
+export const getAppLoader = (id) => {
+  if (appLoaderCache.has(id)) {
+    return appLoaderCache.get(id);
+  }
+
+  const app = getAppById(id);
+  const loader = resolveAppLoader(app);
+
+  if (!loader) {
+    return null;
+  }
+
+  const lazyComponent = React.lazy(() => loader().then(normalizeModule));
+  appLoaderCache.set(id, lazyComponent);
+  return lazyComponent;
 };
