@@ -1,421 +1,646 @@
-export type Complex = {
+import type { MutableRefObject } from 'react';
+
+export type GateType =
+  | 'H'
+  | 'X'
+  | 'Y'
+  | 'Z'
+  | 'S'
+  | 'T'
+  | 'Rx'
+  | 'Ry'
+  | 'Rz'
+  | 'CNOT'
+  | 'CZ'
+  | 'SWAP';
+
+export interface GateOperation {
+  id?: string;
+  type: GateType;
+  targets: number[];
+  controls?: number[];
+  angle?: number;
+  label?: string;
+}
+
+export interface CircuitStep {
+  id?: string;
+  description?: string;
+  operations: GateOperation[];
+}
+
+export type QuantumCircuit = CircuitStep[];
+
+export interface ComplexNumber {
   re: number;
   im: number;
-};
+}
 
-const ZERO: Complex = { re: 0, im: 0 };
-const ONE: Complex = { re: 1, im: 0 };
+export interface StateVectorEntry {
+  index: number;
+  basis: string;
+  amplitude: ComplexNumber;
+  probability: number;
+  phase: number;
+}
 
-const complex = (re: number, im = 0): Complex => ({ re, im });
+export interface ProbabilityEntry {
+  state: string;
+  probability: number;
+}
 
-const add = (a: Complex, b: Complex): Complex => ({ re: a.re + b.re, im: a.im + b.im });
-const mul = (a: Complex, b: Complex): Complex => ({
+export interface MeasurementResult {
+  histogram: Record<string, number>;
+  probabilities: Record<string, number>;
+  shots: number;
+  measuredQubits: number[];
+  collapsedOutcome: string | null;
+}
+
+const EPSILON = 1e-12;
+const DEFAULT_STORAGE_KEY = 'quantum-playground:circuit';
+
+type Matrix2x2 = [
+  [ComplexNumber, ComplexNumber],
+  [ComplexNumber, ComplexNumber]
+];
+
+const ZERO_COMPLEX: ComplexNumber = { re: 0, im: 0 };
+
+const ensureWindow = () => (typeof window !== 'undefined' ? window : undefined);
+
+const createComplex = (re: number, im = 0): ComplexNumber => ({ re, im });
+
+const complexAdd = (a: ComplexNumber, b: ComplexNumber): ComplexNumber => ({
+  re: a.re + b.re,
+  im: a.im + b.im,
+});
+
+const complexMul = (a: ComplexNumber, b: ComplexNumber): ComplexNumber => ({
   re: a.re * b.re - a.im * b.im,
   im: a.re * b.im + a.im * b.re,
 });
-const scale = (a: Complex, factor: number): Complex => ({ re: a.re * factor, im: a.im * factor });
 
-const magnitudeSquared = (a: Complex): number => a.re * a.re + a.im * a.im;
-
-const cos = Math.cos;
-const sin = Math.sin;
-
-const TWO_PI = Math.PI * 2;
-
-const createRotationMatrix = (axis: 'x' | 'y' | 'z', theta: number): Complex[][] => {
-  const half = theta / 2;
-  switch (axis) {
-    case 'x': {
-      const c = cos(half);
-      const s = sin(half);
-      return [
-        [complex(c, 0), complex(0, -s)],
-        [complex(0, -s), complex(c, 0)],
-      ];
-    }
-    case 'y': {
-      const c = cos(half);
-      const s = sin(half);
-      return [
-        [complex(c, 0), complex(-s, 0)],
-        [complex(s, 0), complex(c, 0)],
-      ];
-    }
-    case 'z': {
-      const phasePos = complex(cos(half), sin(half));
-      const phaseNeg = complex(cos(half), -sin(half));
-      return [
-        [phaseNeg, ZERO],
-        [ZERO, phasePos],
-      ];
-    }
-    default:
-      throw new Error(`Unsupported rotation axis: ${axis}`);
-  }
-};
-
-const hadamardMatrix: Complex[][] = [
-  [scale(ONE, Math.SQRT1_2), scale(ONE, Math.SQRT1_2)],
-  [scale(ONE, Math.SQRT1_2), scale(complex(-1, 0), Math.SQRT1_2)],
-];
-
-const pauliX: Complex[][] = [
-  [ZERO, ONE],
-  [ONE, ZERO],
-];
-
-const pauliY: Complex[][] = [
-  [ZERO, complex(0, -1)],
-  [complex(0, 1), ZERO],
-];
-
-const pauliZ: Complex[][] = [
-  [ONE, ZERO],
-  [ZERO, complex(-1, 0)],
-];
-
-const identity2: Complex[][] = [
-  [ONE, ZERO],
-  [ZERO, ONE],
-];
-
-const controlledPhaseMatrix = (angle: number): Complex[][] => {
-  const phase = complex(cos(angle), sin(angle));
-  return [
-    [ONE, ZERO, ZERO, ZERO],
-    [ZERO, ONE, ZERO, ZERO],
-    [ZERO, ZERO, ONE, ZERO],
-    [ZERO, ZERO, ZERO, phase],
-  ];
-};
-
-const swapMatrix: Complex[][] = [
-  [ONE, ZERO, ZERO, ZERO],
-  [ZERO, ZERO, ONE, ZERO],
-  [ZERO, ONE, ZERO, ZERO],
-  [ZERO, ZERO, ZERO, ONE],
-];
-
-const cnotMatrix: Complex[][] = [
-  [ONE, ZERO, ZERO, ZERO],
-  [ZERO, ONE, ZERO, ZERO],
-  [ZERO, ZERO, ZERO, ONE],
-  [ZERO, ZERO, ONE, ZERO],
-];
-
-const czMatrix: Complex[][] = [
-  [ONE, ZERO, ZERO, ZERO],
-  [ZERO, ONE, ZERO, ZERO],
-  [ZERO, ZERO, ONE, ZERO],
-  [ZERO, ZERO, ZERO, complex(-1, 0)],
-];
-
-const qftMatrix2: Complex[][] = (() => {
-  const factor = 0.5;
-  const roots = [0, 1, 2, 3].map((k) => complex(Math.cos((TWO_PI * k) / 4), Math.sin((TWO_PI * k) / 4)));
-  const rows: Complex[][] = [];
-  for (let j = 0; j < 4; j += 1) {
-    const row: Complex[] = [];
-    for (let k = 0; k < 4; k += 1) {
-      const exponent = (j * k) % 4;
-      row.push(scale(roots[exponent], factor));
-    }
-    rows.push(row);
-  }
-  return rows;
-})();
-
-const lcg = (seed: number) => {
-  let state = seed >>> 0;
-  return () => {
-    state = (state * 1664525 + 1013904223) % 0x100000000;
-    return state / 0x100000000;
-  };
-};
-
-export type QuantumOperation =
-  | { type: 'H'; target: number }
-  | { type: 'X'; target: number }
-  | { type: 'Y'; target: number }
-  | { type: 'Z'; target: number }
-  | { type: 'RX'; target: number; theta: number }
-  | { type: 'RY'; target: number; theta: number }
-  | { type: 'RZ'; target: number; theta: number }
-  | { type: 'PHASE'; target: number; theta: number }
-  | { type: 'CPHASE'; control: number; target: number; theta: number }
-  | { type: 'CNOT'; control: number; target: number }
-  | { type: 'CZ'; control: number; target: number }
-  | { type: 'SWAP'; targets: [number, number] }
-  | { type: 'QFT2'; targets: [number, number] };
-
-export type MeasurementOptions = {
-  qubits?: number[];
-  seed?: number;
-};
-
-export type MeasurementResult = {
-  probabilities: Record<string, number>;
-  counts: Record<string, number>;
-};
+const normalizeAngle = (angle?: number) => (typeof angle === 'number' ? angle : 0);
 
 export class QuantumSimulator {
-  private readonly numQubits: number;
+  private readonly qubitCount: number;
 
-  private state: Complex[];
+  private readonly dimension: number;
 
-  constructor(qubits: number) {
-    if (qubits <= 0 || !Number.isInteger(qubits)) {
-      throw new Error('QuantumSimulator requires a positive integer number of qubits');
-    }
-    this.numQubits = qubits;
-    this.state = new Array(1 << qubits).fill(null).map((_, index) => (index === 0 ? ONE : ZERO));
-  }
+  private readonly real: Float64Array;
 
-  reset(): void {
-    this.state = new Array(1 << this.numQubits)
-      .fill(null)
-      .map((_, index) => (index === 0 ? ONE : ZERO));
+  private readonly imag: Float64Array;
+
+  constructor(qubitCount = 4) {
+    this.qubitCount = qubitCount;
+    this.dimension = 1 << qubitCount;
+    this.real = new Float64Array(this.dimension);
+    this.imag = new Float64Array(this.dimension);
+    this.reset();
   }
 
   getQubitCount(): number {
-    return this.numQubits;
+    return this.qubitCount;
   }
 
-  getStateVector(): Complex[] {
-    return this.state.map((amp) => ({ ...amp }));
+  reset(): void {
+    this.real.fill(0);
+    this.imag.fill(0);
+    this.real[0] = 1;
   }
 
-  getAmplitude(state: number | string): Complex {
-    const index = typeof state === 'number' ? state : parseInt(state, 2);
-    if (Number.isNaN(index) || index < 0 || index >= this.state.length) {
-      throw new Error(`Invalid basis state: ${state}`);
+  cloneState(): { real: Float64Array; imag: Float64Array } {
+    return {
+      real: new Float64Array(this.real),
+      imag: new Float64Array(this.imag),
+    };
+  }
+
+  restoreState(state: { real: Float64Array; imag: Float64Array }): void {
+    this.real.set(state.real);
+    this.imag.set(state.imag);
+  }
+
+  getAmplitude(index: number): ComplexNumber {
+    return { re: this.real[index], im: this.imag[index] };
+  }
+
+  getStateVector(): StateVectorEntry[] {
+    const entries: StateVectorEntry[] = [];
+    for (let index = 0; index < this.dimension; index += 1) {
+      const amplitude = this.getAmplitude(index);
+      const probability = amplitude.re * amplitude.re + amplitude.im * amplitude.im;
+      const phase = Math.atan2(amplitude.im, amplitude.re);
+      entries.push({
+        index,
+        basis: this.formatBasis(index),
+        amplitude,
+        probability,
+        phase,
+      });
     }
-    const amplitude = this.state[index];
-    return { ...amplitude };
+    return entries;
   }
 
-  getProbabilities(options?: { qubits?: number[] }): Record<string, number> {
-    const { qubits } = options ?? {};
-    if (!qubits || qubits.length === 0) {
-      return this.state.reduce<Record<string, number>>((acc, amp, index) => {
-        const key = index.toString(2).padStart(this.numQubits, '0');
-        acc[key] = magnitudeSquared(amp);
-        return acc;
-      }, {});
-    }
-
-    const unique = [...new Set(qubits)].sort((a, b) => b - a);
-    const distribution: Record<string, number> = {};
-    for (let index = 0; index < this.state.length; index += 1) {
-      const key = unique.map((qubit) => ((index >> qubit) & 1).toString()).join('');
-      distribution[key] = (distribution[key] ?? 0) + magnitudeSquared(this.state[index]);
+  getProbabilityDistribution(): ProbabilityEntry[] {
+    const distribution: ProbabilityEntry[] = [];
+    for (let index = 0; index < this.dimension; index += 1) {
+      const amplitude = this.getAmplitude(index);
+      const probability = amplitude.re * amplitude.re + amplitude.im * amplitude.im;
+      if (probability > EPSILON) {
+        distribution.push({ state: this.formatBasis(index), probability });
+      }
     }
     return distribution;
   }
 
-  private applySingleQubit(matrix: Complex[][], qubit: number): void {
-    if (qubit < 0 || qubit >= this.numQubits) {
-      throw new Error(`Qubit index ${qubit} is out of bounds`);
+  runCircuit(circuit: QuantumCircuit): void {
+    this.reset();
+    circuit.forEach((step) => this.applyStep(step));
+  }
+
+  applyStep(step: CircuitStep | null | undefined): void {
+    if (!step || !Array.isArray(step.operations)) {
+      return;
     }
-    const dimension = 1 << this.numQubits;
-    const stride = 1 << (qubit + 1);
-    const half = 1 << qubit;
-    for (let block = 0; block < dimension; block += stride) {
-      for (let offset = 0; offset < half; offset += 1) {
-        const zeroIndex = block + offset;
-        const oneIndex = zeroIndex + half;
-        const ampZero = this.state[zeroIndex];
-        const ampOne = this.state[oneIndex];
-        const newZero = add(mul(matrix[0][0], ampZero), mul(matrix[0][1], ampOne));
-        const newOne = add(mul(matrix[1][0], ampZero), mul(matrix[1][1], ampOne));
-        this.state[zeroIndex] = newZero;
-        this.state[oneIndex] = newOne;
+
+    const occupiedQubits = new Set<number>();
+    step.operations.forEach((operation) => {
+      const involved = [
+        ...(operation.targets ?? []),
+        ...(operation.controls ?? []),
+      ];
+
+      involved.forEach((qubit) => {
+        if (occupiedQubits.has(qubit)) {
+          throw new Error(`Conflicting gate placement on qubit ${qubit}`);
+        }
+        occupiedQubits.add(qubit);
+      });
+
+      this.applyGate(operation);
+    });
+  }
+
+  applyGate(operation: GateOperation): void {
+    const { type, targets, controls } = operation;
+    const target = targets?.[0];
+
+    switch (type) {
+      case 'H':
+        this.applySingleQubitGate(getHadamardMatrix(), target);
+        break;
+      case 'X':
+        this.applySingleQubitGate(getPauliXMatrix(), target);
+        break;
+      case 'Y':
+        this.applySingleQubitGate(getPauliYMatrix(), target);
+        break;
+      case 'Z':
+        this.applySingleQubitGate(getPauliZMatrix(), target);
+        break;
+      case 'S':
+        this.applySingleQubitGate(getPhaseMatrix(Math.PI / 2), target);
+        break;
+      case 'T':
+        this.applySingleQubitGate(getPhaseMatrix(Math.PI / 4), target);
+        break;
+      case 'Rx':
+        this.applySingleQubitGate(getRxMatrix(normalizeAngle(operation.angle)), target);
+        break;
+      case 'Ry':
+        this.applySingleQubitGate(getRyMatrix(normalizeAngle(operation.angle)), target);
+        break;
+      case 'Rz':
+        this.applySingleQubitGate(getRzMatrix(normalizeAngle(operation.angle)), target);
+        break;
+      case 'CNOT': {
+        const control = controls?.[0];
+        if (control === undefined) {
+          throw new Error('CNOT gate missing control qubit');
+        }
+        this.applyControlledNot(control, target);
+        break;
       }
+      case 'CZ': {
+        const control = controls?.[0];
+        if (control === undefined) {
+          throw new Error('CZ gate missing control qubit');
+        }
+        this.applyControlledZ(control, target);
+        break;
+      }
+      case 'SWAP': {
+        const targetB = targets?.[1];
+        if (targetB === undefined) {
+          throw new Error('SWAP gate requires two target qubits');
+        }
+        this.applySwap(target, targetB);
+        break;
+      }
+      default:
+        throw new Error(`Unsupported gate type: ${type}`);
     }
   }
 
-  private applyTwoQubit(matrix: Complex[][], qubits: [number, number]): void {
-    const [q0, q1] = qubits;
-    if (q0 === q1) {
-      throw new Error('Two-qubit gates require distinct qubits');
+  measure(
+    qubits: number[],
+    shots = 1024,
+    collapse = false,
+  ): MeasurementResult {
+    const measuredQubits = this.normalizeMeasurementTargets(qubits);
+    if (measuredQubits.length === 0) {
+      return {
+        histogram: {},
+        probabilities: {},
+        shots: 0,
+        measuredQubits,
+        collapsedOutcome: null,
+      };
     }
-    if (q0 < 0 || q0 >= this.numQubits || q1 < 0 || q1 >= this.numQubits) {
-      throw new Error(`Qubit index out of bounds: ${qubits}`);
+
+    const probabilitiesMap = this.computeMeasurementProbabilities(measuredQubits);
+    const entries = Array.from(probabilitiesMap.entries()).sort((a, b) => (a[0] < b[0] ? -1 : 1));
+    const cumulative: number[] = [];
+    let runningTotal = 0;
+    entries.forEach(([, probability]) => {
+      runningTotal += probability;
+      cumulative.push(runningTotal);
+    });
+
+    const histogram: Record<string, number> = {};
+
+    if (shots > 0 && entries.length > 0) {
+      for (let shot = 0; shot < shots; shot += 1) {
+        const sample = Math.random();
+        let index = 0;
+        while (index < cumulative.length && sample > cumulative[index]) {
+          index += 1;
+        }
+        const outcomeKey = entries[Math.min(index, entries.length - 1)][0];
+        histogram[outcomeKey] = (histogram[outcomeKey] ?? 0) + 1;
+      }
     }
-    const maskFirst = 1 << q0;
-    const maskSecond = 1 << q1;
-    const dimension = this.state.length;
-    for (let base = 0; base < dimension; base += 1) {
-      if ((base & maskFirst) !== 0 || (base & maskSecond) !== 0) {
+
+    let collapsedOutcome: string | null = null;
+    if (collapse && entries.length > 0) {
+      const sample = Math.random();
+      let index = 0;
+      while (index < cumulative.length && sample > cumulative[index]) {
+        index += 1;
+      }
+      const selected = entries[Math.min(index, entries.length - 1)][0];
+      collapsedOutcome = selected;
+      this.collapseState(measuredQubits, selected, probabilitiesMap.get(selected) ?? 0);
+    }
+
+    const probabilities: Record<string, number> = {};
+    entries.forEach(([key, probability]) => {
+      probabilities[key] = probability;
+    });
+
+    return {
+      histogram,
+      probabilities,
+      shots,
+      measuredQubits,
+      collapsedOutcome,
+    };
+  }
+
+  private normalizeMeasurementTargets(qubits: number[]): number[] {
+    const unique = new Set<number>();
+    qubits.forEach((qubit) => {
+      if (Number.isInteger(qubit) && qubit >= 0 && qubit < this.qubitCount) {
+        unique.add(qubit);
+      }
+    });
+    if (unique.size === 0) {
+      for (let qubit = 0; qubit < this.qubitCount; qubit += 1) {
+        unique.add(qubit);
+      }
+    }
+    return Array.from(unique).sort((a, b) => a - b);
+  }
+
+  private computeMeasurementProbabilities(qubits: number[]): Map<string, number> {
+    const probabilities = new Map<string, number>();
+    const totalStates = this.dimension;
+
+    for (let index = 0; index < totalStates; index += 1) {
+      const amplitude = this.getAmplitude(index);
+      const probability = amplitude.re * amplitude.re + amplitude.im * amplitude.im;
+      if (probability < EPSILON) {
         continue;
       }
-      const indexFor = (bitFirst: number, bitSecond: number) =>
-        base | (bitFirst ? maskFirst : 0) | (bitSecond ? maskSecond : 0);
-      const i00 = indexFor(0, 0);
-      const i01 = indexFor(0, 1);
-      const i10 = indexFor(1, 0);
-      const i11 = indexFor(1, 1);
-      const original = [this.state[i00], this.state[i01], this.state[i10], this.state[i11]];
-      const updated: Complex[] = [ZERO, ZERO, ZERO, ZERO].map(() => ZERO);
-      for (let row = 0; row < 4; row += 1) {
-        let value = complex(0, 0);
-        for (let col = 0; col < 4; col += 1) {
-          value = add(value, mul(matrix[row][col], original[col]));
+      const outcomeKey = this.formatMeasurementOutcome(qubits, index);
+      probabilities.set(outcomeKey, (probabilities.get(outcomeKey) ?? 0) + probability);
+    }
+
+    let total = 0;
+    probabilities.forEach((value) => {
+      total += value;
+    });
+
+    if (total > 0) {
+      probabilities.forEach((value, key) => {
+        probabilities.set(key, value / total);
+      });
+    }
+
+    return probabilities;
+  }
+
+  private collapseState(qubits: number[], outcome: string, outcomeProbability: number): void {
+    if (outcomeProbability <= EPSILON) {
+      return;
+    }
+
+    const mask = this.createMask(qubits);
+    const outcomeBits = this.outcomeStringToBits(qubits, outcome);
+
+    let norm = 0;
+    for (let index = 0; index < this.dimension; index += 1) {
+      if ((index & mask) !== outcomeBits) {
+        this.real[index] = 0;
+        this.imag[index] = 0;
+      } else {
+        norm += this.real[index] * this.real[index] + this.imag[index] * this.imag[index];
+      }
+    }
+
+    const scale = norm > 0 ? 1 / Math.sqrt(norm) : 1;
+    for (let index = 0; index < this.dimension; index += 1) {
+      if ((index & mask) === outcomeBits) {
+        this.real[index] *= scale;
+        this.imag[index] *= scale;
+      }
+    }
+  }
+
+  private formatBasis(index: number): string {
+    const bits = index.toString(2).padStart(this.qubitCount, '0');
+    return `|${bits}>`;
+  }
+
+  private formatMeasurementOutcome(qubits: number[], index: number): string {
+    const descending = [...qubits].sort((a, b) => b - a);
+    const bits = descending
+      .map((qubit) => ((index >> qubit) & 1).toString())
+      .join('');
+    return bits || '0';
+  }
+
+  private outcomeStringToBits(qubits: number[], outcome: string): number {
+    const descending = [...qubits].sort((a, b) => b - a);
+    let bits = 0;
+    for (let i = 0; i < descending.length; i += 1) {
+      const qubit = descending[i];
+      const bit = outcome[i] === '1' ? 1 : 0;
+      const mask = 1 << qubit;
+      if (bit) {
+        bits |= mask;
+      }
+    }
+    return bits;
+  }
+
+  private createMask(qubits: number[]): number {
+    return qubits.reduce((mask, qubit) => mask | (1 << qubit), 0);
+  }
+
+  private applySingleQubitGate(matrix: Matrix2x2, target: number): void {
+    if (!Number.isInteger(target) || target < 0 || target >= this.qubitCount) {
+      throw new Error(`Invalid target qubit: ${target}`);
+    }
+
+    const stride = 1 << target;
+    const span = stride << 1;
+
+    for (let base = 0; base < this.dimension; base += span) {
+      for (let offset = 0; offset < stride; offset += 1) {
+        const index0 = base + offset;
+        const index1 = index0 + stride;
+
+        const a0 = { re: this.real[index0], im: this.imag[index0] };
+        const a1 = { re: this.real[index1], im: this.imag[index1] };
+
+        const r0 = complexAdd(
+          complexMul(matrix[0][0], a0),
+          complexMul(matrix[0][1], a1),
+        );
+        const r1 = complexAdd(
+          complexMul(matrix[1][0], a0),
+          complexMul(matrix[1][1], a1),
+        );
+
+        this.real[index0] = r0.re;
+        this.imag[index0] = r0.im;
+        this.real[index1] = r1.re;
+        this.imag[index1] = r1.im;
+      }
+    }
+  }
+
+  private applyControlledNot(control: number, target: number): void {
+    if (!Number.isInteger(control) || !Number.isInteger(target)) {
+      throw new Error('Control and target must be integers');
+    }
+    if (control === target) {
+      throw new Error('Control and target qubits must differ for CNOT');
+    }
+
+    const controlMask = 1 << control;
+    const targetMask = 1 << target;
+
+    for (let index = 0; index < this.dimension; index += 1) {
+      if ((index & controlMask) !== 0) {
+        const flippedIndex = index ^ targetMask;
+        if (index < flippedIndex) {
+          const realTemp = this.real[index];
+          const imagTemp = this.imag[index];
+          this.real[index] = this.real[flippedIndex];
+          this.imag[index] = this.imag[flippedIndex];
+          this.real[flippedIndex] = realTemp;
+          this.imag[flippedIndex] = imagTemp;
         }
-        updated[row] = value;
-      }
-      [this.state[i00], this.state[i01], this.state[i10], this.state[i11]] = updated;
-    }
-  }
-
-  applyHadamard(qubit: number): void {
-    this.applySingleQubit(hadamardMatrix, qubit);
-  }
-
-  applyPauliX(qubit: number): void {
-    this.applySingleQubit(pauliX, qubit);
-  }
-
-  applyPauliY(qubit: number): void {
-    this.applySingleQubit(pauliY, qubit);
-  }
-
-  applyPauliZ(qubit: number): void {
-    this.applySingleQubit(pauliZ, qubit);
-  }
-
-  applyRotation(axis: 'x' | 'y' | 'z', qubit: number, theta: number): void {
-    this.applySingleQubit(createRotationMatrix(axis, theta), qubit);
-  }
-
-  applyPhase(qubit: number, theta: number): void {
-    const matrix = [
-      [ONE, ZERO],
-      [ZERO, complex(Math.cos(theta), Math.sin(theta))],
-    ];
-    this.applySingleQubit(matrix, qubit);
-  }
-
-  applyControlledPhase(control: number, target: number, theta: number): void {
-    this.applyTwoQubit(controlledPhaseMatrix(theta), [control, target]);
-  }
-
-  applyCNOT(control: number, target: number): void {
-    this.applyTwoQubit(cnotMatrix, [control, target]);
-  }
-
-  applyCZ(control: number, target: number): void {
-    this.applyTwoQubit(czMatrix, [control, target]);
-  }
-
-  applySwap(a: number, b: number): void {
-    this.applyTwoQubit(swapMatrix, [a, b]);
-  }
-
-  applyQFT2(targets: [number, number]): void {
-    this.applyTwoQubit(qftMatrix2, [targets[1], targets[0]]);
-  }
-
-  runCircuit(operations: QuantumOperation[]): void {
-    for (const op of operations) {
-      switch (op.type) {
-        case 'H':
-          this.applyHadamard(op.target);
-          break;
-        case 'X':
-          this.applyPauliX(op.target);
-          break;
-        case 'Y':
-          this.applyPauliY(op.target);
-          break;
-        case 'Z':
-          this.applyPauliZ(op.target);
-          break;
-        case 'RX':
-          this.applyRotation('x', op.target, op.theta);
-          break;
-        case 'RY':
-          this.applyRotation('y', op.target, op.theta);
-          break;
-        case 'RZ':
-          this.applyRotation('z', op.target, op.theta);
-          break;
-        case 'PHASE':
-          this.applyPhase(op.target, op.theta);
-          break;
-        case 'CPHASE':
-          this.applyControlledPhase(op.control, op.target, op.theta);
-          break;
-        case 'CNOT':
-          this.applyCNOT(op.control, op.target);
-          break;
-        case 'CZ':
-          this.applyCZ(op.control, op.target);
-          break;
-        case 'SWAP':
-          this.applySwap(op.targets[0], op.targets[1]);
-          break;
-        case 'QFT2':
-          this.applyQFT2(op.targets);
-          break;
-        default:
-          throw new Error(`Unsupported operation: ${(op as { type: string }).type}`);
       }
     }
   }
 
-  sampleMeasurements(shots: number, options?: MeasurementOptions): MeasurementResult {
-    if (!Number.isInteger(shots) || shots <= 0) {
-      throw new Error('Number of shots must be a positive integer');
-    }
-    const { qubits, seed } = options ?? {};
-    const probabilities = this.getProbabilities({ qubits });
-    const outcomes = Object.keys(probabilities).sort();
-    const weights = outcomes.map((key) => probabilities[key]);
-
-    const totalProbability = weights.reduce((sum, value) => sum + value, 0);
-    if (Math.abs(totalProbability - 1) > 1e-9) {
-      throw new Error('State is not normalised');
+  private applyControlledZ(control: number, target: number): void {
+    if (!Number.isInteger(control) || !Number.isInteger(target)) {
+      throw new Error('Control and target must be integers');
     }
 
-    const cumulative: number[] = [];
-    weights.reduce((acc, value, index) => {
-      cumulative[index] = acc + value;
-      return cumulative[index];
-    }, 0);
+    const controlMask = 1 << control;
+    const targetMask = 1 << target;
 
-    const random = seed != null ? lcg(seed) : Math.random;
-    const counts: Record<string, number> = Object.fromEntries(outcomes.map((key) => [key, 0]));
+    for (let index = 0; index < this.dimension; index += 1) {
+      if ((index & controlMask) !== 0 && (index & targetMask) !== 0) {
+        this.real[index] = -this.real[index];
+        this.imag[index] = -this.imag[index];
+      }
+    }
+  }
 
-    for (let shot = 0; shot < shots; shot += 1) {
-      const r = random();
-      const idx = cumulative.findIndex((threshold) => r < threshold);
-      const outcome = idx === -1 ? outcomes[outcomes.length - 1] : outcomes[idx];
-      counts[outcome] += 1;
+  private applySwap(qubitA: number, qubitB: number): void {
+    if (qubitA === qubitB) {
+      return;
     }
 
-    return { probabilities, counts };
+    const maskA = 1 << qubitA;
+    const maskB = 1 << qubitB;
+
+    for (let index = 0; index < this.dimension; index += 1) {
+      const hasA = (index & maskA) !== 0;
+      const hasB = (index & maskB) !== 0;
+      if (hasA !== hasB) {
+        const swapIndex = index ^ (maskA | maskB);
+        if (index < swapIndex) {
+          const realTemp = this.real[index];
+          const imagTemp = this.imag[index];
+          this.real[index] = this.real[swapIndex];
+          this.imag[index] = this.imag[swapIndex];
+          this.real[swapIndex] = realTemp;
+          this.imag[swapIndex] = imagTemp;
+        }
+      }
+    }
   }
 }
 
-export const Gates = {
-  hadamard: hadamardMatrix,
-  pauliX,
-  pauliY,
-  pauliZ,
-  identity2,
+const getHadamardMatrix = (): Matrix2x2 => {
+  const factor = 1 / Math.sqrt(2);
+  return [
+    [createComplex(factor), createComplex(factor)],
+    [createComplex(factor), createComplex(-factor)],
+  ];
 };
 
-export const Rotations = {
-  rx: (theta: number) => createRotationMatrix('x', theta),
-  ry: (theta: number) => createRotationMatrix('y', theta),
-  rz: (theta: number) => createRotationMatrix('z', theta),
+const getPauliXMatrix = (): Matrix2x2 => ([
+  [ZERO_COMPLEX, createComplex(1)],
+  [createComplex(1), ZERO_COMPLEX],
+]);
+
+const getPauliYMatrix = (): Matrix2x2 => ([
+  [ZERO_COMPLEX, createComplex(0, -1)],
+  [createComplex(0, 1), ZERO_COMPLEX],
+]);
+
+const getPauliZMatrix = (): Matrix2x2 => ([
+  [createComplex(1), ZERO_COMPLEX],
+  [ZERO_COMPLEX, createComplex(-1)],
+]);
+
+const getPhaseMatrix = (angle: number): Matrix2x2 => ([
+  [createComplex(1), ZERO_COMPLEX],
+  [ZERO_COMPLEX, createComplex(Math.cos(angle), Math.sin(angle))],
+]);
+
+const getRxMatrix = (angle: number): Matrix2x2 => {
+  const half = angle / 2;
+  const cos = Math.cos(half);
+  const sin = Math.sin(half);
+  return [
+    [createComplex(cos), createComplex(0, -sin)],
+    [createComplex(0, -sin), createComplex(cos)],
+  ];
 };
 
-export const TwoQubitGates = {
-  cnot: cnotMatrix,
-  cz: czMatrix,
-  cphase: controlledPhaseMatrix,
-  swap: swapMatrix,
-  qft2: qftMatrix2,
+const getRyMatrix = (angle: number): Matrix2x2 => {
+  const half = angle / 2;
+  const cos = Math.cos(half);
+  const sin = Math.sin(half);
+  return [
+    [createComplex(cos), createComplex(-sin)],
+    [createComplex(sin), createComplex(cos)],
+  ];
+};
+
+const getRzMatrix = (angle: number): Matrix2x2 => {
+  const half = angle / 2;
+  return [
+    [createComplex(Math.cos(half), -Math.sin(half)), ZERO_COMPLEX],
+    [ZERO_COMPLEX, createComplex(Math.cos(half), Math.sin(half))],
+  ];
+};
+
+export const saveCircuitToStorage = (
+  circuit: QuantumCircuit,
+  storageKey = DEFAULT_STORAGE_KEY,
+): void => {
+  const storageHost = ensureWindow();
+  if (!storageHost?.localStorage) {
+    return;
+  }
+
+  try {
+    const serialized = JSON.stringify(circuit);
+    storageHost.localStorage.setItem(storageKey, serialized);
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.warn('Failed to persist circuit', error);
+  }
+};
+
+export const loadCircuitFromStorage = (
+  storageKey = DEFAULT_STORAGE_KEY,
+): QuantumCircuit | null => {
+  const storageHost = ensureWindow();
+  if (!storageHost?.localStorage) {
+    return null;
+  }
+
+  try {
+    const serialized = storageHost.localStorage.getItem(storageKey);
+    if (!serialized) {
+      return null;
+    }
+    const parsed = JSON.parse(serialized) as QuantumCircuit;
+    if (!Array.isArray(parsed)) {
+      return null;
+    }
+    return parsed.map((step) => ({
+      ...step,
+      operations: Array.isArray(step?.operations) ? step.operations.map((operation) => ({ ...operation })) : [],
+    }));
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.warn('Failed to read circuit from storage', error);
+    return null;
+  }
+};
+
+export const clearCircuitFromStorage = (storageKey = DEFAULT_STORAGE_KEY): void => {
+  const storageHost = ensureWindow();
+  if (!storageHost?.localStorage) {
+    return;
+  }
+  storageHost.localStorage.removeItem(storageKey);
+};
+
+export const attachSimulatorToRef = <T extends QuantumSimulator>(
+  ref: MutableRefObject<T | null>,
+  simulator: T,
+): void => {
+  // eslint-disable-next-line no-param-reassign
+  ref.current = simulator;
+};
+
+export const formatAngleLabel = (angle?: number): string => {
+  if (typeof angle !== 'number') {
+    return '';
+  }
+  if (Math.abs(angle - Math.PI) < 1e-6) {
+    return 'π';
+  }
+  if (Math.abs(angle - Math.PI / 2) < 1e-6) {
+    return 'π/2';
+  }
+  if (Math.abs(angle - Math.PI / 4) < 1e-6) {
+    return 'π/4';
+  }
+  return angle.toFixed(2);
 };

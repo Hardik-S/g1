@@ -12,6 +12,12 @@ import {
   setStoredToken,
 } from './storage';
 import {
+  clearGlobalGistSettings,
+  readGlobalGistSettings,
+  subscribeToGlobalGistSettings,
+  writeGlobalGistSettings,
+} from '../../global/gistSettings';
+import {
   DEFAULT_SYNC_FILENAME,
   mergeNoteCollections,
   pullFromGist,
@@ -372,14 +378,30 @@ const CatPadApp = () => {
           title: firstNote ? firstNote.title : '',
           content: firstNote ? firstNote.content : '',
         };
-        const nextSettings = { ...DEFAULT_SETTINGS, ...storedSettings };
-        settingsRef.current = nextSettings;
-        setSettings(nextSettings);
-        const rememberedToken = nextSettings.rememberToken ? storedToken : '';
-        await applyToken(rememberedToken, nextSettings.rememberToken);
-        if (nextSettings.lastSyncedAt) {
-          setSyncStatus({ type: 'success', message: `Last synced ${formatTimestamp(nextSettings.lastSyncedAt)}` });
-        } else if (!nextSettings.syncEnabled) {
+        const baseSettings = { ...DEFAULT_SETTINGS, ...storedSettings };
+        const globalSettings = readGlobalGistSettings();
+        const globalGistId = typeof globalSettings.gistId === 'string' ? globalSettings.gistId.trim() : '';
+        const globalToken = typeof globalSettings.token === 'string' ? globalSettings.token : '';
+        const mergedSettings = globalGistId
+          ? { ...baseSettings, gistId: globalGistId, syncEnabled: true }
+          : baseSettings;
+        const appliedSettings = await persistSettings(mergedSettings);
+        const rememberedToken = appliedSettings.rememberToken ? storedToken : '';
+        await applyToken(rememberedToken, appliedSettings.rememberToken);
+        if (globalGistId || globalToken) {
+          await applyToken(globalToken, appliedSettings.rememberToken);
+        } else if (appliedSettings.rememberToken) {
+          const localGistId = (appliedSettings.gistId || '').trim();
+          if (localGistId || gistTokenRef.current) {
+            writeGlobalGistSettings({ gistId: localGistId, token: gistTokenRef.current });
+          }
+        }
+        if (appliedSettings.lastSyncedAt) {
+          setSyncStatus({
+            type: 'success',
+            message: `Last synced ${formatTimestamp(appliedSettings.lastSyncedAt)}`,
+          });
+        } else if (!appliedSettings.syncEnabled) {
           setSyncStatus({ type: 'idle', message: 'Cloud sync disabled' });
         }
       } catch (error) {
@@ -399,7 +421,60 @@ const CatPadApp = () => {
     };
 
     load();
-  }, [applyToken, updateNotesState]);
+  }, [applyToken, persistSettings, updateNotesState]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToGlobalGistSettings((nextGlobal) => {
+      if (!nextGlobal) {
+        return;
+      }
+
+      const trimmedId = typeof nextGlobal.gistId === 'string' ? nextGlobal.gistId.trim() : '';
+      const nextToken = typeof nextGlobal.token === 'string' ? nextGlobal.token : '';
+      const previousSettings = settingsRef.current || DEFAULT_SETTINGS;
+      const previousGistId = (previousSettings.gistId || '').trim();
+      const previousToken = gistTokenRef.current || '';
+      const desiredSyncEnabled = Boolean(trimmedId);
+
+      if (
+        trimmedId === previousGistId
+        && nextToken === previousToken
+        && previousSettings.syncEnabled === desiredSyncEnabled
+      ) {
+        return;
+      }
+
+      (async () => {
+        try {
+          if (trimmedId !== previousGistId || previousSettings.syncEnabled !== desiredSyncEnabled) {
+            await persistSettings((prev) => ({
+              ...prev,
+              gistId: trimmedId,
+              syncEnabled: desiredSyncEnabled,
+            }));
+          }
+
+          if (nextToken !== previousToken) {
+            await applyToken(nextToken, settingsRef.current.rememberToken);
+          }
+
+          initialSyncAttemptedRef.current = false;
+          const effectiveGistId = trimmedId || (settingsRef.current.gistId || '').trim();
+          if (effectiveGistId) {
+            pullFromRemote('initial');
+          }
+        } catch (error) {
+          console.error('[CatPad] Failed to apply global gist settings', error);
+        }
+      })();
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
+  }, [applyToken, persistSettings, pullFromRemote]);
 
   useEffect(() => {
     if (isLoading) return;
@@ -565,11 +640,36 @@ const CatPadApp = () => {
     if (field === 'syncEnabled' || field === 'gistId') {
       initialSyncAttemptedRef.current = false;
     }
+
+    if (field === 'gistId') {
+      const raw = typeof value === 'string' ? value : '';
+      const trimmed = raw.trim();
+      (async () => {
+        await persistSettings((prev) => ({
+          ...prev,
+          gistId: trimmed,
+          syncEnabled: Boolean(trimmed),
+        }));
+        if (settingsRef.current.rememberToken && (trimmed || gistTokenRef.current)) {
+          writeGlobalGistSettings({ gistId: trimmed, token: gistTokenRef.current });
+        } else {
+          clearGlobalGistSettings();
+        }
+      })();
+      return;
+    }
+
+    if (field === 'syncEnabled') {
+      const enabled = Boolean(value);
+      persistSettings((prev) => ({ ...prev, syncEnabled: enabled }));
+      return;
+    }
+
     persistSettings((prev) => ({
       ...prev,
-      [field]: field === 'gistId' ? value.trim() : value,
+      [field]: value,
     }));
-  }, [persistSettings]);
+  }, [clearGlobalGistSettings, persistSettings, writeGlobalGistSettings]);
 
   const syncStateIcon = statusIconMap[syncStatus.type] || statusIconMap.idle;
   const activeNote = useMemo(
@@ -702,6 +802,16 @@ const CatPadApp = () => {
               onChange={async (event) => {
                 const value = event.target.value;
                 await applyToken(value, settings.rememberToken);
+                if (settings.rememberToken) {
+                  const gistId = (settingsRef.current.gistId || '').trim();
+                  if (gistId || gistTokenRef.current) {
+                    writeGlobalGistSettings({ gistId, token: gistTokenRef.current });
+                  } else {
+                    clearGlobalGistSettings();
+                  }
+                } else {
+                  clearGlobalGistSettings();
+                }
               }}
               placeholder="ghp_…"
             />
@@ -716,8 +826,13 @@ const CatPadApp = () => {
                 await persistSettings((prev) => ({ ...prev, rememberToken: remember }));
                 if (remember) {
                   await applyToken(gistTokenRef.current, true);
+                  const gistId = (settingsRef.current.gistId || '').trim();
+                  if (gistId || gistTokenRef.current) {
+                    writeGlobalGistSettings({ gistId, token: gistTokenRef.current });
+                  }
                 } else {
                   await setStoredToken('');
+                  clearGlobalGistSettings();
                 }
               }}
             />

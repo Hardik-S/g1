@@ -36,6 +36,99 @@
   const GIST_FILENAME = 'cat-typing-speed-test.json';
   const STORAGE_KEY = 'catTypingSettings';
   const SESSION_TOKEN_KEY = 'catTypingSessionToken';
+  const GIST_SETTINGS_COOKIE = 'g1_gist_settings';
+  const GIST_SETTINGS_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+  const GIST_SETTINGS_MESSAGE = 'g1-gist-settings-update';
+  const gistSettingsChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('g1-gist-settings') : null;
+
+  const sanitizeGistSettings = (value = {}) => ({
+    gistId: typeof value.gistId === 'string' ? value.gistId.trim() : '',
+    gistToken: typeof value.gistToken === 'string' ? value.gistToken.trim() : '',
+  });
+
+  const readGistSettingsCookie = () => {
+    if (typeof document === 'undefined') {
+      return { gistId: '', gistToken: '' };
+    }
+
+    try {
+      const cookies = document.cookie ? document.cookie.split(';') : [];
+      for (let index = 0; index < cookies.length; index += 1) {
+        const cookie = cookies[index];
+        const [rawName, ...rest] = cookie.split('=');
+        if (!rawName || rawName.trim() !== GIST_SETTINGS_COOKIE) {
+          continue;
+        }
+        const rawValue = rest.join('=');
+        if (!rawValue) {
+          return { gistId: '', gistToken: '' };
+        }
+        const decoded = decodeURIComponent(rawValue);
+        const parsed = JSON.parse(decoded);
+        return sanitizeGistSettings(parsed);
+      }
+    } catch (error) {
+      console.warn('Unable to read gist settings cookie.', error);
+    }
+
+    return { gistId: '', gistToken: '' };
+  };
+
+  const writeGistSettingsCookie = (settings) => {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    const sanitized = sanitizeGistSettings(settings);
+    try {
+      if (!sanitized.gistId && !sanitized.gistToken) {
+        document.cookie = `${GIST_SETTINGS_COOKIE}=; expires=${new Date(0).toUTCString()}; path=/; SameSite=Lax`;
+        return;
+      }
+
+      const expires = new Date(Date.now() + GIST_SETTINGS_TTL_MS).toUTCString();
+      const encoded = encodeURIComponent(JSON.stringify(sanitized));
+      document.cookie = `${GIST_SETTINGS_COOKIE}=${encoded}; expires=${expires}; path=/; SameSite=Lax`;
+    } catch (error) {
+      console.warn('Unable to persist gist settings cookie.', error);
+    }
+  };
+
+  const postGistSettingsUpdate = (settings) => {
+    const payload = {
+      type: GIST_SETTINGS_MESSAGE,
+      gistId: settings.gistId || '',
+      gistToken: settings.gistToken || '',
+    };
+
+    if (gistSettingsChannel) {
+      try {
+        gistSettingsChannel.postMessage(payload);
+      } catch (error) {
+        console.warn('Unable to post gist settings update through BroadcastChannel.', error);
+      }
+      return;
+    }
+
+    if (typeof window === 'undefined' || typeof window.postMessage !== 'function') {
+      return;
+    }
+
+    try {
+      if (window.parent && window.parent !== window && typeof window.parent.postMessage === 'function') {
+        window.parent.postMessage(payload, '*');
+      }
+      window.postMessage(payload, '*');
+    } catch (error) {
+      console.warn('Unable to post gist settings update through window messaging.', error);
+    }
+  };
+
+  const shareGlobalGistSettings = (settings) => {
+    const sanitized = sanitizeGistSettings(settings);
+    writeGistSettingsCookie(sanitized);
+    postGistSettingsUpdate(sanitized);
+  };
 
   const defaultStartHint = startHint ? startHint.textContent : '';
 
@@ -54,6 +147,7 @@
   let currentAlias = '';
   let gistId = '';
   let gistToken = '';
+  let isLoggedIn = false;
   let syncInFlight = false;
   let syncPending = false;
 
@@ -345,18 +439,24 @@
     if (!loginForm) return;
 
     const aliasValue = aliasInput ? aliasInput.value.trim() : '';
+    const rawTokenValue = tokenInput ? tokenInput.value.trim() : '';
+    const sessionTokenValue = getSessionToken();
     const gistValue = gistIdInput ? gistIdInput.value.trim() : '';
-    const tokenValue = (tokenInput ? tokenInput.value.trim() : '') || getSessionToken();
+    const tokenValue = rawTokenValue || sessionTokenValue;
+    const { gistId: normalizedGistId, gistToken: normalizedToken } = sanitizeGistSettings({
+      gistId: gistValue,
+      gistToken: tokenValue,
+    });
 
     if (!aliasValue) {
       setLoginStatus('Enter an alias to continue.', 'error');
       return;
     }
-    if (!gistValue) {
+    if (!normalizedGistId) {
       setLoginStatus('Add the GitHub gist ID to store your scores.', 'error');
       return;
     }
-    if (!tokenValue) {
+    if (!normalizedToken) {
       setLoginStatus('Provide a GitHub personal access token with gist access.', 'error');
       return;
     }
@@ -367,17 +467,25 @@
     setLoginStatus('Loading score history…');
 
     currentAlias = aliasValue;
-    gistId = gistValue;
-    gistToken = tokenValue;
+    gistId = normalizedGistId;
+    gistToken = normalizedToken;
+    if (gistIdInput) {
+      gistIdInput.value = normalizedGistId;
+    }
+    if (tokenInput && rawTokenValue) {
+      tokenInput.value = normalizedToken;
+    }
 
     try {
       await fetchGistFromGitHub();
-      persistLocalSettings(aliasValue, gistValue);
-      setSessionToken(tokenValue);
+      persistLocalSettings(aliasValue, normalizedGistId);
+      setSessionToken(normalizedToken);
       setLoginState(true);
       updateAliasBadge();
       renderScoreHistory();
       setLoginStatus(`Signed in as ${aliasValue}.`, 'success');
+      isLoggedIn = true;
+      shareGlobalGistSettings({ gistId, gistToken });
     } catch (error) {
       console.error(error);
       gistStore = {};
@@ -391,6 +499,7 @@
       if (!isAuto && tokenInput) {
         tokenInput.focus();
       }
+      isLoggedIn = false;
     } finally {
       if (loginButton) {
         loginButton.disabled = false;
@@ -398,19 +507,109 @@
     }
   };
 
-  const handleLogout = () => {
-    persistLocalSettings(aliasInput ? aliasInput.value.trim() : '', gistIdInput ? gistIdInput.value.trim() : '');
+  const performLogout = ({ broadcast = true, statusMessage, statusTone } = {}) => {
+    const normalizedAlias = aliasInput ? aliasInput.value.trim() : '';
+    const normalizedGistId = gistIdInput ? gistIdInput.value.trim() : '';
+    persistLocalSettings(normalizedAlias, normalizedGistId);
     setSessionToken('');
     gistStore = {};
     currentAlias = '';
+    gistId = normalizedGistId;
     gistToken = '';
     syncInFlight = false;
     syncPending = false;
+    isLoggedIn = false;
+    if (tokenInput) {
+      tokenInput.value = '';
+    }
+    if (gistIdInput) {
+      gistIdInput.value = normalizedGistId;
+    }
     setLoginState(false);
     updateAliasBadge();
     renderScoreHistory();
-    setLoginStatus('Signed out. Enter your details to sync scores again.');
+    setLoginStatus(statusMessage || 'Signed out. Enter your details to sync scores again.', statusTone || 'info');
+    if (broadcast) {
+      shareGlobalGistSettings({ gistId: normalizedGistId, gistToken: '' });
+    }
   };
+
+  const handleLogout = () => {
+    performLogout({ broadcast: true });
+  };
+
+  const handleSharedGistSettingsUpdate = (raw) => {
+    if (!raw || typeof raw !== 'object') {
+      return;
+    }
+
+    const previousGistId = gistId;
+    const previousGistToken = gistToken;
+    const sanitized = sanitizeGistSettings(raw);
+    const hasChanged = sanitized.gistId !== previousGistId || sanitized.gistToken !== previousGistToken;
+
+    gistId = sanitized.gistId;
+    gistToken = sanitized.gistToken;
+
+    if (gistIdInput) {
+      gistIdInput.value = sanitized.gistId;
+    }
+    if (tokenInput) {
+      tokenInput.value = sanitized.gistToken;
+    }
+
+    if (!hasChanged) {
+      return;
+    }
+
+    if (aliasInput && sanitized.gistId !== previousGistId) {
+      persistLocalSettings(aliasInput.value.trim(), sanitized.gistId);
+    }
+
+    if (sanitized.gistToken) {
+      setSessionToken(sanitized.gistToken);
+      if (isLoggedIn) {
+        setLoginStatus('Refreshing GitHub history…');
+        fetchGistFromGitHub()
+          .then(() => {
+            renderScoreHistory();
+            setLoginStatus(`Signed in as ${currentAlias}.`, 'success');
+          })
+          .catch((error) => {
+            console.warn('Unable to refresh GitHub history from broadcast.', error);
+            setLoginStatus('Unable to refresh GitHub history.', 'error');
+          });
+      }
+    } else {
+      setSessionToken('');
+      if (isLoggedIn) {
+        performLogout({
+          broadcast: false,
+          statusMessage: 'GitHub access removed in another tab. Log in again to sync.',
+          statusTone: 'info',
+        });
+      }
+    }
+  };
+
+  if (gistSettingsChannel) {
+    gistSettingsChannel.addEventListener('message', (event) => {
+      if (!event || typeof event.data !== 'object') {
+        return;
+      }
+      handleSharedGistSettingsUpdate(event.data);
+    });
+  }
+
+  window.addEventListener('message', (event) => {
+    if (!event || typeof event.data !== 'object') {
+      return;
+    }
+    if (event.data.type !== GIST_SETTINGS_MESSAGE) {
+      return;
+    }
+    handleSharedGistSettingsUpdate(event.data);
+  });
 
   const formatTime = (seconds) => {
     const safeSeconds = Math.max(0, Math.floor(seconds));
@@ -701,15 +900,40 @@
   observeTextPanel();
 
   const storedSettings = loadStoredSettings();
+  const cookieSettings = readGistSettingsCookie();
+
   if (aliasInput && storedSettings.alias) {
     aliasInput.value = storedSettings.alias;
   }
-  if (gistIdInput && storedSettings.gistId) {
-    gistIdInput.value = storedSettings.gistId;
+
+  if (gistIdInput) {
+    const initialGistId = storedSettings.gistId || cookieSettings.gistId;
+    if (initialGistId) {
+      gistIdInput.value = initialGistId;
+    }
   }
+
   const sessionToken = getSessionToken();
-  if (tokenInput && sessionToken) {
-    tokenInput.value = sessionToken;
+  if (tokenInput) {
+    if (sessionToken) {
+      tokenInput.value = sessionToken;
+    } else if (cookieSettings.gistToken) {
+      tokenInput.value = cookieSettings.gistToken;
+    }
+  }
+
+  const initialInputs = sanitizeGistSettings({
+    gistId: gistIdInput ? gistIdInput.value : '',
+    gistToken: tokenInput ? tokenInput.value : '',
+  });
+  gistId = initialInputs.gistId;
+  gistToken = initialInputs.gistToken || sessionToken || '';
+
+  if (gistIdInput) {
+    gistIdInput.value = gistId;
+  }
+  if (tokenInput && initialInputs.gistToken) {
+    tokenInput.value = initialInputs.gistToken;
   }
 
   updateAliasBadge();
@@ -717,7 +941,9 @@
   renderScoreHistory();
   setLoginStatus('Log in with your alias to start tracking scores.');
 
-  if (sessionToken && storedSettings.alias && storedSettings.gistId) {
+  const aliasForAutoLogin = aliasInput ? aliasInput.value.trim() : '';
+  const tokenForAutoLogin = sessionToken || (tokenInput ? tokenInput.value.trim() : '');
+  if (aliasForAutoLogin && gistId && tokenForAutoLogin) {
     handleLogin(true);
   }
 
