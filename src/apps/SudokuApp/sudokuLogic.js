@@ -1,10 +1,7 @@
-const GRID_SIZE = 9;
-const SUBGRID_SIZE = 3;
-
 const range = (length) => Array.from({ length }, (_, i) => i);
 
-export const createEmptyBoard = () =>
-  Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
+export const createEmptyBoard = (size) =>
+  Array.from({ length: size }, () => Array(size).fill(0));
 
 const cloneBoard = (board) => board.map((row) => row.slice());
 
@@ -17,19 +14,26 @@ const shuffle = (array) => {
   return result;
 };
 
-export const isValidPlacement = (board, row, col, value) => {
+export const isValidPlacement = (
+  board,
+  row,
+  col,
+  value,
+  gridSize,
+  subgridSize
+) => {
   if (value === 0) return true;
 
-  for (let i = 0; i < GRID_SIZE; i += 1) {
+  for (let i = 0; i < gridSize; i += 1) {
     if (board[row][i] === value && i !== col) return false;
     if (board[i][col] === value && i !== row) return false;
   }
 
-  const startRow = Math.floor(row / SUBGRID_SIZE) * SUBGRID_SIZE;
-  const startCol = Math.floor(col / SUBGRID_SIZE) * SUBGRID_SIZE;
+  const startRow = Math.floor(row / subgridSize) * subgridSize;
+  const startCol = Math.floor(col / subgridSize) * subgridSize;
 
-  for (let r = 0; r < SUBGRID_SIZE; r += 1) {
-    for (let c = 0; c < SUBGRID_SIZE; c += 1) {
+  for (let r = 0; r < subgridSize; r += 1) {
+    for (let c = 0; c < subgridSize; c += 1) {
       const currentRow = startRow + r;
       const currentCol = startCol + c;
       if (
@@ -44,9 +48,9 @@ export const isValidPlacement = (board, row, col, value) => {
   return true;
 };
 
-const findEmptyCell = (board) => {
-  for (let row = 0; row < GRID_SIZE; row += 1) {
-    for (let col = 0; col < GRID_SIZE; col += 1) {
+const findEmptyCell = (board, gridSize) => {
+  for (let row = 0; row < gridSize; row += 1) {
+    for (let col = 0; col < gridSize; col += 1) {
       if (board[row][col] === 0) {
         return { row, col };
       }
@@ -55,18 +59,18 @@ const findEmptyCell = (board) => {
   return null;
 };
 
-const solveBoardInPlace = (board) => {
-  const emptyCell = findEmptyCell(board);
+const solveBoardInPlace = (board, gridSize, subgridSize) => {
+  const emptyCell = findEmptyCell(board, gridSize);
   if (!emptyCell) return true;
 
   const { row, col } = emptyCell;
-  const candidates = shuffle(range(GRID_SIZE).map((i) => i + 1));
+  const candidates = shuffle(range(gridSize).map((i) => i + 1));
 
   for (let i = 0; i < candidates.length; i += 1) {
     const value = candidates[i];
-    if (isValidPlacement(board, row, col, value)) {
+    if (isValidPlacement(board, row, col, value, gridSize, subgridSize)) {
       board[row][col] = value;
-      if (solveBoardInPlace(board)) return true;
+      if (solveBoardInPlace(board, gridSize, subgridSize)) return true;
       board[row][col] = 0;
     }
   }
@@ -74,27 +78,32 @@ const solveBoardInPlace = (board) => {
   return false;
 };
 
-export const solveSudoku = (board) => {
+export const solveSudoku = (board, gridSize = 9, subgridSize = 3) => {
   const workingBoard = cloneBoard(board);
-  const solved = solveBoardInPlace(workingBoard);
+  const solved = solveBoardInPlace(workingBoard, gridSize, subgridSize);
   return solved ? workingBoard : null;
 };
 
-export const countSolutions = (board, limit = 2) => {
+export const countSolutions = (
+  board,
+  gridSize,
+  subgridSize,
+  limit = 2
+) => {
   const workingBoard = cloneBoard(board);
   let solutions = 0;
 
   const backtrack = () => {
     if (solutions >= limit) return;
-    const emptyCell = findEmptyCell(workingBoard);
+    const emptyCell = findEmptyCell(workingBoard, gridSize);
     if (!emptyCell) {
       solutions += 1;
       return;
     }
 
     const { row, col } = emptyCell;
-    for (let value = 1; value <= GRID_SIZE; value += 1) {
-      if (isValidPlacement(workingBoard, row, col, value)) {
+    for (let value = 1; value <= gridSize; value += 1) {
+      if (isValidPlacement(workingBoard, row, col, value, gridSize, subgridSize)) {
         workingBoard[row][col] = value;
         backtrack();
         workingBoard[row][col] = 0;
@@ -107,34 +116,32 @@ export const countSolutions = (board, limit = 2) => {
   return solutions;
 };
 
-const generateCompleteBoard = () => {
-  const board = createEmptyBoard();
-  solveBoardInPlace(board);
+const generateCompleteBoard = (gridSize, subgridSize) => {
+  const board = createEmptyBoard(gridSize);
+  solveBoardInPlace(board, gridSize, subgridSize);
   return board;
 };
 
-const DIFFICULTY_LEVELS = {
-  easy: 38,
-  medium: 32,
-  hard: 28,
-  expert: 24,
-};
-
-const generatePuzzleFromSolution = (solution, cluesTarget) => {
+const generatePuzzleFromSolution = (
+  solution,
+  gridSize,
+  subgridSize,
+  cluesTarget
+) => {
   const puzzle = cloneBoard(solution);
-  const cells = shuffle(range(GRID_SIZE * GRID_SIZE));
-  let remainingClues = GRID_SIZE * GRID_SIZE;
+  const cells = shuffle(range(gridSize * gridSize));
+  let remainingClues = gridSize * gridSize;
 
   for (let i = 0; i < cells.length; i += 1) {
     const cellIndex = cells[i];
-    const row = Math.floor(cellIndex / GRID_SIZE);
-    const col = cellIndex % GRID_SIZE;
+    const row = Math.floor(cellIndex / gridSize);
+    const col = cellIndex % gridSize;
     const backup = puzzle[row][col];
 
     if (backup === 0) continue;
 
     puzzle[row][col] = 0;
-    const solutions = countSolutions(puzzle, 2);
+    const solutions = countSolutions(puzzle, gridSize, subgridSize, 2);
     if (solutions !== 1 || remainingClues - 1 < cluesTarget) {
       puzzle[row][col] = backup;
     } else {
@@ -145,31 +152,136 @@ const generatePuzzleFromSolution = (solution, cluesTarget) => {
   return puzzle;
 };
 
-export const generateSudoku = (difficulty = 'easy') => {
-  const normalizedDifficulty = DIFFICULTY_LEVELS[difficulty]
-    ? difficulty
-    : 'easy';
+const DECAF_PUZZLES = [
+  {
+    puzzle: [
+      [1, 0, 0, 4],
+      [0, 4, 0, 0],
+      [0, 0, 4, 0],
+      [4, 0, 0, 2],
+    ],
+    solution: [
+      [1, 2, 3, 4],
+      [3, 4, 2, 1],
+      [2, 1, 4, 3],
+      [4, 3, 1, 2],
+    ],
+  },
+  {
+    puzzle: [
+      [2, 0, 4, 0],
+      [0, 1, 0, 3],
+      [1, 0, 3, 0],
+      [0, 2, 0, 4],
+    ],
+    solution: [
+      [2, 3, 4, 1],
+      [4, 1, 2, 3],
+      [1, 4, 3, 2],
+      [3, 2, 1, 4],
+    ],
+  },
+  {
+    puzzle: [
+      [0, 1, 2, 0],
+      [4, 0, 0, 3],
+      [0, 4, 0, 2],
+      [2, 0, 4, 1],
+    ],
+    solution: [
+      [3, 1, 2, 4],
+      [4, 2, 1, 3],
+      [1, 4, 3, 2],
+      [2, 3, 4, 1],
+    ],
+  },
+];
 
-  const solution = generateCompleteBoard();
-  const cluesTarget = DIFFICULTY_LEVELS[normalizedDifficulty];
-  const puzzle = generatePuzzleFromSolution(solution, cluesTarget);
+const DIFFICULTY_LEVELS = {
+  decaf: {
+    id: 'decaf',
+    label: 'Decaf',
+    gridSize: 4,
+    subgridSize: 2,
+    symbols: ['Circle', 'Triangle', 'Square', 'Star'],
+    puzzlePool: DECAF_PUZZLES,
+  },
+  latte: {
+    id: 'latte',
+    label: 'Latte',
+    gridSize: 9,
+    subgridSize: 3,
+    clues: 38,
+  },
+  cappuccino: {
+    id: 'cappuccino',
+    label: 'Cappuccino',
+    gridSize: 9,
+    subgridSize: 3,
+    clues: 32,
+  },
+  espresso: {
+    id: 'espresso',
+    label: 'Espresso',
+    gridSize: 9,
+    subgridSize: 3,
+    clues: 28,
+  },
+  ristretto: {
+    id: 'ristretto',
+    label: 'Ristretto',
+    gridSize: 9,
+    subgridSize: 3,
+    clues: 24,
+  },
+};
+
+const DEFAULT_DIFFICULTY = 'latte';
+
+export const getDifficultyConfig = (difficulty) =>
+  DIFFICULTY_LEVELS[difficulty] || DIFFICULTY_LEVELS[DEFAULT_DIFFICULTY];
+
+export const generateSudoku = (difficulty = DEFAULT_DIFFICULTY) => {
+  const config = getDifficultyConfig(difficulty);
+
+  if (config.id === 'decaf') {
+    const selection =
+      config.puzzlePool[Math.floor(Math.random() * config.puzzlePool.length)];
+    return {
+      puzzle: cloneBoard(selection.puzzle),
+      solution: cloneBoard(selection.solution),
+      difficulty: config.id,
+      label: config.label,
+      gridSize: config.gridSize,
+      subgridSize: config.subgridSize,
+      symbols: config.symbols.slice(),
+    };
+  }
+
+  const solution = generateCompleteBoard(config.gridSize, config.subgridSize);
+  const puzzle = generatePuzzleFromSolution(
+    solution,
+    config.gridSize,
+    config.subgridSize,
+    config.clues
+  );
 
   return {
     puzzle,
     solution,
-    difficulty: normalizedDifficulty,
+    difficulty: config.id,
+    label: config.label,
+    gridSize: config.gridSize,
+    subgridSize: config.subgridSize,
+    symbols: null,
   };
 };
 
-export const getDifficultyLevels = () => Object.keys(DIFFICULTY_LEVELS);
+export const getDifficultyLevels = () =>
+  Object.values(DIFFICULTY_LEVELS).map(({ id, label }) => ({ id, label }));
 
-export const isBoardComplete = (board) => {
-  for (let row = 0; row < GRID_SIZE; row += 1) {
-    for (let col = 0; col < GRID_SIZE; col += 1) {
-      if (board[row][col] === 0) return false;
-    }
-  }
-  return true;
-};
+export const isBoardComplete = (board) =>
+  board.every((row) => row.every((value) => value !== 0));
 
-export { GRID_SIZE, SUBGRID_SIZE, DIFFICULTY_LEVELS };
+export { DIFFICULTY_LEVELS };
+

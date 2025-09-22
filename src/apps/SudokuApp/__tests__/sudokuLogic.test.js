@@ -38,38 +38,47 @@ describe('sudoku logic utilities', () => {
   });
 
   it('generateSudoku returns valid puzzle and solution across difficulties', () => {
-    Object.keys(DIFFICULTY_LEVELS).forEach((level) => {
-      const { puzzle, solution, difficulty } = generateSudoku(level);
-      expect(difficulty).toBe(level);
-      expect(solution).toHaveLength(9);
-      expect(puzzle).toHaveLength(9);
+    Object.values(DIFFICULTY_LEVELS).forEach((config) => {
+      const { puzzle, solution, difficulty, gridSize, subgridSize } =
+        generateSudoku(config.id);
+      expect(difficulty).toBe(config.id);
+      expect(solution).toHaveLength(gridSize);
+      expect(puzzle).toHaveLength(gridSize);
 
       puzzle.forEach((row, rowIndex) => {
-        expect(row).toHaveLength(9);
+        expect(row).toHaveLength(gridSize);
         row.forEach((value, colIndex) => {
           expect(value).toBeGreaterThanOrEqual(0);
-          expect(value).toBeLessThanOrEqual(9);
+          expect(value).toBeLessThanOrEqual(gridSize);
           if (value !== 0) {
-            expect(isValidPlacement(puzzle, rowIndex, colIndex, value)).toBe(true);
+            expect(
+              isValidPlacement(puzzle, rowIndex, colIndex, value, gridSize, subgridSize)
+            ).toBe(true);
           }
         });
       });
 
-      const solved = solveSudoku(puzzle);
+      const solved = solveSudoku(puzzle, gridSize, subgridSize);
       expect(solved).not.toBeNull();
       expect(solved).toEqual(solution);
     });
   });
 
   it('difficulty levels control the number of given clues', () => {
-    Object.entries(DIFFICULTY_LEVELS).forEach(([level, clues]) => {
-      const { puzzle } = generateSudoku(level);
+    Object.values(DIFFICULTY_LEVELS).forEach((config) => {
+      const { puzzle } = generateSudoku(config.id);
       const filled = puzzle.reduce(
         (total, row) => total + row.filter((value) => value !== 0).length,
         0
       );
-      expect(filled).toBeGreaterThanOrEqual(clues - 2); // allow slight variance due to uniqueness enforcement
-      expect(filled).toBeLessThanOrEqual(81);
+
+      if (config.clues) {
+        expect(filled).toBeGreaterThanOrEqual(config.clues - 2);
+        expect(filled).toBeLessThanOrEqual(config.gridSize * config.gridSize);
+      } else {
+        expect(filled).toBeGreaterThan(0);
+        expect(filled).toBeLessThanOrEqual(config.gridSize * config.gridSize);
+      }
     });
   });
 });
