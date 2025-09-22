@@ -207,6 +207,19 @@ export const APP_REGISTRY = {
     created: '2025-09-22',
     featured: true,
   }),
+  cosmos: withDefaults({
+    id: 'cosmos',
+    title: 'Cosmos Simulator',
+    description: 'Navigate a scaled solar system with Newtonian physics, trails, and teleport controls.',
+    icon: '🪐',
+    category: 'Exploration',
+    component: null,
+    loader: () => import('./CosmosApp'),
+    path: '/apps/cosmos',
+    tags: ['three.js', 'simulation', 'space', 'physics'],
+    created: '2024-11-19',
+    featured: true,
+  }),
   'catnap-leap': withDefaults({
 
     id: 'catnap-leap',
@@ -258,6 +271,7 @@ export const APP_CATEGORIES = {
   'Tools': { icon: '🛠️', color: '#4ecdc4' },
   'Creative': { icon: '🎨', color: '#45b7d1' },
   'Education': { icon: '📚', color: '#96ceb4' },
+  'Exploration': { icon: '🪐', color: '#7f9cff' },
   'Productivity': { icon: '⚡', color: '#feca57' },
   'Development': { icon: '💻', color: '#ff9ff3' },
   'Entertainment': { icon: '🎭', color: '#54a0ff' }

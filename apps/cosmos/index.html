@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cosmos • Solar System Simulator</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="cosmos-app">
+      <header class="cosmos-header">
+        <h1>Cosmos</h1>
+        <p>
+          Navigate a to-scale (×10<sup>-9</sup>) solar system rendered with Three.js and velocity Verlet
+          integration. Adjust time, gravity, and orbital trails to watch planets evolve in real time.
+        </p>
+        <ul class="cosmos-highlights">
+          <li>Newtonian physics with velocity Verlet integration.</li>
+          <li>Teleport the camera to any planet instantly.</li>
+          <li>Adjust gravity strength and orbital trails live.</li>
+        </ul>
+      </header>
+      <section class="cosmos-viewport">
+        <div class="cosmos-loader">Loading solar system…</div>
+      </section>
+      <footer class="cosmos-footer">
+        Data sourced from NASA JPL public records. Distances and radii scaled by 1×10<sup>-9</sup> for a
+        desktop-friendly view. Designed for modern desktop browsers.
+      </footer>
+    </div>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
