@@ -8,6 +8,7 @@ import TaskEditorModal from './modals/TaskEditorModal';
 import useZenDoState from './useZenDoState';
 import { DAY_ORDER } from './constants';
 import { flattenTasks, sortTasksByDueDate } from './taskUtils';
+import { writeGlobalGistSettings } from '../globalGistSettings';
 
 const VIEW_TABS = [
   { id: 'landing', label: 'Landing' },
@@ -35,10 +36,10 @@ const ZenDoApp = ({ onBack }) => {
     clearFocus,
     gistConfig,
     setGistConfig,
+    markLocalGlobalSettingsUpdate,
     syncStatus,
     pullFromGist,
     pushToGist,
-    isReady,
   } = useZenDoState();
 
   useEffect(() => {
@@ -47,12 +48,6 @@ const ZenDoApp = ({ onBack }) => {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
-
-  useEffect(() => {
-    if (isReady && gistConfig.gistId && !gistConfig.lastSyncedAt) {
-      pullFromGist();
-    }
-  }, [gistConfig.gistId, gistConfig.lastSyncedAt, isReady, pullFromGist]);
 
   const todayKey = DAY_ORDER[now.getDay()];
   const dateLabel = new Intl.DateTimeFormat(undefined, {
@@ -233,24 +228,40 @@ const ZenDoApp = ({ onBack }) => {
           ))}
         </nav>
         <div className="zen-sync-panel">
-          <div className="zen-sync-row">
-            <label>
-              Gist ID
-              <input
-                value={gistConfig.gistId || ''}
-                onChange={(e) => setGistConfig((prev) => ({ ...prev, gistId: e.target.value }))}
-                placeholder="Public gist ID"
-              />
-            </label>
-            <label>
-              Token
-              <input
-                type="password"
-                value={gistConfig.gistToken || ''}
-                onChange={(e) => setGistConfig((prev) => ({ ...prev, gistToken: e.target.value }))}
-                placeholder="Optional PAT"
-              />
-            </label>
+            <div className="zen-sync-row">
+              <label>
+                Gist ID
+                <input
+                  value={gistConfig.gistId || ''}
+                  onChange={(e) => {
+                    const nextValue = e.target.value;
+                    setGistConfig((prev) => ({ ...prev, gistId: nextValue }));
+                    markLocalGlobalSettingsUpdate();
+                    writeGlobalGistSettings({
+                      gistId: nextValue,
+                      gistToken: gistConfig.gistToken || '',
+                    });
+                  }}
+                  placeholder="Public gist ID"
+                />
+              </label>
+              <label>
+                Token
+                <input
+                  type="password"
+                  value={gistConfig.gistToken || ''}
+                  onChange={(e) => {
+                    const nextValue = e.target.value;
+                    setGistConfig((prev) => ({ ...prev, gistToken: nextValue }));
+                    markLocalGlobalSettingsUpdate();
+                    writeGlobalGistSettings({
+                      gistId: gistConfig.gistId || '',
+                      gistToken: nextValue,
+                    });
+                  }}
+                  placeholder="Optional PAT"
+                />
+              </label>
             <label>
               File
               <input
