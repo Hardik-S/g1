@@ -258,6 +258,9 @@ const CatNapLeapApp = () => {
   const effectsSnapshotRef = useRef([]);
   const drowsinessRef = useRef(0);
   const audioContextRef = useRef(null);
+  const spaceHoldTimeoutRef = useRef(null);
+  const spaceHoldStartRef = useRef(null);
+  const isSpaceHeldRef = useRef(false);
 
   const [phase, setPhase] = useState('start');
   const [stats, setStats] = useState({ score: 0, perfects: 0, best: 0 });
@@ -561,7 +564,9 @@ const CatNapLeapApp = () => {
     publishEffects([]);
 
     setPhase('gameover');
-    setMessage(`${reason} Choose your next move.`);
+
+    setMessage(`${reason} Hold space for 2 seconds to leap again, or choose a different dream.`);
+
   };
 
   const applyJump = () => {
@@ -1479,8 +1484,6 @@ const CatNapLeapApp = () => {
       applyJump();
     } else if (phase === 'playing') {
       applyJump();
-    } else if (phase === 'gameover') {
-      resetGameState({ forcePhase: 'ready' });
     }
   };
 
@@ -1535,13 +1538,43 @@ const CatNapLeapApp = () => {
 
       if (event.code === 'Space') {
         event.preventDefault();
-        handlePrimaryAction();
+        if (phase === 'gameover') {
+          if (!isSpaceHeldRef.current) {
+            isSpaceHeldRef.current = true;
+            spaceHoldStartRef.current = performance.now();
+            spaceHoldTimeoutRef.current = window.setTimeout(() => {
+              spaceHoldTimeoutRef.current = null;
+              spaceHoldStartRef.current = null;
+              isSpaceHeldRef.current = false;
+              const state = stateRef.current;
+              if (state?.phase === 'gameover') {
+                resetGameState({ forcePhase: 'ready' });
+              }
+            }, 2000);
+          }
+        } else {
+          handlePrimaryAction();
+        }
       } else if (event.code === 'KeyK') {
         event.preventDefault();
         toggleKittenMode();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
+
+    const handleKeyUp = (event) => {
+      if (event.code === 'Space') {
+        if (isSpaceHeldRef.current) {
+          isSpaceHeldRef.current = false;
+          spaceHoldStartRef.current = null;
+          if (spaceHoldTimeoutRef.current) {
+            clearTimeout(spaceHoldTimeoutRef.current);
+            spaceHoldTimeoutRef.current = null;
+          }
+        }
+      }
+    };
+    window.addEventListener('keyup', handleKeyUp);
 
     const canvas = canvasRef.current;
     if (canvas) {
@@ -1553,12 +1586,19 @@ const CatNapLeapApp = () => {
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
       if (canvas) {
         canvas.removeEventListener('pointerdown', handlePrimaryAction);
       }
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
+      if (spaceHoldTimeoutRef.current) {
+        clearTimeout(spaceHoldTimeoutRef.current);
+        spaceHoldTimeoutRef.current = null;
+      }
+      spaceHoldStartRef.current = null;
+      isSpaceHeldRef.current = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
