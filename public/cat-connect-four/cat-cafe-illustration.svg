@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bgGradient" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe7ec" />
+      <stop offset="60%" stop-color="#ffe0f4" />
+      <stop offset="100%" stop-color="#ffd6c5" />
+    </linearGradient>
+    <radialGradient id="sunsetGlow" cx="50%" cy="12%" r="60%">
+      <stop offset="0%" stop-color="#fff3d6" stop-opacity="0.95" />
+      <stop offset="70%" stop-color="#ffdccb" stop-opacity="0.55" />
+      <stop offset="100%" stop-color="#ffbfd9" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="tableTop" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#f7d8c1" />
+      <stop offset="100%" stop-color="#edc1a5" />
+    </linearGradient>
+    <linearGradient id="counterFront" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f0b7cd" />
+      <stop offset="100%" stop-color="#e098b9" />
+    </linearGradient>
+    <linearGradient id="chalkboard" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5d4d53" />
+      <stop offset="100%" stop-color="#43353c" />
+    </linearGradient>
+    <linearGradient id="cushion" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffb8d1" />
+      <stop offset="100%" stop-color="#ff8aa8" />
+    </linearGradient>
+    <linearGradient id="cushion2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fddbb9" />
+      <stop offset="100%" stop-color="#ffb87a" />
+    </linearGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#bgGradient)" />
+  <rect width="1920" height="1080" fill="url(#sunsetGlow)" />
+  <g opacity="0.2">
+    <path d="M0 840 C240 760 420 760 660 820 C900 880 1020 870 1260 820 C1500 770 1680 790 1920 860 L1920 1080 L0 1080 Z" fill="#fcd7df" />
+  </g>
+  <g opacity="0.1">
+    <path d="M0 780 C220 720 420 720 660 780 C900 840 1100 830 1340 780 C1580 730 1720 740 1920 800 L1920 1080 L0 1080 Z" fill="#f8cbd6" />
+  </g>
+  <g opacity="0.7">
+    <rect x="220" y="360" width="420" height="280" rx="22" fill="url(#chalkboard)" />
+    <rect x="240" y="380" width="380" height="240" rx="18" fill="#2e262b" opacity="0.65" />
+    <text x="260" y="440" font-family="'Comic Sans MS', 'Nunito', sans-serif" font-size="44" fill="#f8f1d4">Today's Special</text>
+    <text x="260" y="490" font-family="'Comic Sans MS', 'Nunito', sans-serif" font-size="32" fill="#ffdfe0">Catpuccino ☕</text>
+    <text x="260" y="530" font-family="'Comic Sans MS', 'Nunito', sans-serif" font-size="32" fill="#ffdfe0">Tuna Tart 🐟</text>
+    <text x="260" y="570" font-family="'Comic Sans MS', 'Nunito', sans-serif" font-size="32" fill="#ffdfe0">Purrfect Pie 🥧</text>
+  </g>
+  <g opacity="0.85">
+    <rect x="1080" y="450" width="620" height="160" rx="28" fill="url(#tableTop)" />
+    <rect x="1100" y="520" width="580" height="280" rx="26" fill="url(#counterFront)" />
+    <circle cx="1180" cy="500" r="24" fill="#fdf4ea" />
+    <circle cx="1260" cy="490" r="30" fill="#fff7f0" />
+    <circle cx="1340" cy="500" r="24" fill="#ffe6d4" />
+    <rect x="1500" y="470" width="160" height="18" rx="9" fill="#ffe1f2" />
+    <rect x="1520" y="500" width="120" height="18" rx="9" fill="#ffd0ea" />
+  </g>
+  <g opacity="0.8">
+    <ellipse cx="540" cy="780" rx="300" ry="60" fill="#f0c6c9" />
+    <rect x="360" y="620" width="360" height="120" rx="26" fill="#fdf0eb" />
+    <rect x="380" y="640" width="320" height="80" rx="20" fill="#f6d7c8" />
+  </g>
+  <g opacity="0.95">
+    <ellipse cx="520" cy="620" rx="48" ry="26" fill="#fffdf8" />
+    <path d="M494 600 C480 564 520 520 560 520 C588 520 606 544 612 564 C620 588 604 610 580 610" fill="#ffede2" />
+    <ellipse cx="580" cy="610" rx="42" ry="22" fill="#fffaf2" />
+    <path d="M492 604 C506 620 512 640 540 648" stroke="#f9b4c8" stroke-width="6" fill="none" stroke-linecap="round" />
+    <ellipse cx="562" cy="532" rx="18" ry="22" fill="#d98fa8" />
+    <ellipse cx="596" cy="536" rx="18" ry="22" fill="#d98fa8" />
+    <path d="M560 560 Q580 576 600 560" stroke="#8c5b6a" stroke-width="6" fill="none" stroke-linecap="round" />
+  </g>
+  <g opacity="0.88">
+    <ellipse cx="820" cy="756" rx="120" ry="34" fill="#e7bbc5" />
+    <rect x="720" y="620" width="200" height="120" rx="38" fill="#fff2f6" />
+    <rect x="740" y="640" width="160" height="80" rx="28" fill="#ffe1ee" />
+    <path d="M800 640 C780 600 820 560 860 570 C900 580 900 640 880 660" fill="#f5c1d4" />
+    <ellipse cx="828" cy="614" rx="16" ry="18" fill="#8c5d74" />
+    <ellipse cx="858" cy="616" rx="16" ry="18" fill="#8c5d74" />
+    <ellipse cx="842" cy="632" rx="8" ry="6" fill="#fff" opacity="0.8" />
+  </g>
+  <g opacity="0.9">
+    <ellipse cx="280" cy="760" rx="140" ry="42" fill="#efcdd2" />
+    <rect x="190" y="640" width="180" height="120" rx="40" fill="url(#cushion)" />
+    <ellipse cx="190" cy="690" rx="24" ry="18" fill="#f49bb7" />
+    <ellipse cx="370" cy="690" rx="24" ry="18" fill="#f49bb7" />
+    <path d="M220 632 C210 600 240 560 290 564 C338 568 360 604 350 636" fill="url(#cushion2)" />
+    <ellipse cx="252" cy="602" rx="12" ry="16" fill="#874c60" />
+    <ellipse cx="310" cy="606" rx="12" ry="16" fill="#874c60" />
+    <path d="M250 640 Q280 660 312 640" stroke="#6b3c4e" stroke-width="6" fill="none" stroke-linecap="round" />
+  </g>
+  <g opacity="0.6">
+    <path d="M1280 340 C1360 260 1540 260 1620 320" stroke="#f3a0be" stroke-width="14" stroke-linecap="round" fill="none" />
+    <circle cx="1340" cy="300" r="16" fill="#f7b7cf" />
+    <circle cx="1400" cy="270" r="16" fill="#f7b7cf" />
+    <circle cx="1460" cy="288" r="16" fill="#f7b7cf" />
+  </g>
+  <g opacity="0.75">
+    <rect x="960" y="360" width="90" height="180" rx="22" fill="#ffe9f4" />
+    <rect x="972" y="372" width="66" height="120" rx="16" fill="#fdd6e8" />
+    <ellipse cx="1010" cy="516" rx="36" ry="16" fill="#f2b6ce" />
+  </g>
+  <g opacity="0.18">
+    <circle cx="180" cy="220" r="90" fill="#fff6f7" />
+    <circle cx="1720" cy="200" r="110" fill="#ffeef8" />
+  </g>
+</svg>
