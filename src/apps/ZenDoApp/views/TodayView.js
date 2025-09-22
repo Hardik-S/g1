@@ -24,8 +24,15 @@ const TodayView = ({
   const sortablesRef = useRef({});
 
   useEffect(() => {
+    const discardSortableClone = (evt) => {
+      const cloneNode = evt.clone || evt.item;
+      if (cloneNode && cloneNode.parentNode) {
+        cloneNode.parentNode.removeChild(cloneNode);
+      }
+    };
+
     sortablesRef.current.today = createSortable(todayRef.current, {
-      group: { name: 'zen-today', pull: true, put: true },
+      group: { name: 'zen-today', pull: 'clone', put: true },
       animation: 150,
       dataIdAttr: 'data-task-id',
       fallbackOnBody: true,
@@ -36,7 +43,7 @@ const TodayView = ({
           const order = Array.from(evt.to.querySelectorAll('[data-task-id]')).map((el) => el.dataset.taskId);
           onReorderBucket('today', order);
         }
-        evt.item.remove();
+        discardSortableClone(evt);
       },
       onRemove: (evt) => {
         const order = Array.from(evt.from.querySelectorAll('[data-task-id]')).map((el) => el.dataset.taskId);
@@ -45,7 +52,7 @@ const TodayView = ({
     });
 
     sortablesRef.current.priority = createSortable(priorityRef.current, {
-      group: { name: 'zen-today', pull: true, put: true },
+      group: { name: 'zen-today', pull: 'clone', put: true },
       animation: 150,
       dataIdAttr: 'data-task-id',
       fallbackOnBody: true,
@@ -56,7 +63,7 @@ const TodayView = ({
           const order = Array.from(evt.to.querySelectorAll('[data-task-id]')).map((el) => el.dataset.taskId);
           onReorderBucket('priority', order);
         }
-        evt.item.remove();
+        discardSortableClone(evt);
       },
       onUpdate: (evt) => {
         const order = Array.from(evt.to.querySelectorAll('[data-task-id]')).map((el) => el.dataset.taskId);
@@ -69,7 +76,7 @@ const TodayView = ({
     });
 
     sortablesRef.current.bonus = createSortable(bonusRef.current, {
-      group: { name: 'zen-today', pull: true, put: true },
+      group: { name: 'zen-today', pull: 'clone', put: true },
       animation: 150,
       dataIdAttr: 'data-task-id',
       fallbackOnBody: true,
@@ -80,7 +87,7 @@ const TodayView = ({
           const order = Array.from(evt.to.querySelectorAll('[data-task-id]')).map((el) => el.dataset.taskId);
           onReorderBucket('bonus', order);
         }
-        evt.item.remove();
+        discardSortableClone(evt);
       },
       onUpdate: (evt) => {
         const order = Array.from(evt.to.querySelectorAll('[data-task-id]')).map((el) => el.dataset.taskId);
