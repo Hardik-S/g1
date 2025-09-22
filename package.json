@@ -7,7 +7,9 @@
     "start": "webpack serve --mode development",
     "build": "webpack --mode production",
     "test": "jest",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "test:cache-lab": "pnpm --filter cache-lab test",
+    "e2e:cache-lab": "pnpm --filter cache-lab exec playwright test"
   },
   "homepage": "https://hardik-s.github.io/g1",
   "dependencies": {

@@ -1,0 +1,55 @@
+.panel {
+  background: rgba(15, 23, 42, 0.7);
+  border-radius: 16px;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.question {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.choices {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.choice {
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  padding: 0.75rem;
+  background: rgba(15, 23, 42, 0.9);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.choice input {
+  transform: scale(1.2);
+}
+
+.feedback {
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: rgba(74, 222, 128, 0.15);
+  border: 1px solid rgba(74, 222, 128, 0.4);
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.actions button {
+  border-radius: 999px;
+  border: none;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.7), rgba(244, 63, 94, 0.7));
+  color: #fff;
+  cursor: pointer;
+}
