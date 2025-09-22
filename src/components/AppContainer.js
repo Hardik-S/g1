@@ -2,20 +2,28 @@ import React, { useState, Suspense } from 'react';
 import AppLauncher from './AppLauncher';
 import './AppContainer.css';
 import { getAppLoader } from '../apps/registry';
+import AppErrorBoundary from './AppErrorBoundary';
 
 
 const AppContainer = () => {
   const [currentView, setCurrentView] = useState('launcher'); // 'launcher' or 'app'
   const [currentApp, setCurrentApp] = useState(null);
+  const [appLoadAttempt, setAppLoadAttempt] = useState(0);
 
   const handleLaunchApp = (app) => {
     setCurrentApp(app);
     setCurrentView('app');
+    setAppLoadAttempt(0);
   };
 
   const handleBackToLauncher = () => {
     setCurrentView('launcher');
     setCurrentApp(null);
+    setAppLoadAttempt(0);
+  };
+
+  const handleRetryLoadApp = () => {
+    setAppLoadAttempt((attempt) => attempt + 1);
   };
 
   const renderCurrentApp = () => {
@@ -41,7 +49,14 @@ const AppContainer = () => {
       );
     }
 
-    return <LazyAppComponent onBack={handleBackToLauncher} />;
+    const attemptKey = `${currentApp.id}-${appLoadAttempt}`;
+
+    return (
+      <LazyAppComponent
+        key={attemptKey}
+        onBack={handleBackToLauncher}
+      />
+    );
   };
 
   return (
@@ -68,14 +83,19 @@ const AppContainer = () => {
           </header>
 
           <main className="app-content">
-            <Suspense fallback={
-              <div className="loading">
-                <div className="loading-spinner"></div>
-                <p>Loading app...</p>
-              </div>
-            }>
-              {renderCurrentApp()}
-            </Suspense>
+            <AppErrorBoundary
+              onRetry={handleRetryLoadApp}
+              onBack={handleBackToLauncher}
+            >
+              <Suspense fallback={
+                <div className="loading">
+                  <div className="loading-spinner"></div>
+                  <p>Loading app...</p>
+                </div>
+              }>
+                {renderCurrentApp()}
+              </Suspense>
+            </AppErrorBoundary>
           </main>
         </div>
       )}

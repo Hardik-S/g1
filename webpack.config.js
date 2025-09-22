@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
@@ -51,13 +52,21 @@ module.exports = {
       template: './public/index.html',
     }),
     new CopyWebpackPlugin({
-      patterns: [
-        { from: path.resolve(__dirname, 'public/hexa-snake'), to: 'hexa-snake' },
-        { from: path.resolve(__dirname, 'apps/cat-typing-speed-test'), to: 'apps/cat-typing-speed-test' },
-        { from: path.resolve(__dirname, 'apps/zen-go'), to: 'apps/zen-go' },
-        { from: path.resolve(__dirname, 'apps/cosmos'), to: 'apps/cosmos' },
-        { from: path.resolve(__dirname, 'apps/cache-lab/dist'), to: 'cache-lab' },
-      ],
+      patterns: (() => {
+        const patterns = [
+          { from: path.resolve(__dirname, 'public/hexa-snake'), to: 'hexa-snake' },
+          { from: path.resolve(__dirname, 'apps/cat-typing-speed-test'), to: 'apps/cat-typing-speed-test' },
+          { from: path.resolve(__dirname, 'apps/cosmos'), to: 'apps/cosmos' },
+          { from: path.resolve(__dirname, 'apps/zen-go'), to: 'apps/zen-go' },
+        ];
+
+        const cacheLabSource = path.resolve(__dirname, 'apps/cache-lab/dist');
+        if (fs.existsSync(cacheLabSource)) {
+          patterns.push({ from: cacheLabSource, to: 'cache-lab' });
+        }
+
+        return patterns;
+      })(),
     }),
   ],
   devServer: {
