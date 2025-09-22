@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "start": "webpack serve --mode development",
+    "dev": "concurrently \"pnpm --filter cache-lab dev\" \"webpack serve --mode development\"",
     "build:cache-lab": "npm --prefix src/apps/cache-lab run build",
     "build": "npm run build:cache-lab && webpack --mode production",
     "test": "jest",
@@ -36,6 +37,7 @@
     "babel-jest": "^29.7.0",
     "babel-loader": "^9.1.0",
     "copy-webpack-plugin": "^13.0.1",
+    "concurrently": "^9.1.2",
     "css-loader": "^6.8.0",
     "gh-pages": "^6.0.0",
     "html-webpack-plugin": "^5.5.0",

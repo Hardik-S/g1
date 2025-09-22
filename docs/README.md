@@ -78,10 +78,12 @@ Gif coming soon
 git clone https://github.com/Hardik-S/g1.git
 cd g1
 npm install
-npm start
+npm run dev
 ```
 
-Then open [http://localhost:3000](http://localhost:3000).
+This launches the webpack dev server at [http://localhost:3000](http://localhost:3000) for the launcher and the Cache Lab Vite
+instance at [http://localhost:4173](http://localhost:4173). Use `CACHE_LAB_DEV_URL` to point the iframe to a different Cache Lab
+origin when necessary (e.g. a remote tunnel or alternate port).
 
 ### Build
 
@@ -109,7 +111,8 @@ Your site will be available at the `homepage` URL.
 
 ### Launcher
 
-* `npm start`: Start webpack dev server at `http://localhost:3000`.
+* `npm run dev`: Run the launcher webpack dev server alongside the Cache Lab Vite dev server (defaults to ports 3000 and 4173).
+* `npm start`: Start only the launcher webpack dev server at `http://localhost:3000`.
 * `npm run build`: Build Cache Lab and the launcher production bundle into `dist/`.
 * `npm run deploy`: Publish `dist/` to `gh-pages`.
 * `npm test`: Run Jest suite for launcher React apps.
@@ -119,6 +122,7 @@ Your site will be available at the `homepage` URL.
 * `npm run build:cache-lab`: Build Cache Lab assets within `src/apps/cache-lab`.
 * `npm run test:cache-lab`: Run Cache Lab unit tests via pnpm.
 * `npm run e2e:cache-lab`: Run Playwright E2E tests for Cache Lab via pnpm.
+* `CACHE_LAB_DEV_URL`: Optional env var to override the Cache Lab dev iframe URL when running `npm run dev`.
 
 ---
 
