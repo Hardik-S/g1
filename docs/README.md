@@ -39,6 +39,7 @@ A small, modular React playground bundling multiple apps behind a simple launche
 
 - Node.js 16+ (18+ recommended)
 - npm
+- pnpm (required for Cache Lab workspace scripts — [installation guide](https://pnpm.io/installation))
 
 ### Install
 
@@ -81,9 +82,12 @@ Your site will be available at the `homepage` URL.
 ## Scripts
 
 - `npm start` — Start webpack dev server at `http://localhost:3000`
+- `npm test` — Run the Jest suite for launcher React apps
 - `npm run build:cache-lab` — Build the Cache Lab assets within `apps/cache-lab`
 - `npm run build` — Build Cache Lab and create the launcher production bundle in `dist/`
 - `npm run deploy` — Publish `dist/` to `gh-pages`
+- `npm run test:cache-lab` — Run Cache Lab unit tests by invoking the workspace through pnpm
+- `npm run e2e:cache-lab` — Execute Cache Lab Playwright E2E tests via the pnpm workspace
 
 ## Project structure
 
