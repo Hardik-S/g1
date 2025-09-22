@@ -21,8 +21,6 @@
 
   const loginForm = document.getElementById('login-form');
   const aliasInput = document.getElementById('alias-input');
-  const gistIdInput = document.getElementById('gist-id-input');
-  const tokenInput = document.getElementById('token-input');
   const loginButton = document.getElementById('login-button');
   const logoutButton = document.getElementById('logout-button');
   const loginStatus = document.getElementById('login-status');
@@ -37,14 +35,19 @@
   const STORAGE_KEY = 'catTypingSettings';
   const SESSION_TOKEN_KEY = 'catTypingSessionToken';
   const GIST_SETTINGS_COOKIE = 'g1_gist_settings';
-  const GIST_SETTINGS_TTL_MS = 30 * 24 * 60 * 60 * 1000;
   const GIST_SETTINGS_MESSAGE = 'g1-gist-settings-update';
   const gistSettingsChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('g1-gist-settings') : null;
 
-  const sanitizeGistSettings = (value = {}) => ({
-    gistId: typeof value.gistId === 'string' ? value.gistId.trim() : '',
-    gistToken: typeof value.gistToken === 'string' ? value.gistToken.trim() : '',
-  });
+  const sanitizeGistSettings = (value = {}) => {
+    const gistId = typeof value.gistId === 'string' ? value.gistId.trim() : '';
+    const gistToken = typeof value.gistToken === 'string'
+      ? value.gistToken.trim()
+      : typeof value.token === 'string'
+        ? value.token.trim()
+        : '';
+
+    return { gistId, gistToken };
+  };
 
   const readGistSettingsCookie = () => {
     if (typeof document === 'undefined') {
@@ -74,60 +77,40 @@
     return { gistId: '', gistToken: '' };
   };
 
-  const writeGistSettingsCookie = (settings) => {
-    if (typeof document === 'undefined') {
-      return;
-    }
+  const readSharedGistSettings = () => {
+    let embeddedSettings = null;
 
-    const sanitized = sanitizeGistSettings(settings);
-    try {
-      if (!sanitized.gistId && !sanitized.gistToken) {
-        document.cookie = `${GIST_SETTINGS_COOKIE}=; expires=${new Date(0).toUTCString()}; path=/; SameSite=Lax`;
-        return;
+    if (typeof window !== 'undefined') {
+      const candidates = [window];
+      if (window.parent && window.parent !== window) {
+        candidates.push(window.parent);
       }
 
-      const expires = new Date(Date.now() + GIST_SETTINGS_TTL_MS).toUTCString();
-      const encoded = encodeURIComponent(JSON.stringify(sanitized));
-      document.cookie = `${GIST_SETTINGS_COOKIE}=${encoded}; expires=${expires}; path=/; SameSite=Lax`;
-    } catch (error) {
-      console.warn('Unable to persist gist settings cookie.', error);
-    }
-  };
+      for (let index = 0; index < candidates.length; index += 1) {
+        const scope = candidates[index];
+        if (!scope) {
+          continue;
+        }
 
-  const postGistSettingsUpdate = (settings) => {
-    const payload = {
-      type: GIST_SETTINGS_MESSAGE,
-      gistId: settings.gistId || '',
-      gistToken: settings.gistToken || '',
-    };
-
-    if (gistSettingsChannel) {
-      try {
-        gistSettingsChannel.postMessage(payload);
-      } catch (error) {
-        console.warn('Unable to post gist settings update through BroadcastChannel.', error);
+        try {
+          if (typeof scope.readGlobalGistSettings === 'function') {
+            embeddedSettings = scope.readGlobalGistSettings();
+            break;
+          }
+        } catch (error) {
+          console.warn('Unable to read embedded global gist settings.', error);
+        }
       }
-      return;
     }
 
-    if (typeof window === 'undefined' || typeof window.postMessage !== 'function') {
-      return;
-    }
-
-    try {
-      if (window.parent && window.parent !== window && typeof window.parent.postMessage === 'function') {
-        window.parent.postMessage(payload, '*');
+    if (embeddedSettings) {
+      const sanitized = sanitizeGistSettings(embeddedSettings);
+      if (sanitized.gistId || sanitized.gistToken) {
+        return sanitized;
       }
-      window.postMessage(payload, '*');
-    } catch (error) {
-      console.warn('Unable to post gist settings update through window messaging.', error);
     }
-  };
 
-  const shareGlobalGistSettings = (settings) => {
-    const sanitized = sanitizeGistSettings(settings);
-    writeGistSettingsCookie(sanitized);
-    postGistSettingsUpdate(sanitized);
+    return readGistSettingsCookie();
   };
 
   const defaultStartHint = startHint ? startHint.textContent : '';
@@ -154,18 +137,23 @@
   const loadStoredSettings = () => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return {};
+      if (!raw) return { alias: '' };
       const parsed = JSON.parse(raw);
-      return parsed && typeof parsed === 'object' ? parsed : {};
+      if (!parsed || typeof parsed !== 'object') {
+        return { alias: '' };
+      }
+
+      const alias = typeof parsed.alias === 'string' ? parsed.alias : '';
+      return { alias };
     } catch (error) {
       console.warn('Unable to parse stored Cat Typing settings.', error);
-      return {};
+      return { alias: '' };
     }
   };
 
-  const persistLocalSettings = (aliasValue, gistValue) => {
+  const persistLocalSettings = (aliasValue) => {
     try {
-      const payload = { alias: aliasValue || '', gistId: gistValue || '' };
+      const payload = { alias: aliasValue || '' };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     } catch (error) {
       console.warn('Unable to persist Cat Typing settings.', error);
@@ -210,12 +198,12 @@
     }
   };
 
-  const updateStartHint = (loggedIn) => {
+  const updateStartHint = (canSync) => {
     if (!startHint) return;
-    if (loggedIn) {
+    if (canSync) {
       startHint.textContent = defaultStartHint;
     } else {
-      startHint.textContent = 'Log in above to sync your scores to GitHub. You can still practice without signing in.';
+      startHint.textContent = 'Connect GitHub access from the global settings to sync your scores. You can still practice without signing in.';
     }
   };
 
@@ -223,7 +211,8 @@
     if (logoutButton) {
       logoutButton.disabled = !loggedIn;
     }
-    updateStartHint(loggedIn);
+    const canSync = Boolean(loggedIn && gistId && gistToken);
+    updateStartHint(canSync);
   };
 
   const ensureAliasHistory = () => {
@@ -371,7 +360,12 @@
   };
 
   const queueSync = () => {
-    if (!currentAlias || !gistId || !gistToken) return;
+    if (!currentAlias) return;
+
+    if (!gistId || !gistToken) {
+      setLoginStatus('GitHub access missing. Open the global settings to reconnect before syncing scores.', 'info');
+      return;
+    }
 
     if (syncInFlight) {
       syncPending = true;
@@ -400,7 +394,7 @@
 
   const persistResult = (result) => {
     if (!currentAlias) {
-      setLoginStatus('Result not saved — log in to store your history.', 'error');
+      setLoginStatus('Result not saved — enter your alias after reconnecting GitHub access to store your history.', 'error');
       return;
     }
 
@@ -439,25 +433,20 @@
     if (!loginForm) return;
 
     const aliasValue = aliasInput ? aliasInput.value.trim() : '';
-    const rawTokenValue = tokenInput ? tokenInput.value.trim() : '';
-    const sessionTokenValue = getSessionToken();
-    const gistValue = gistIdInput ? gistIdInput.value.trim() : '';
-    const tokenValue = rawTokenValue || sessionTokenValue;
-    const { gistId: normalizedGistId, gistToken: normalizedToken } = sanitizeGistSettings({
-      gistId: gistValue,
-      gistToken: tokenValue,
-    });
+    const sharedSettings = readSharedGistSettings();
+    const normalizedGistId = sharedSettings.gistId;
+    const normalizedToken = sharedSettings.gistToken;
 
     if (!aliasValue) {
       setLoginStatus('Enter an alias to continue.', 'error');
       return;
     }
-    if (!normalizedGistId) {
-      setLoginStatus('Add the GitHub gist ID to store your scores.', 'error');
-      return;
-    }
-    if (!normalizedToken) {
-      setLoginStatus('Provide a GitHub personal access token with gist access.', 'error');
+
+    gistId = normalizedGistId;
+    gistToken = normalizedToken;
+
+    if (!normalizedGistId || !normalizedToken) {
+      setLoginStatus('Connect a GitHub gist in the global settings to sync your scores.', 'error');
       return;
     }
 
@@ -467,25 +456,16 @@
     setLoginStatus('Loading score history…');
 
     currentAlias = aliasValue;
-    gistId = normalizedGistId;
-    gistToken = normalizedToken;
-    if (gistIdInput) {
-      gistIdInput.value = normalizedGistId;
-    }
-    if (tokenInput && rawTokenValue) {
-      tokenInput.value = normalizedToken;
-    }
 
     try {
       await fetchGistFromGitHub();
-      persistLocalSettings(aliasValue, normalizedGistId);
+      persistLocalSettings(aliasValue);
       setSessionToken(normalizedToken);
+      isLoggedIn = true;
       setLoginState(true);
       updateAliasBadge();
       renderScoreHistory();
       setLoginStatus(`Signed in as ${aliasValue}.`, 'success');
-      isLoggedIn = true;
-      shareGlobalGistSettings({ gistId, gistToken });
     } catch (error) {
       console.error(error);
       gistStore = {};
@@ -496,8 +476,8 @@
       updateAliasBadge();
       renderScoreHistory();
       setLoginStatus(error.message || 'Login failed.', 'error');
-      if (!isAuto && tokenInput) {
-        tokenInput.focus();
+      if (!isAuto && aliasInput) {
+        aliasInput.focus();
       }
       isLoggedIn = false;
     } finally {
@@ -507,35 +487,23 @@
     }
   };
 
-  const performLogout = ({ broadcast = true, statusMessage, statusTone } = {}) => {
+  const performLogout = ({ statusMessage, statusTone } = {}) => {
     const normalizedAlias = aliasInput ? aliasInput.value.trim() : '';
-    const normalizedGistId = gistIdInput ? gistIdInput.value.trim() : '';
-    persistLocalSettings(normalizedAlias, normalizedGistId);
+    persistLocalSettings(normalizedAlias);
     setSessionToken('');
     gistStore = {};
     currentAlias = '';
-    gistId = normalizedGistId;
-    gistToken = '';
     syncInFlight = false;
     syncPending = false;
     isLoggedIn = false;
-    if (tokenInput) {
-      tokenInput.value = '';
-    }
-    if (gistIdInput) {
-      gistIdInput.value = normalizedGistId;
-    }
     setLoginState(false);
     updateAliasBadge();
     renderScoreHistory();
-    setLoginStatus(statusMessage || 'Signed out. Enter your details to sync scores again.', statusTone || 'info');
-    if (broadcast) {
-      shareGlobalGistSettings({ gistId: normalizedGistId, gistToken: '' });
-    }
+    setLoginStatus(statusMessage || 'Signed out. Enter your alias after reconnecting GitHub access to sync again.', statusTone || 'info');
   };
 
   const handleLogout = () => {
-    performLogout({ broadcast: true });
+    performLogout({});
   };
 
   const handleSharedGistSettingsUpdate = (raw) => {
@@ -551,23 +519,19 @@
     gistId = sanitized.gistId;
     gistToken = sanitized.gistToken;
 
-    if (gistIdInput) {
-      gistIdInput.value = sanitized.gistId;
-    }
-    if (tokenInput) {
-      tokenInput.value = sanitized.gistToken;
-    }
-
     if (!hasChanged) {
       return;
     }
 
-    if (aliasInput && sanitized.gistId !== previousGistId) {
-      persistLocalSettings(aliasInput.value.trim(), sanitized.gistId);
-    }
-
     if (sanitized.gistToken) {
       setSessionToken(sanitized.gistToken);
+      if (!isLoggedIn && currentAlias) {
+        if (aliasInput && !aliasInput.value.trim()) {
+          aliasInput.value = currentAlias;
+        }
+        handleLogin(true);
+        return;
+      }
       if (isLoggedIn) {
         setLoginStatus('Refreshing GitHub history…');
         fetchGistFromGitHub()
@@ -582,13 +546,16 @@
       }
     } else {
       setSessionToken('');
+      const hadAlias = Boolean(currentAlias);
       if (isLoggedIn) {
-        performLogout({
-          broadcast: false,
-          statusMessage: 'GitHub access removed in another tab. Log in again to sync.',
-          statusTone: 'info',
-        });
+        isLoggedIn = false;
       }
+      setLoginState(hadAlias);
+      if (hadAlias) {
+        setLoginStatus('GitHub access removed in another tab. Open the global settings to reconnect before syncing again.', 'info');
+      }
+      updateAliasBadge();
+      renderScoreHistory();
     }
   };
 
@@ -900,50 +867,28 @@
   observeTextPanel();
 
   const storedSettings = loadStoredSettings();
-  const cookieSettings = readGistSettingsCookie();
 
   if (aliasInput && storedSettings.alias) {
     aliasInput.value = storedSettings.alias;
   }
 
-  if (gistIdInput) {
-    const initialGistId = storedSettings.gistId || cookieSettings.gistId;
-    if (initialGistId) {
-      gistIdInput.value = initialGistId;
-    }
-  }
-
+  const sharedSettings = readSharedGistSettings();
   const sessionToken = getSessionToken();
-  if (tokenInput) {
-    if (sessionToken) {
-      tokenInput.value = sessionToken;
-    } else if (cookieSettings.gistToken) {
-      tokenInput.value = cookieSettings.gistToken;
-    }
-  }
 
-  const initialInputs = sanitizeGistSettings({
-    gistId: gistIdInput ? gistIdInput.value : '',
-    gistToken: tokenInput ? tokenInput.value : '',
-  });
-  gistId = initialInputs.gistId;
-  gistToken = initialInputs.gistToken || sessionToken || '';
+  gistId = sharedSettings.gistId;
+  gistToken = sharedSettings.gistToken;
 
-  if (gistIdInput) {
-    gistIdInput.value = gistId;
-  }
-  if (tokenInput && initialInputs.gistToken) {
-    tokenInput.value = initialInputs.gistToken;
+  if (!gistToken && sessionToken) {
+    setSessionToken('');
   }
 
   updateAliasBadge();
   setLoginState(false);
   renderScoreHistory();
-  setLoginStatus('Log in with your alias to start tracking scores.');
+  setLoginStatus('Enter your alias and use the global settings to connect GitHub before syncing scores.');
 
   const aliasForAutoLogin = aliasInput ? aliasInput.value.trim() : '';
-  const tokenForAutoLogin = sessionToken || (tokenInput ? tokenInput.value.trim() : '');
-  if (aliasForAutoLogin && gistId && tokenForAutoLogin) {
+  if (aliasForAutoLogin && gistId && gistToken) {
     handleLogin(true);
   }
 

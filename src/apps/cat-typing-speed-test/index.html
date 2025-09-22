@@ -12,28 +12,20 @@
         <h1>Cat Typing Speed Test</h1>
         <p>Warm up your paws and measure typing speed with Kimchi, Rythm, and Siella.</p>
         <p class="alias-display" id="alias-display" hidden>
-          Signed in as <span id="current-alias"></span>
+          Alias ready: <span id="current-alias"></span>
         </p>
       </header>
 
       <section class="card login-card" id="login-panel">
         <h2>Sign in with your alias</h2>
         <p class="login-intro">
-          Enter an alias to track your scores. Provide the GitHub Gist ID and a Personal Access Token with the
-          <code>gist</code> scope so results can sync.
+          Enter an alias to track your scores. Manage the GitHub gist connection from the global settings to sync
+          results.
         </p>
-        <form id="login-form" class="login-grid">
+        <form id="login-form">
           <label class="field" for="alias-input">
             <span>Alias</span>
             <input id="alias-input" type="text" placeholder="e.g. whisker-wizard" autocomplete="username" spellcheck="false" required />
-          </label>
-          <label class="field" for="gist-id-input">
-            <span>GitHub Gist ID</span>
-            <input id="gist-id-input" type="text" placeholder="Paste the gist ID" autocomplete="off" spellcheck="false" required />
-          </label>
-          <label class="field" for="token-input">
-            <span>GitHub Token</span>
-            <input id="token-input" type="password" placeholder="ghp_..." autocomplete="off" spellcheck="false" required />
           </label>
           <div class="login-actions">
             <button type="submit" class="login-submit" id="login-button">Login</button>
@@ -41,7 +33,7 @@
           </div>
         </form>
         <p class="login-note">
-          Tokens are stored only for this browser tab using session storage. Create a public or secret gist that contains a
+          Open the global settings to provide a GitHub gist and token. Create a public or secret gist that contains a
           <code>cat-typing-speed-test.json</code> file with <code>{}</code> to get started.
         </p>
         <p class="status-message" id="login-status" aria-live="polite"></p>
