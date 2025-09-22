@@ -2,12 +2,12 @@
 
 ## Overview
 
-Cache Learning Lab is a self-contained Vite + React + TypeScript project housed under `apps/cache-lab`. It ships eight mini-modules and three auxiliary views (Learn, Experiment, Assess, Dashboard) that share a common state store. Everything renders client-side and persists to `localStorage` (key `cache-lab:v1`) when enabled.
+Cache Learning Lab is a self-contained Vite + React + TypeScript project housed under `src/apps/cache-lab`. It ships eight mini-modules and three auxiliary views (Learn, Experiment, Assess, Dashboard) that share a common state store. Everything renders client-side and persists to `localStorage` (key `cache-lab:v1`) when enabled.
 
 ## Directory structure
 
 ```
-apps/cache-lab
+src/apps/cache-lab
 ├── public/            # static assets (sample traces)
 ├── src/
 │   ├── components/    # cross-module panels (config form, panels, cards)
@@ -49,7 +49,7 @@ apps/cache-lab
 
 ## Build & deploy
 
-- Run `pnpm --filter cache-lab build` to produce a static bundle under `apps/cache-lab/dist/` (not committed).
+- Run `pnpm --filter cache-lab build` to produce a static bundle under `src/apps/cache-lab/dist/` (not committed).
 - Serve the built assets under the `/cache-lab/` path when deploying (GitHub Pages compatible). The iframe in `CacheLabApp` points to this route via `process.env.PUBLIC_URL` to remain path-aware.
 
 ## Testing strategy

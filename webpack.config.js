@@ -60,7 +60,7 @@ module.exports = {
           { from: path.resolve(__dirname, 'apps/zen-go'), to: 'apps/zen-go' },
         ];
 
-        const cacheLabSource = path.resolve(__dirname, 'apps/cache-lab/dist');
+        const cacheLabSource = path.resolve(__dirname, 'src/apps/cache-lab/dist');
         if (fs.existsSync(cacheLabSource)) {
           patterns.push({ from: cacheLabSource, to: 'cache-lab' });
         }

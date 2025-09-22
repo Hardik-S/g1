@@ -52,6 +52,6 @@ Ensure `pnpm install` has been executed at the repo root before running the suit
 
 ## Adding new golden traces
 
-1. Place CSV files in `apps/cache-lab/public/samples/`.
+1. Place CSV files in `src/apps/cache-lab/public/samples/`.
 2. Reference them from the Trace Loader module (buttons) or load them manually via the UI.
 3. For deterministic tests, prefer storing small traces and verifying simulation metrics via unit or property-based tests.
