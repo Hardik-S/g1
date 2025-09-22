@@ -38,6 +38,7 @@ describe('app registry', () => {
     expect(typingTest.icon).toBe('⌨️');
     expect(typingTest.path).toBe('/apps/cat-typing-speed-test');
   });
+
 });
 
 describe('getAppLoader', () => {
