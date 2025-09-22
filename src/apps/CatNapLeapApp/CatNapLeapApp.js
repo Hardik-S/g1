@@ -1249,60 +1249,67 @@ const CatNapLeapApp = () => {
 
   return (
     <div className="catnap-app" ref={containerRef}>
-      <div className="catnap-hud">
-        <div className="scoreboard" aria-live="polite">
-          <div className="score-item">
-            <span className="label">Score</span>
-            <span className="value">{stats.score}</span>
-          </div>
-          <div className="score-item">
-            <span className="label">Best</span>
-            <span className="value">{stats.best}</span>
-          </div>
-          <div className="score-item treats">
-            <span className="label">Treats</span>
-            <span className="value">{treats}</span>
-          </div>
-          <div className="score-item">
-            <span className="label">Perfect Leaps</span>
-            <span className="value">{stats.perfects}</span>
-          </div>
-        </div>
-
-        {startBoostIndicators.length > 0 && (
-          <div className="start-boost-banner" aria-live="polite">
-            <span className="boost-label">Shop Boosts Active</span>
-            <ul>
-              {startBoostIndicators.map((boost) => (
-                <li key={boost}>{boost}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        <div className="drowsiness-meter" aria-label="Drowsiness meter">
-          <div className="meter-header">
-            <span>Drowsiness</span>
-            <span>{Math.round(drowsiness)}%</span>
-          </div>
-          <div className={`mode-indicator ${kittenMode ? 'active' : ''}`} aria-live="polite">
-            {kittenMode ? 'Kitten Mode · Cozy pacing' : 'Cat Mode · Classic challenge'}
-          </div>
-          <div className="meter-track" role="progressbar" aria-valuenow={Math.round(drowsiness)} aria-valuemin="0" aria-valuemax="100">
-            <div className="meter-fill" style={{ width: `${clamp(drowsiness, 0, 100)}%` }} />
-          </div>
-          {effects.length > 0 && (
-            <ul className="active-effects">
-              {effects.map((effect) => (
-                <li key={effect}>{effect}</li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-
       <div className="catnap-canvas-wrapper">
         <canvas ref={canvasRef} className="catnap-canvas" />
+        <div className="catnap-hud-overlay">
+          <div className="catnap-hud">
+            <div className="scoreboard" aria-live="polite">
+              <div className="score-item">
+                <span className="label">Score</span>
+                <span className="value">{stats.score}</span>
+              </div>
+              <div className="score-item">
+                <span className="label">Best</span>
+                <span className="value">{stats.best}</span>
+              </div>
+              <div className="score-item treats">
+                <span className="label">Treats</span>
+                <span className="value">{treats}</span>
+              </div>
+              <div className="score-item">
+                <span className="label">Perfect Leaps</span>
+                <span className="value">{stats.perfects}</span>
+              </div>
+            </div>
+
+            {startBoostIndicators.length > 0 && (
+              <div className="start-boost-banner" aria-live="polite">
+                <span className="boost-label">Shop Boosts Active</span>
+                <ul>
+                  {startBoostIndicators.map((boost) => (
+                    <li key={boost}>{boost}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="drowsiness-meter" aria-label="Drowsiness meter">
+              <div className="meter-header">
+                <span>Drowsiness</span>
+                <span>{Math.round(drowsiness)}%</span>
+              </div>
+              <div className={`mode-indicator ${kittenMode ? 'active' : ''}`} aria-live="polite">
+                {kittenMode ? 'Kitten Mode · Cozy pacing' : 'Cat Mode · Classic challenge'}
+              </div>
+              <div
+                className="meter-track"
+                role="progressbar"
+                aria-valuenow={Math.round(drowsiness)}
+                aria-valuemin="0"
+                aria-valuemax="100"
+              >
+                <div className="meter-fill" style={{ width: `${clamp(drowsiness, 0, 100)}%` }} />
+              </div>
+              {effects.length > 0 && (
+                <ul className="active-effects">
+                  {effects.map((effect) => (
+                    <li key={effect}>{effect}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
         {phase !== 'playing' && (
           <div className={`catnap-overlay ${phase}`}>
             <div
