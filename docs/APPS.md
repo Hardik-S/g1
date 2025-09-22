@@ -60,6 +60,12 @@ Chessboard Summit bundles a draggable board, polished status panel, and optional
 - Surface clocks and increment options to support blitz and rapid play.
 - Explore online multiplayer via WebRTC or WebSockets for remote matches.
 
+## Cache Lab
+Cache Lab embeds the dedicated cache-learning subapp that lives under `/cache-lab`. Eight mini-modules cover mapping, replacement, parameter sweeps, locality visualisation, miss classification, hierarchy exploration, pipeline impact, and trace loading. Auxiliary tabs (Learn, Experiment, Assess, Dashboard) guide newcomers, let advanced users tinker, and track quiz progress with localStorage persistence.
+- Ship more visualisations (e.g., animated heatmaps) for large traces while maintaining performance.
+- Add authorable lessons or importable notebooks so instructors can package curated labs.
+- Extend assessment question pools with configurable difficulty tiers and scoring rubrics.
+
 ## Coming Soon
 Coming Soon placeholder reserves space for upcoming experiments within the launcher. It reminds contributors to ideate beyond the initial trio, surfacing metadata hooks, routing, and categories that future experiences will inherit. Documented scaffolding ensures new concepts launch smoothly while signaling a living roadmap to collaborators continuously exploring the ecosystem's potential.
 - Define a template generator for scaffolding new app directories, tests, and documentation.

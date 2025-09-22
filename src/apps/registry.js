@@ -141,6 +141,20 @@ export const APP_REGISTRY = {
     created: '2024-06-01',
     featured: true
   },
+  'cache-lab': {
+    id: 'cache-lab',
+    title: 'Cache Lab',
+    description: 'Interactive cache memory learning lab with mapping, replacement, hierarchy, and assessments.',
+    icon: '💾',
+    category: 'Education',
+    component: null,
+    path: '/cache-lab',
+    tags: ['cache', 'education', 'react', 'interactive'],
+    version: '1.0.0',
+    author: 'OpenAI Assistant',
+    created: '2024-07-01',
+    featured: true
+  },
   'app-3': {
     id: 'app-3',
     title: 'Coming Soon',

@@ -16,6 +16,8 @@ const CatNapLeapApp = React.lazy(() => import('../apps/CatNapLeapApp'));
 
 const CatPadApp = React.lazy(() => import('../apps/CatPadApp'));
 
+const CacheLabApp = React.lazy(() => import('../apps/CacheLabApp'));
+
 
 const AppContainer = () => {
   const [currentView, setCurrentView] = useState('launcher'); // 'launcher' or 'app'
@@ -57,6 +59,9 @@ const AppContainer = () => {
 
       case 'catpad':
         return <CatPadApp onBack={handleBackToLauncher} />;
+
+      case 'cache-lab':
+        return <CacheLabApp onBack={handleBackToLauncher} />;
 
       default:
         return (
