@@ -36,11 +36,13 @@
     const skillInput = document.getElementById('skill-level');
     const skillValue = document.getElementById('skill-value');
 
-    if (!global.BoardManager) {
+    const BoardManagerCtor = global.BoardManager?.default ?? global.BoardManager;
+
+    if (!BoardManagerCtor) {
       throw new Error('BoardManager must be loaded before chess.js');
     }
 
-    const boardManager = new global.BoardManager({
+    const boardManager = new BoardManagerCtor({
       elementId: boardElementId,
     });
 
@@ -51,10 +53,13 @@
 
     function ensureEngine() {
       if (!engineInstance) {
-        if (!global.StockfishEngine) {
+        const StockfishEngineCtor =
+          global.StockfishEngine?.default ?? global.StockfishEngine;
+
+        if (!StockfishEngineCtor) {
           throw new Error('StockfishEngine must be loaded before enabling single player mode');
         }
-        engineInstance = new global.StockfishEngine();
+        engineInstance = new StockfishEngineCtor();
       }
       return engineInstance;
     }
