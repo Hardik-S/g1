@@ -125,3 +125,98 @@
   border: 1px solid rgba(209, 182, 149, 0.45);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
+
+.confetti-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 5;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -12vh;
+  width: 0.5rem;
+  height: 1.2rem;
+  border-radius: 0.35rem;
+  opacity: 0;
+  animation-name: confettiFall;
+  animation-fill-mode: forwards;
+  animation-timing-function: ease-in-out;
+  box-shadow: 0 6px 10px rgba(64, 40, 24, 0.18);
+}
+
+.confetti-piece:nth-child(2n) {
+  transform: rotate(22deg);
+  border-radius: 0.1rem;
+}
+
+.confetti-piece:nth-child(3n) {
+  width: 0.4rem;
+  height: 1.4rem;
+  border-radius: 0.15rem;
+}
+
+@keyframes confettiFall {
+  0% {
+    transform: translate3d(0, -20vh, 0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(var(--confetti-end-x, 0), 110vh, 0)
+      rotate(var(--confetti-rotation, 720deg));
+    opacity: 0;
+  }
+}
+
+.zen-mode .sudoku-coffee-content {
+  min-height: 100vh;
+}
+
+.zen-mode .sudoku-panel {
+  max-width: min(92vw, 640px);
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.34);
+  box-shadow: 0 24px 48px rgba(86, 62, 44, 0.22);
+}
+
+.zen-active-panel {
+  gap: 2.5rem;
+}
+
+.zen-hidden {
+  display: none !important;
+}
+
+.zen-board-only {
+  width: 100%;
+  padding-block: 1.5rem;
+}
+
+.zen-board-only .sudoku-board-surface {
+  max-width: min(92vw, 560px);
+  padding: 1.75rem;
+  box-shadow: inset 0 0 0 1px rgba(161, 124, 92, 0.18),
+    0 20px 46px rgba(79, 58, 42, 0.22);
+}
+
+.fullscreen-active .sudoku-panel {
+  box-shadow: 0 26px 52px rgba(58, 39, 26, 0.26);
+}
+
+.screen-reader-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

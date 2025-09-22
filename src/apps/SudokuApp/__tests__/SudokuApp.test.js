@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { act } from 'react';
 import SudokuApp from '../SudokuApp';
 import { generateSudoku } from '../sudokuLogic';
 
@@ -47,6 +48,12 @@ jest.mock('../sudokuLogic', () => {
 
 const originalGetContext = HTMLCanvasElement.prototype.getContext;
 const originalGetBoundingClientRect = HTMLCanvasElement.prototype.getBoundingClientRect;
+const originalRequestFullscreen = HTMLElement.prototype.requestFullscreen;
+const originalExitFullscreen = document.exitFullscreen;
+const fullscreenElementDescriptor = Object.getOwnPropertyDescriptor(
+  document,
+  'fullscreenElement'
+);
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -84,6 +91,21 @@ beforeEach(() => {
 afterEach(() => {
   HTMLCanvasElement.prototype.getContext = originalGetContext;
   HTMLCanvasElement.prototype.getBoundingClientRect = originalGetBoundingClientRect;
+  if (originalRequestFullscreen) {
+    HTMLElement.prototype.requestFullscreen = originalRequestFullscreen;
+  } else {
+    delete HTMLElement.prototype.requestFullscreen;
+  }
+  if (originalExitFullscreen) {
+    document.exitFullscreen = originalExitFullscreen;
+  } else {
+    delete document.exitFullscreen;
+  }
+  if (fullscreenElementDescriptor) {
+    Object.defineProperty(document, 'fullscreenElement', fullscreenElementDescriptor);
+  } else {
+    delete document.fullscreenElement;
+  }
 });
 
 describe('SudokuApp component', () => {
@@ -140,6 +162,92 @@ describe('SudokuApp component', () => {
     await waitFor(() => {
       const boardData = canvas.getAttribute('data-board');
       expect(boardData.split('|')[0]).toBe('435269781');
+    });
+  });
+
+  it('fills the next empty cells with the correct solution values', async () => {
+    render(<SudokuApp onBack={jest.fn()} />);
+    const canvas = screen.getByLabelText(/Sudoku board/i);
+
+    const fillNextButton = screen.getByRole('button', { name: /fill next$/i });
+    fireEvent.click(fillNextButton);
+
+    await waitFor(() => {
+      const firstRow = canvas.getAttribute('data-board').split('|')[0];
+      expect(firstRow[0]).toBe('4');
+    });
+
+    const fillNextThreeButton = screen.getByRole('button', { name: /fill next 3/i });
+    fireEvent.click(fillNextThreeButton);
+
+    await waitFor(() => {
+      const firstRow = canvas.getAttribute('data-board').split('|')[0];
+      expect(firstRow).toBe('435269701');
+    });
+  });
+
+  it('enters and exits zen mode with the toggle and Escape key', () => {
+    render(<SudokuApp onBack={jest.fn()} />);
+    const zenButton = screen.getByRole('button', { name: /^zen$/i });
+    const controls = screen.getByTestId('control-column');
+
+    fireEvent.click(zenButton);
+    expect(zenButton).toHaveAttribute('aria-pressed', 'true');
+    expect(controls).toHaveClass('zen-hidden');
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(zenButton).toHaveAttribute('aria-pressed', 'false');
+    expect(controls).not.toHaveClass('zen-hidden');
+  });
+
+  it('responds to full screen activation events', async () => {
+    const requestFullscreen = jest.fn(() => Promise.resolve());
+    HTMLElement.prototype.requestFullscreen = requestFullscreen;
+    document.exitFullscreen = jest.fn(() => Promise.resolve());
+
+    render(<SudokuApp onBack={jest.fn()} />);
+    const fullScreenButton = screen.getByRole('button', { name: /full screen/i });
+
+    fireEvent.click(fullScreenButton);
+    expect(requestFullscreen).toHaveBeenCalled();
+
+    act(() => {
+      Object.defineProperty(document, 'fullscreenElement', {
+        configurable: true,
+        value: document.body,
+      });
+      document.dispatchEvent(new Event('fullscreenchange'));
+    });
+
+    await waitFor(() => {
+      expect(fullScreenButton).toHaveAttribute('aria-pressed', 'true');
+      expect(fullScreenButton).toHaveTextContent(/exit full screen/i);
+    });
+
+    fireEvent.click(fullScreenButton);
+    expect(document.exitFullscreen).toHaveBeenCalled();
+
+    act(() => {
+      Object.defineProperty(document, 'fullscreenElement', {
+        configurable: true,
+        value: null,
+      });
+      document.dispatchEvent(new Event('fullscreenchange'));
+    });
+
+    await waitFor(() => {
+      expect(fullScreenButton).toHaveAttribute('aria-pressed', 'false');
+    });
+  });
+
+  it('shows confetti when the puzzle is completed', async () => {
+    render(<SudokuApp onBack={jest.fn()} />);
+
+    const solutionButton = screen.getByRole('button', { name: /solution/i });
+    fireEvent.click(solutionButton);
+
+    await waitFor(() => {
+      expect(document.querySelector('.confetti-container')).toBeInTheDocument();
     });
   });
 });

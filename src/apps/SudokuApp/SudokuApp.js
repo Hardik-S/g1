@@ -10,6 +10,15 @@ import {
 
 const CANVAS_SIZE = 540;
 
+const CONFETTI_COLORS = [
+  '#d19171',
+  '#f2d8c2',
+  '#c6845e',
+  '#f7bfb4',
+  '#b57a5e',
+  '#f0c27b',
+];
+
 const cloneBoard = (board) => board.map((row) => row.slice());
 
 const createEmptyNotes = (size) =>
@@ -50,8 +59,18 @@ const SudokuApp = ({ onBack }) => {
   const [noteMode, setNoteMode] = useState(false);
   const [isBoardAnimating, setIsBoardAnimating] = useState(false);
   const [lastAction, setLastAction] = useState('Breathe in the aroma and begin.');
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [confettiBurst, setConfettiBurst] = useState(0);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isZenMode, setIsZenMode] = useState(false);
+  const zenHintId = useMemo(
+    () => `zen-hint-${Math.random().toString(36).slice(2, 9)}`,
+    []
+  );
   const canvasRef = useRef(null);
+  const shellRef = useRef(null);
   const animationTimeoutRef = useRef(null);
+  const celebrationTimeoutRef = useRef(null);
 
   const gridSize = gameData.gridSize;
   const subgridSize = gameData.subgridSize;
@@ -80,8 +99,40 @@ const SudokuApp = ({ onBack }) => {
       if (animationTimeoutRef.current) {
         clearTimeout(animationTimeoutRef.current);
       }
+      if (celebrationTimeoutRef.current) {
+        clearTimeout(celebrationTimeoutRef.current);
+      }
     };
   }, []);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const active = Boolean(document.fullscreenElement);
+      setIsFullScreen(active);
+      setLastAction(
+        active
+          ? 'Immersive mode engaged — enjoy the quiet.'
+          : 'Returned from full screen comfort.'
+      );
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    if (isZenMode) {
+      canvas.focus();
+      canvas.setAttribute('title', 'Zen mode active — press Escape to return.');
+    } else {
+      canvas.removeAttribute('title');
+    }
+  }, [isZenMode]);
 
   const boardSignature = useMemo(() => toBoardSignature(board), [board]);
   const notesSignature = useMemo(() => toNotesSignature(notes), [notes]);
@@ -103,6 +154,36 @@ const SudokuApp = ({ onBack }) => {
     () => board.reduce((acc, row) => acc + row.filter((value) => value !== 0).length, 0),
     [board]
   );
+
+  const confettiPieces = useMemo(() => {
+    const pieces = 42;
+    return Array.from({ length: pieces }, (_, index) => {
+      const color = CONFETTI_COLORS[index % CONFETTI_COLORS.length];
+      return {
+        id: `${confettiBurst}-${index}`,
+        color,
+        left: Math.random() * 100,
+        delay: Math.random() * 0.25,
+        duration: 1.7 + Math.random() * 0.4,
+        horizontalDrift: Math.random() * 60 - 30,
+        rotation: 360 + Math.random() * 540,
+      };
+    });
+  }, [confettiBurst]);
+
+  useEffect(() => {
+    if (!boardMatchesSolution) return;
+    if (!isBoardComplete(board)) return;
+
+    setShowConfetti(true);
+    setConfettiBurst((prev) => prev + 1);
+    if (celebrationTimeoutRef.current) {
+      clearTimeout(celebrationTimeoutRef.current);
+    }
+    celebrationTimeoutRef.current = setTimeout(() => {
+      setShowConfetti(false);
+    }, 2000);
+  }, [board, boardMatchesSolution]);
 
   const ambianceMessage = useMemo(() => {
     if (boardMatchesSolution && isBoardComplete(board)) {
@@ -151,6 +232,26 @@ const SudokuApp = ({ onBack }) => {
     setLastAction('Restarted the brew — new possibilities await.');
   };
 
+  const getSolutionBoard = useCallback(() => {
+    if (gameData.solution) {
+      return cloneBoard(gameData.solution);
+    }
+
+    if (gameData.puzzle) {
+      const computedFromPuzzle = solveSudoku(
+        gameData.puzzle,
+        gridSize,
+        subgridSize
+      );
+      if (computedFromPuzzle) {
+        return cloneBoard(computedFromPuzzle);
+      }
+    }
+
+    const computedFromBoard = solveSudoku(board, gridSize, subgridSize);
+    return computedFromBoard ? cloneBoard(computedFromBoard) : null;
+  }, [board, gameData, gridSize, subgridSize]);
+
   const handleRevealSolution = useCallback(() => {
     if (boardMatchesSolution) {
       setLastAction('Already perfected — savor the calm.');
@@ -158,27 +259,7 @@ const SudokuApp = ({ onBack }) => {
       return;
     }
 
-    let solvedBoard = null;
-
-    if (gameData.solution) {
-      solvedBoard = cloneBoard(gameData.solution);
-    } else if (gameData.puzzle) {
-      const computedFromPuzzle = solveSudoku(
-        gameData.puzzle,
-        gridSize,
-        subgridSize
-      );
-      if (computedFromPuzzle) {
-        solvedBoard = computedFromPuzzle;
-      }
-    }
-
-    if (!solvedBoard) {
-      const computedFromBoard = solveSudoku(board, gridSize, subgridSize);
-      if (computedFromBoard) {
-        solvedBoard = computedFromBoard;
-      }
-    }
+    const solvedBoard = getSolutionBoard();
 
     if (!solvedBoard) {
       setLastAction('This blend resisted a solution — try a fresh brew.');
@@ -186,11 +267,121 @@ const SudokuApp = ({ onBack }) => {
     }
 
     setBoard(cloneBoard(solvedBoard));
-    setNotes(createEmptyNotes());
+    setNotes(createEmptyNotes(gridSize));
     setNoteMode(false);
     setLastAction('Solution revealed — savor the mastery.');
     triggerBoardAnimation();
-  }, [board, boardMatchesSolution, gameData, triggerBoardAnimation]);
+  }, [
+    boardMatchesSolution,
+    getSolutionBoard,
+    gridSize,
+    triggerBoardAnimation,
+  ]);
+
+  const fillNextCells = useCallback(
+    (cellsToFill) => {
+      if (boardMatchesSolution && isBoardComplete(board)) {
+        setLastAction('Already perfected — savor the calm.');
+        return;
+      }
+
+      const solvedBoard = getSolutionBoard();
+      if (!solvedBoard) {
+        setLastAction('This blend resisted a solution — try a fresh brew.');
+        return;
+      }
+
+      const nextBoard = board.map((row) => row.slice());
+      const filledPositions = [];
+
+      for (let row = 0; row < gridSize; row += 1) {
+        for (let col = 0; col < gridSize; col += 1) {
+          if (nextBoard[row][col] !== 0) continue;
+          const correctValue = solvedBoard[row][col];
+          if (!correctValue) continue;
+
+          nextBoard[row][col] = correctValue;
+          filledPositions.push({ row, col });
+          if (filledPositions.length >= cellsToFill) {
+            break;
+          }
+        }
+        if (filledPositions.length >= cellsToFill) {
+          break;
+        }
+      }
+
+      if (!filledPositions.length) {
+        setLastAction('No empty cups left to fill — keep savoring.');
+        return;
+      }
+
+      setBoard(nextBoard);
+      setNotes((prev) => {
+        const next = prev.map((r) => r.map((set) => new Set(set)));
+        filledPositions.forEach(({ row, col }) => {
+          next[row][col] = new Set();
+        });
+        return next;
+      });
+      setNoteMode(false);
+      setSelectedCell(filledPositions[filledPositions.length - 1]);
+      setLastAction(
+        filledPositions.length === 1
+          ? 'One gentle hint poured in.'
+          : `${filledPositions.length} gentle hints poured in.`
+      );
+      triggerBoardAnimation();
+    },
+    [
+      board,
+      boardMatchesSolution,
+      getSolutionBoard,
+      gridSize,
+      triggerBoardAnimation,
+    ]
+  );
+
+  const handleFillNext = useCallback(() => {
+    fillNextCells(1);
+  }, [fillNextCells]);
+
+  const handleFillNextThree = useCallback(() => {
+    fillNextCells(3);
+  }, [fillNextCells]);
+
+  const handleToggleFullScreen = useCallback(() => {
+    const container = shellRef.current;
+    if (!container) return;
+
+    if (!document.fullscreenElement) {
+      if (container.requestFullscreen) {
+        container.requestFullscreen().catch(() => {
+          setLastAction('Full screen is unavailable in this blend.');
+        });
+      } else {
+        setLastAction('Full screen is unavailable in this blend.');
+      }
+    } else if (document.exitFullscreen) {
+      document.exitFullscreen().catch(() => {
+        setLastAction('Full screen is unavailable in this blend.');
+      });
+    } else {
+      setLastAction('Full screen is unavailable in this blend.');
+    }
+  }, []);
+
+  const handleToggleZen = useCallback(() => {
+    setIsZenMode((prev) => {
+      const next = !prev;
+      setLastAction(
+        next
+          ? 'Zen mode — the board sits center stage.'
+          : 'Zen mode lifted — welcome back to the bustle.'
+      );
+      return next;
+    });
+  }, []);
 
   const handleCanvasSelection = (event) => {
     if (!canvasRef.current) return null;
@@ -312,6 +503,14 @@ const SudokuApp = ({ onBack }) => {
       const { row, col } = selectedCell;
       const locked = lockedCells[row][col];
 
+      if (event.key === 'Escape') {
+        if (isZenMode) {
+          setIsZenMode(false);
+          setLastAction('Zen mode lifted — welcome back to the bustle.');
+        }
+        return;
+      }
+
       if (event.key === 'ArrowUp' || event.key === 'w') {
         event.preventDefault();
         moveSelection('up');
@@ -381,6 +580,7 @@ const SudokuApp = ({ onBack }) => {
       symbolNames,
       toggleNoteValue,
       updateBoardValue,
+      isZenMode,
     ]
   );
 
@@ -591,10 +791,41 @@ const SudokuApp = ({ onBack }) => {
   ]);
 
   return (
-    <div className="sudoku-coffee-shell font-sudoku text-coffee-ink">
+    <div
+      ref={shellRef}
+      className={`sudoku-coffee-shell font-sudoku text-coffee-ink ${
+        isZenMode ? 'zen-mode' : ''
+      } ${isFullScreen ? 'fullscreen-active' : ''}`}
+    >
+      {showConfetti && (
+        <div className="confetti-container" aria-hidden="true">
+          {confettiPieces.map((piece) => (
+            <span
+              key={piece.id}
+              className="confetti-piece"
+              style={{
+                left: `${piece.left}%`,
+                backgroundColor: piece.color,
+                animationDelay: `${piece.delay}s`,
+                animationDuration: `${piece.duration}s`,
+                '--confetti-end-x': `${piece.horizontalDrift}vw`,
+                '--confetti-rotation': `${piece.rotation}deg`,
+              }}
+            />
+          ))}
+        </div>
+      )}
       <div className="sudoku-coffee-content flex flex-col min-h-full items-center justify-center py-10 px-4">
-        <div className="sudoku-panel bg-white/40 w-full max-w-5xl p-6 md:p-10 flex flex-col lg:flex-row gap-8 transition-all duration-700">
-          <div className="flex-1 flex flex-col gap-6">
+        <div
+          className={`sudoku-panel bg-white/40 w-full max-w-5xl p-6 md:p-10 flex flex-col gap-8 transition-all duration-700 ${
+            isZenMode ? 'zen-active-panel' : 'lg:flex-row'
+          }`}
+        >
+          <div
+            className={`flex-1 flex flex-col gap-6 ${isZenMode ? 'zen-hidden' : ''}`}
+            aria-hidden={isZenMode}
+            data-testid="control-column"
+          >
             <div className="flex flex-col gap-2">
               <span className="text-xs uppercase tracking-[0.35em] text-coffee-hazelnut/90">
                 Cozy Canvas Series
@@ -652,11 +883,55 @@ const SudokuApp = ({ onBack }) => {
               </button>
               <button
                 type="button"
+                onClick={handleFillNext}
+                className="px-5 py-2 rounded-full bg-coffee-hazelnut/80 text-coffee-cream font-medium uppercase tracking-[0.3em] text-xs shadow-md transition hover:bg-coffee-hazelnut"
+                data-testid="fill-next"
+              >
+                Fill Next
+              </button>
+              <button
+                type="button"
+                onClick={handleFillNextThree}
+                className="px-5 py-2 rounded-full bg-coffee-hazelnut/60 text-coffee-ink font-medium uppercase tracking-[0.3em] text-xs shadow-md transition hover:bg-coffee-hazelnut/80"
+                data-testid="fill-next-three"
+              >
+                Fill Next 3
+              </button>
+              <button
+                type="button"
                 onClick={handleRevealSolution}
                 className="px-5 py-2 rounded-full bg-coffee-ink/80 text-coffee-cream font-medium uppercase tracking-[0.3em] text-xs shadow-md transition hover:bg-coffee-ink hover:shadow-lg"
                 data-testid="reveal-solution"
               >
                 Solution
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={handleToggleFullScreen}
+                className={`px-5 py-2 rounded-full font-medium uppercase tracking-[0.3em] text-xs shadow-md transition ${
+                  isFullScreen
+                    ? 'bg-coffee-ink text-coffee-cream hover:bg-coffee-ink/90'
+                    : 'bg-coffee-ink/70 text-coffee-cream hover:bg-coffee-ink'
+                }`}
+                aria-pressed={isFullScreen}
+                data-testid="toggle-fullscreen"
+              >
+                {isFullScreen ? 'Exit Full Screen' : 'Full Screen'}
+              </button>
+              <button
+                type="button"
+                onClick={handleToggleZen}
+                className={`px-5 py-2 rounded-full font-medium uppercase tracking-[0.3em] text-xs shadow-md transition ${
+                  isZenMode
+                    ? 'bg-coffee-foam text-coffee-ink hover:bg-coffee-foam/90'
+                    : 'bg-white/70 text-coffee-ink hover:bg-white/90'
+                }`}
+                aria-pressed={isZenMode}
+                data-testid="toggle-zen"
+              >
+                {isZenMode ? 'Exit Zen' : 'Zen'}
               </button>
               <button
                 type="button"
@@ -668,7 +943,11 @@ const SudokuApp = ({ onBack }) => {
             </div>
           </div>
 
-          <div className="flex-1 flex justify-center items-center">
+          <div
+            className={`flex-1 flex justify-center items-center ${
+              isZenMode ? 'zen-board-only' : ''
+            }`}
+          >
             <div className="sudoku-board-surface w-full max-w-xl">
               <canvas
                 ref={canvasRef}
@@ -682,11 +961,19 @@ const SudokuApp = ({ onBack }) => {
                 data-board={boardSignature}
                 data-notes={notesSignature}
                 data-difficulty={difficulty}
+                aria-describedby={isZenMode ? zenHintId : undefined}
                 onClick={handleCanvasClick}
                 onDoubleClick={handleCanvasDoubleClick}
                 onContextMenu={handleCanvasContextMenu}
               />
             </div>
+            <span
+              id={zenHintId}
+              className="screen-reader-only"
+              aria-hidden={!isZenMode}
+            >
+              Zen mode active. Press Escape to return to the full café view.
+            </span>
           </div>
         </div>
       </div>
