@@ -52,16 +52,13 @@
     moves: [],
     aiThinking: false,
     gameOver: false,
-    pendingRequestId: null,
-    engineReady: false,
-    engineFailed: false,
+    pendingAiMoveId: null,
     currentSgf: '',
     lastHighlight: null
   };
 
   let board;
   let game;
-  let worker;
 
   let boardCanvas;
   let statusText;
@@ -87,9 +84,9 @@
 
     cacheDom();
     setupDifficultyOptions();
-    setupWorker();
     setupBoard();
     attachEvents();
+    setEngineStatus('Random opponent ready.', 'success');
     startNewGame();
   }
 
@@ -120,22 +117,6 @@
     updateDifficultyUi();
   }
 
-  function setupWorker() {
-    worker = new Worker('engineWorker.js');
-    worker.addEventListener('message', handleWorkerMessage);
-    worker.postMessage({
-      type: 'bootstrap',
-      profiles: DIFFICULTIES.map(({ id, seeds, randomness }) => ({
-        id,
-        seeds,
-        randomness
-      })),
-      defaultDifficulty: state.difficulty.id
-    });
-    worker.postMessage({ type: 'warmup' });
-    setEngineStatus('Loading WebAssembly…', 'pending');
-  }
-
   function setupBoard() {
     board = new WGo.Board(boardCanvas, {
       size: BOARD_SIZE,
@@ -156,7 +137,6 @@
       }
       state.difficulty = next;
       updateDifficultyUi();
-      worker.postMessage({ type: 'setDifficulty', difficulty: next.id });
       if (!state.aiThinking && !state.gameOver) {
         setStatusMessage(`Difficulty set to ${next.rank}.`, 'passive');
       }
@@ -190,10 +170,13 @@
   }
 
   function startNewGame() {
+    if (state.pendingAiMoveId !== null) {
+      window.clearTimeout(state.pendingAiMoveId);
+      state.pendingAiMoveId = null;
+    }
     state.moves = [];
     state.gameOver = false;
     state.aiThinking = false;
-    state.pendingRequestId = null;
     state.handicapStones = state.handicap >= 2 ? HANDICAP_POINTS.slice(0, Math.min(state.handicap, HANDICAP_POINTS.length)) : [];
 
     game = new WGo.Game(BOARD_SIZE);
@@ -208,6 +191,7 @@
     updateBoardFromGame();
     updateCaptureCounts();
     setStatusMessage(state.handicapStones.length ? 'White to play.' : 'Your move as Black.', 'passive');
+    setEngineStatus('Random opponent ready.', 'success');
     updateButtons();
   }
 
@@ -236,98 +220,90 @@
     setStatusMessage('Zen Go is thinking…', 'active');
     state.aiThinking = true;
     updateButtons();
-
-    const requestId = `req-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-    state.pendingRequestId = requestId;
     setEngineStatus('Calculating move…', 'pending');
-
-    worker.postMessage({
-      type: 'compute',
-      requestId,
-      sgf: state.currentSgf,
-      difficulty: state.difficulty.id
-    });
+    scheduleRandomAiMove();
   }
 
-  function handleWorkerMessage(event) {
-    const { type } = event.data || {};
-    if (type === 'engine-ready') {
-      state.engineReady = true;
-      setEngineStatus('GNU Go (WebAssembly) ready.', 'success');
-      if (!state.aiThinking) {
-        setStatusMessage('Engine ready. Your move.', 'passive');
-      }
-      return;
+  function scheduleRandomAiMove() {
+    if (state.pendingAiMoveId !== null) {
+      window.clearTimeout(state.pendingAiMoveId);
     }
-
-    if (type === 'error') {
-      if (state.pendingRequestId && event.data.requestId === state.pendingRequestId) {
+    state.pendingAiMoveId = window.setTimeout(() => {
+      state.pendingAiMoveId = null;
+      if (state.gameOver) {
         state.aiThinking = false;
-        state.pendingRequestId = null;
         updateButtons();
-      }
-      state.engineFailed = true;
-      const message = event.data.message || 'Engine error.';
-      setEngineStatus(message, 'error');
-      setStatusMessage(message, 'error');
-      return;
-    }
-
-    if (type === 'result') {
-      if (!state.pendingRequestId || event.data.requestId !== state.pendingRequestId) {
+        setEngineStatus('Match finished.', 'passive');
         return;
       }
-      state.pendingRequestId = null;
-      state.aiThinking = false;
-      processAiMove(event.data);
-      return;
-    }
+      const move = computeRandomAiMove();
+      applyAiMove(move);
+    }, 400);
   }
 
-  function processAiMove(payload) {
-    const moveInfo = payload.move;
-    state.currentSgf = payload.sgf;
+  function computeRandomAiMove() {
+    const legalMoves = [];
+    const position = game.getPosition();
 
-    if (!moveInfo) {
-      setEngineStatus('Engine returned no move.', 'error');
-      setStatusMessage('Engine returned no move.', 'error');
+    for (let x = 0; x < BOARD_SIZE; x += 1) {
+      for (let y = 0; y < BOARD_SIZE; y += 1) {
+        if (position.get(x, y) !== 0) {
+          continue;
+        }
+        if (!game.isValid(x, y, WGo.W)) {
+          continue;
+        }
+        legalMoves.push({ x, y });
+      }
+    }
+
+    if (!legalMoves.length) {
+      return { pass: true };
+    }
+
+    const choice = legalMoves[Math.floor(Math.random() * legalMoves.length)];
+    return { ...choice, pass: false };
+  }
+
+  function applyAiMove(move) {
+    if (!move) {
+      setEngineStatus('Random opponent error.', 'error');
+      setStatusMessage('Zen Go could not find a move.', 'error');
+      state.aiThinking = false;
       updateButtons();
       return;
     }
 
-    if (moveInfo.isPass) {
+    if (move.pass) {
       game.pass(WGo.W);
       state.moves.push({ color: 'W', pass: true });
-      setEngineStatus('Zen Go is ready.', 'success');
-      setStatusMessage('Zen Go passes. Your move.', 'passive');
+      state.currentSgf = buildSgf();
       updateBoardFromGame();
       updateCaptureCounts();
+      state.aiThinking = false;
+      setEngineStatus('Random opponent ready.', 'success');
+      setStatusMessage('Zen Go passes. Your move.', 'passive');
       updateButtons();
       return;
     }
 
-    const coords = sgfToCoord(moveInfo.coord);
-    if (!coords) {
-      setEngineStatus('Engine move parse error.', 'error');
-      setStatusMessage('Engine move parse error.', 'error');
-      updateButtons();
-      return;
-    }
-
-    const result = game.play(coords.x, coords.y, WGo.W);
+    const result = game.play(move.x, move.y, WGo.W);
     if (typeof result === 'number') {
-      setEngineStatus('Illegal engine move.', 'error');
-      setStatusMessage('Engine attempted an illegal move.', 'error');
+      state.aiThinking = false;
+      setEngineStatus('Random opponent error.', 'error');
+      setStatusMessage('Zen Go attempted an illegal move.', 'error');
       updateButtons();
       return;
     }
 
-    state.moves.push({ color: 'W', x: coords.x, y: coords.y });
-    updateBoardFromGame({ x: coords.x, y: coords.y, color: 'W' });
+    state.moves.push({ color: 'W', x: move.x, y: move.y });
+    state.currentSgf = buildSgf();
+    updateBoardFromGame({ x: move.x, y: move.y, color: 'W' });
     updateCaptureCounts();
-    const readable = toHumanCoord(coords.x, coords.y);
+    state.aiThinking = false;
+    const readable = toHumanCoord(move.x, move.y);
     setStatusMessage(`Zen Go (${state.difficulty.rank}) plays ${readable}. Your move.`, 'passive');
-    setEngineStatus('Zen Go is ready.', 'success');
+    setEngineStatus('Random opponent ready.', 'success');
     updateButtons();
   }
 
@@ -356,9 +332,12 @@
     if (state.gameOver) {
       return;
     }
+    if (state.pendingAiMoveId !== null) {
+      window.clearTimeout(state.pendingAiMoveId);
+      state.pendingAiMoveId = null;
+    }
     state.gameOver = true;
     state.aiThinking = false;
-    state.pendingRequestId = null;
     setStatusMessage('You resigned. Start a new game to play again.', 'error');
     setEngineStatus('Match finished.', 'passive');
     updateButtons();
@@ -503,16 +482,6 @@
 
   function coordToSgf(x, y) {
     return `${String.fromCharCode(97 + x)}${String.fromCharCode(97 + y)}`;
-  }
-
-  function sgfToCoord(token) {
-    if (!token || token.length < 2) {
-      return null;
-    }
-    return {
-      x: token.charCodeAt(0) - 97,
-      y: token.charCodeAt(1) - 97
-    };
   }
 
   function toHumanCoord(x, y) {
