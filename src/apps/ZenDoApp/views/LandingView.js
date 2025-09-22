@@ -22,8 +22,9 @@ const LandingView = ({
   const sortablesRef = useRef({});
 
   useEffect(() => {
-    if (!allTasksRef.current) return undefined;
-    const sortable = Sortable.create(allTasksRef.current, {
+    const listElement = allTasksRef.current?.querySelector('.zen-task-tree');
+    if (!listElement) return undefined;
+    const sortable = Sortable.create(listElement, {
       group: { name: 'zen-weekly', pull: 'clone', put: false },
       animation: 150,
       sort: false,
@@ -38,8 +39,14 @@ const LandingView = ({
         }
       },
     });
-    return () => sortable.destroy();
-  }, []);
+    sortablesRef.current.allTasks = sortable;
+    return () => {
+      sortable.destroy();
+      if (sortablesRef.current.allTasks === sortable) {
+        delete sortablesRef.current.allTasks;
+      }
+    };
+  }, [tasks]);
 
   useEffect(() => {
     DAY_ORDER.forEach((day) => {
