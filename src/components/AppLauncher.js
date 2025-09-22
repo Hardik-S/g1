@@ -245,6 +245,7 @@ const AppLauncher = () => {
       const matchesSearch = app.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         app.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         app.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+
       return matchesCategory && matchesSearch;
     })
     .sort((a, b) => a.title.localeCompare(b.title)), [allApps, favoriteIds, searchQuery, selectedCategory]);
