@@ -51,13 +51,21 @@ module.exports = {
       template: './public/index.html',
     }),
     new CopyWebpackPlugin({
-      patterns: [{ from: path.resolve(__dirname, 'public/hexa-snake'), to: 'hexa-snake' }],
+      patterns: [
+        { from: path.resolve(__dirname, 'public/hexa-snake'), to: 'hexa-snake' },
+        { from: path.resolve(__dirname, 'apps/cat-typing-speed-test'), to: 'apps/cat-typing-speed-test' },
+      ],
     }),
   ],
   devServer: {
-    static: {
-      directory: path.join(__dirname, 'public'),
-    },
+    static: [
+      {
+        directory: path.join(__dirname, 'public'),
+      },
+      {
+        directory: path.join(__dirname, 'apps'),
+      },
+    ],
     compress: true,
     port: 3000,
     open: true,

@@ -7,4 +7,5 @@ Use this file to track commits, pushes, merges, and noteworthy design choices. E
 - 2025-09-19 — feature+docs — Introduced CatNap Leap with a dreamy canvas game loop, registry wiring, and documentation updates across the catalog.
 - 2025-09-21 — feature+docs — Added the CatPad notepad with IndexedDB persistence, GitHub gist syncing, and refreshed docs/tests for the new launcher entry.
 
-2025-09-22 – Added Cache Lab Vite subapp with interactive cache modules, assessments, and dashboard.
+- 2025-09-22 — feature+docs — Added Cache Lab Vite subapp with interactive cache modules, assessments, and dashboard.
+- 2025-09-23 — feature+docs — Introduced Cat Typing Speed Test with a vanilla JS typing drill, launcher wiring, and refreshed documentation.

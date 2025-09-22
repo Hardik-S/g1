@@ -12,6 +12,12 @@ CatPad is a feline-inspired notepad that autosaves to IndexedDB and offers optio
 - Layer in version history so writers can rewind to an earlier meowment or compare drafts.
 - Provide rich-text flourishes like headings or checklists while keeping the editor lightweight.
 
+## Cat Typing Speed Test
+Cat Typing Speed Test launches a focused browser-based drill for measuring WPM, CPM, and accuracy across 15 or 30 second sprints. Sentences are assembled on the fly from Kimchi, Rythm, and Siella’s daily antics, while inline highlighting tracks perfect keystrokes versus mischievous typos. A responsive layout, cached corpus fetch, and shareable iframe make it easy to practise in the launcher or pop the experience into a dedicated tab.
+- Offer selectable corpus themes so typists can swap between cats, cosmic voyages, or custom uploads.
+- Surface progress charts that compare recent runs and highlight improvements over time.
+- Add keyboard shortcuts for restarting, toggling durations, and switching to a zen full-screen mode.
+
 ## N-Pomodoro Timer
 N-Pomodoro Timer choreographs customizable work cycles within a cosmic interface. Users pick multi-activity presets, monitor progress through animated rings, and toggle configuration panels without losing context. Timers persist across states, enabling focused sprints, reflective breaks, and celebratory completions through ambient stars, all tailored to evolving productivity rituals and team rhythms.
 - Enable user-defined activity presets with saved profiles synchronized across devices.

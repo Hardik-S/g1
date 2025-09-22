@@ -28,6 +28,20 @@ export const APP_REGISTRY = {
     created: '2024-06-01',
     featured: true,
   },
+  'cat-typing-speed-test': {
+    id: 'cat-typing-speed-test',
+    title: 'Cat Typing Speed Test',
+    description: 'Sprint through cat-themed sentences to measure WPM, CPM, and accuracy.',
+    icon: '⌨️',
+    category: 'Education',
+    component: null,
+    path: '/apps/cat-typing-speed-test',
+    tags: ['typing', 'speed', 'practice', 'cats'],
+    version: '1.0.0',
+    author: 'OpenAI Assistant',
+    created: '2024-09-23',
+    featured: true,
+  },
   // Placeholder for future apps
   'n-pomodoro': {
     id: 'n-pomodoro',
