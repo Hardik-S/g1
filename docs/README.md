@@ -6,6 +6,7 @@ A small, modular React playground bundling multiple apps behind a simple launche
 
 - Day Switcher — flip through the week with animated transitions.
 - CatPad — jot notes with a cat-themed editor that syncs through GitHub gists.
+- Zen Do — manage a zen-styled task garden with weekly buckets, focus mode, and gist sync.
 - Cat Typing Speed Test — practise timed typing drills with Kimchi, Rythm, and Siella.
 - N-Pomodoro — orchestrate multi-activity pomodoro sessions.
 - Snake — chase high scores across a responsive grid.

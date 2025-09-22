@@ -20,6 +20,8 @@ const CacheLabApp = React.lazy(() => import('../apps/CacheLabApp'));
 
 const CatTypingSpeedTestApp = React.lazy(() => import('../apps/CatTypingSpeedTestApp'));
 
+const ZenDoApp = React.lazy(() => import('../apps/ZenDoApp'));
+
 
 const AppContainer = () => {
   const [currentView, setCurrentView] = useState('launcher'); // 'launcher' or 'app'
@@ -67,6 +69,9 @@ const AppContainer = () => {
 
       case 'cat-typing-speed-test':
         return <CatTypingSpeedTestApp onBack={handleBackToLauncher} />;
+
+      case 'zen-do':
+        return <ZenDoApp onBack={handleBackToLauncher} />;
 
       default:
         return (

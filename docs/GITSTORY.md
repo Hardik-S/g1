@@ -9,3 +9,4 @@ Use this file to track commits, pushes, merges, and noteworthy design choices. E
 
 - 2025-09-22 — feature+docs — Added Cache Lab Vite subapp with interactive cache modules, assessments, and dashboard.
 - 2025-09-23 — feature+docs — Introduced Cat Typing Speed Test with a vanilla JS typing drill, launcher wiring, and refreshed documentation.
+- 2025-10-05 — feature+docs — Added Zen Do with gist-backed persistence, drag-and-drop planning, and docs updates across the catalog.
