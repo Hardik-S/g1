@@ -111,6 +111,7 @@ Your site will be available at the `homepage` URL.
 
 * `npm start`: Start webpack dev server at `http://localhost:3000`.
 * `npm run build`: Build Cache Lab and the launcher production bundle into `dist/`.
+* `npm run lint`: Lint launcher JavaScript/JSX with React, accessibility, and Testing Library rules.
 * `npm run deploy`: Publish `dist/` to `gh-pages`.
 * `npm test`: Run Jest suite for launcher React apps.
 
