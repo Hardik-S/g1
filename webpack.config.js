@@ -54,14 +54,17 @@ module.exports = {
     new CopyWebpackPlugin({
       patterns: (() => {
         const patterns = [
-          { from: path.resolve(__dirname, 'public/hexa-snake'), to: 'hexa-snake' },
-          { from: path.resolve(__dirname, 'apps/cat-typing-speed-test'), to: 'apps/cat-typing-speed-test' },
-          { from: path.resolve(__dirname, 'apps/cosmos'), to: 'apps/cosmos' },
-          { from: path.resolve(__dirname, 'apps/zen-go'), to: 'apps/zen-go' },
+          { from: path.resolve(__dirname, 'src/apps/hexa-snake'), to: 'hexa-snake' },
+          { from: path.resolve(__dirname, 'src/apps/cat-typing-speed-test'), to: 'apps/cat-typing-speed-test' },
+          { from: path.resolve(__dirname, 'src/apps/cosmos'), to: 'apps/cosmos' },
+          { from: path.resolve(__dirname, 'src/apps/zen-go'), to: 'apps/zen-go' },
         ];
 
-        const cacheLabSource = path.resolve(__dirname, 'apps/cache-lab/dist');
-        if (fs.existsSync(cacheLabSource)) {
+        const cacheLabSource = [
+          path.resolve(__dirname, 'src/apps/cache-lab/dist'),
+          path.resolve(__dirname, 'apps/cache-lab/dist'),
+        ].find(fs.existsSync);
+        if (cacheLabSource) {
           patterns.push({ from: cacheLabSource, to: 'cache-lab' });
         }
 
@@ -75,7 +78,12 @@ module.exports = {
         directory: path.join(__dirname, 'public'),
       },
       {
-        directory: path.join(__dirname, 'apps'),
+        directory: path.join(__dirname, 'src/apps'),
+        publicPath: '/apps',
+      },
+      {
+        directory: path.join(__dirname, 'src/apps/hexa-snake'),
+        publicPath: '/hexa-snake',
       },
     ],
     compress: true,
