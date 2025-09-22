@@ -53,8 +53,13 @@ export interface CacheSimulationOptions {
 
 export interface CacheSimulationResult {
   metrics: ResultMetrics;
-  perAccess: { hit: boolean; missType?: 'compulsory' | 'conflict' | 'capacity'; setIndex: number; tag: number; }[];
-  perSet?: number[][];
+  perAccess: {
+    hit: boolean;
+    missType?: 'compulsory' | 'conflict' | 'capacity';
+    setIndex: number;
+    tag: number;
+  }[];
+  perSet?: number[][][];
 }
 
 export interface HierarchyLevelConfig {

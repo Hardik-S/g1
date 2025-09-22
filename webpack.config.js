@@ -54,6 +54,7 @@ module.exports = {
       patterns: [
         { from: path.resolve(__dirname, 'public/hexa-snake'), to: 'hexa-snake' },
         { from: path.resolve(__dirname, 'apps/cat-typing-speed-test'), to: 'apps/cat-typing-speed-test' },
+        { from: path.resolve(__dirname, 'apps/cache-lab/dist'), to: 'cache-lab' },
       ],
     }),
   ],

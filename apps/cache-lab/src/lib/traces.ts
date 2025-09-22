@@ -2,16 +2,16 @@ import { Access, Trace } from './types';
 import { SeededRNG } from './prng';
 
 function makeSequentialTrace(length: number): Access[] {
-  return Array.from({ length }, (_, i) => ({ address: i, type: 'R' }));
+  return Array.from({ length }, (_, i): Access => ({ address: i, type: 'R' }));
 }
 
 function makeStrideTrace(length: number, stride: number): Access[] {
-  return Array.from({ length }, (_, i) => ({ address: (i * stride) % length, type: 'R' }));
+  return Array.from({ length }, (_, i): Access => ({ address: (i * stride) % length, type: 'R' }));
 }
 
 function makeRandomTrace(length: number, seed = 42): Access[] {
   const rng = new SeededRNG(seed);
-  return Array.from({ length }, () => ({ address: Math.floor(rng.next() * length), type: 'R' }));
+  return Array.from({ length }, (): Access => ({ address: Math.floor(rng.next() * length), type: 'R' }));
 }
 
 export const builtInTraces: Trace[] = [
@@ -29,7 +29,10 @@ export function generateCustomTrace(expression: string, limit = 1024): Trace {
     }
     const start = Number(match[1]);
     const end = Number(match[2]);
-    const accesses = Array.from({ length: end - start + 1 }, (_, i) => ({ address: start + i, type: 'R' }));
+    const accesses: Access[] = Array.from({ length: end - start + 1 }, (_, i): Access => ({
+      address: start + i,
+      type: 'R',
+    }));
     return { name: `seq(${start}..${end})`, accesses };
   }
   if (trimmed.startsWith('stride(')) {
@@ -41,7 +44,10 @@ export function generateCustomTrace(expression: string, limit = 1024): Trace {
     const end = Number(match[2]);
     const stride = Number(match[3]);
     const length = Math.min(limit, Math.max(1, Math.floor((end - start + stride) / stride)));
-    const accesses = Array.from({ length }, (_, i) => ({ address: start + i * stride, type: 'R' }));
+    const accesses: Access[] = Array.from({ length }, (_, i): Access => ({
+      address: start + i * stride,
+      type: 'R',
+    }));
     return { name: `stride(${start}..${end},${stride})`, accesses };
   }
   if (trimmed.startsWith('random(')) {
