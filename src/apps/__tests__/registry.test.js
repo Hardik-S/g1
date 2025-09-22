@@ -23,6 +23,22 @@ describe('app registry', () => {
     expect(typingTest.path).toBe('/apps/cat-typing-speed-test');
   });
 
+  it('registers the Quantum Playground metadata', () => {
+    const quantum = getAppById('quantum-playground');
+
+    expect(quantum).toBeTruthy();
+    expect(quantum.title).toBe('Quantum Playground');
+    expect(quantum.category).toBe('Education');
+    expect(quantum.icon).toBe('⚛️');
+    expect(quantum.path).toBe('/apps/quantum-playground');
+    expect(quantum.tags).toEqual(
+      expect.arrayContaining(['quantum', 'simulator', 'visualization', 'education'])
+    );
+    expect(quantum.description).toBe(
+      'Design circuits, run a four-qubit simulator, and visualize state-vector measurements.'
+    );
+  });
+
   it('assigns default versions that match the x.yz.dd format', () => {
     const versionPattern = /^[1-5]\.(?:0[2-8]|1[2-8])\.00$/;
 
