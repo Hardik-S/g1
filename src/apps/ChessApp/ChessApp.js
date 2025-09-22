@@ -11,7 +11,7 @@ const CHESSBOARD_STYLE_URL =
 const CHESSBOARD_SCRIPT_URL =
   'https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js';
 const CHESS_RULES_SCRIPT_URL =
-  'https://cdn.jsdelivr.net/npm/chess.js@1.0.0/dist/chess.min.js';
+  'https://cdn.jsdelivr.net/npm/chess.js@0.13.4/chess.min.js';
 const STOCKFISH_SCRIPT_URL =
   'https://cdn.jsdelivr.net/npm/stockfish@16.1.1/dist/stockfish.js';
 
