@@ -1,35 +1,60 @@
-import React, { useState, Suspense } from 'react';
+import React, { Suspense, useCallback, useEffect, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import AppLauncher from './AppLauncher';
 import './AppContainer.css';
-import { getAppLoader } from '../apps/registry';
+import { getAllApps, getAppLoader } from '../apps/registry';
 import AppErrorBoundary from './AppErrorBoundary';
 
+const normalizePath = (path) => {
+  if (!path) {
+    return '/';
+  }
+
+  const trimmed = path.replace(/\/+$/, '');
+  return trimmed.length === 0 ? '/' : trimmed;
+};
 
 const AppContainer = () => {
-  const [currentView, setCurrentView] = useState('launcher'); // 'launcher' or 'app'
-  const [currentApp, setCurrentApp] = useState(null);
-  const [appLoadAttempt, setAppLoadAttempt] = useState(0);
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const handleLaunchApp = (app) => {
-    setCurrentApp(app);
-    setCurrentView('app');
-    setAppLoadAttempt(0);
-  };
+  const apps = useMemo(() => getAllApps(), []);
+  const normalizedPath = useMemo(
+    () => normalizePath(location.pathname),
+    [location.pathname]
+  );
 
-  const handleBackToLauncher = () => {
-    setCurrentView('launcher');
-    setCurrentApp(null);
-    setAppLoadAttempt(0);
-  };
+  const activeApp = useMemo(() => {
+    if (normalizedPath === '/') {
+      return null;
+    }
 
-  const handleRetryLoadApp = () => {
-    setAppLoadAttempt((attempt) => attempt + 1);
-  };
 
-  const renderCurrentApp = () => {
-    if (!currentApp) return null;
+    return apps.find((app) => normalizePath(app.path) === normalizedPath) || null;
+  }, [apps, normalizedPath]);
 
-    const LazyAppComponent = getAppLoader(currentApp.id);
+  const LazyAppComponent = useMemo(() => {
+    if (!activeApp) {
+      return null;
+    }
+
+    return getAppLoader(activeApp.id);
+  }, [activeApp]);
+
+  useEffect(() => {
+    if (!activeApp && normalizedPath !== '/') {
+      navigate('/', { replace: true });
+    }
+  }, [activeApp, navigate, normalizedPath]);
+
+  const handleBackToLauncher = useCallback(() => {
+    navigate('/');
+  }, [navigate]);
+
+  const renderActiveApp = () => {
+    if (!activeApp) {
+      return null;
+    }
 
     if (!LazyAppComponent) {
       return (
@@ -41,6 +66,7 @@ const AppContainer = () => {
             <button
               className="back-btn"
               onClick={handleBackToLauncher}
+              type="button"
             >
               ← Back to Apps
             </button>
@@ -61,41 +87,35 @@ const AppContainer = () => {
 
   return (
     <div className="app-container">
-      {currentView === 'launcher' ? (
-        <AppLauncher 
-          onLaunchApp={handleLaunchApp}
-          currentView={currentView}
-          onBackToLauncher={handleBackToLauncher}
-        />
+      {!activeApp ? (
+        <AppLauncher />
       ) : (
         <div className="app-view">
           <header className="app-header">
-            <button 
+            <button
               className="back-btn"
               onClick={handleBackToLauncher}
+              type="button"
             >
               ← Back to Apps
             </button>
             <div className="app-title">
-              <span className="app-icon">{currentApp?.icon}</span>
-              <h1>{currentApp?.title}</h1>
+              <span className="app-icon">{activeApp.icon}</span>
+              <h1>{activeApp.title}</h1>
             </div>
           </header>
 
           <main className="app-content">
-            <AppErrorBoundary
-              onRetry={handleRetryLoadApp}
-              onBack={handleBackToLauncher}
-            >
-              <Suspense fallback={
+            <Suspense
+              fallback={(
                 <div className="loading">
                   <div className="loading-spinner"></div>
                   <p>Loading app...</p>
                 </div>
-              }>
-                {renderCurrentApp()}
-              </Suspense>
-            </AppErrorBoundary>
+              )}
+            >
+              {renderActiveApp()}
+            </Suspense>
           </main>
         </div>
       )}

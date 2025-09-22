@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { APP_CATEGORIES, getAllApps } from '../apps/registry';
 import './AppLauncher.css';
 
-const AppLauncher = ({ onLaunchApp, currentView, onBackToLauncher }) => {
+const AppLauncher = () => {
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
@@ -68,7 +70,7 @@ const AppLauncher = ({ onLaunchApp, currentView, onBackToLauncher }) => {
 
   const handleAppClick = (app) => {
     if (app.disabled) return;
-    onLaunchApp(app);
+    navigate(app.path);
   };
 
   const renderAppCard = (app) => {
@@ -103,10 +105,6 @@ const AppLauncher = ({ onLaunchApp, currentView, onBackToLauncher }) => {
       </div>
     );
   };
-
-  if (currentView !== 'launcher') {
-    return null;
-  }
 
   return (
     <div className="app-launcher">
