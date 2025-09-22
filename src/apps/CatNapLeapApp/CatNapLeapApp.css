@@ -9,15 +9,34 @@
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
+.catnap-hud-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding: 1.25rem;
+  pointer-events: none;
+  z-index: 2;
+}
+
 .catnap-hud {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
   justify-content: space-between;
   align-items: stretch;
+  width: 100%;
+}
+
+.catnap-hud .scoreboard,
+.catnap-hud .start-boost-banner,
+.catnap-hud .drowsiness-meter {
+  pointer-events: auto;
 }
 
 .scoreboard {
+  flex: 1 1 320px;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   background: rgba(255, 255, 255, 0.85);
@@ -191,6 +210,7 @@
   padding: 1.5rem;
   background: rgba(24, 20, 38, 0.35);
   backdrop-filter: blur(6px);
+  z-index: 3;
 }
 
 .overlay-card {
