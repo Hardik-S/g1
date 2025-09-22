@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "A React app that switches the day of the week on button click",
   "main": "index.js",
+  "workspaces": [
+    "apps/cache-lab"
+  ],
   "scripts": {
     "start": "webpack serve --mode development",
     "build:cache-lab": "npm --prefix apps/cache-lab run build",
