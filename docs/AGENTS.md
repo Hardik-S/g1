@@ -26,5 +26,6 @@ Welcome! This guide captures expectations for future coding agents collaborating
 - Keep this `AGENTS.md` file updated when conventions evolve.
 - Maintain a running log of merges and significant decisions in `GITSTORY.md` (one line per event).
 - Reflect user-facing updates in `README.md` so the GitHub page stays accurate.
+- When touching gist-enabled experiences, update [`GIST_SETTINGS.md`](GIST_SETTINGS.md) so contributors know how the shared settings flow behaves.
 
 Happy hacking!
