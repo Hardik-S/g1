@@ -72,6 +72,12 @@ Chessboard Summit bundles a draggable board, polished status panel, and optional
 - Surface clocks and increment options to support blitz and rapid play.
 - Explore online multiplayer via WebRTC or WebSockets for remote matches.
 
+## Zen Go
+Zen Go invites quick 9×9 sparring against a lightweight GNU Go engine compiled to WebAssembly. WGo.js renders captures, ko, and coordinates while a Web Worker streams moves based on kyu/dan difficulty presets, handicap setups, and ELO guidance.
+- Expand support to 13×13 and 19×19 boards while keeping load times in check.
+- Layer SGF export, move history, and review tools for deeper post-game study.
+- Surface AI insight overlays such as win-rate charts or candidate variation summaries.
+
 ## Cache Lab
 Cache Lab embeds the dedicated cache-learning subapp that lives under `/cache-lab`. Eight mini-modules cover mapping, replacement, parameter sweeps, locality visualisation, miss classification, hierarchy exploration, pipeline impact, and trace loading. Auxiliary tabs (Learn, Experiment, Assess, Dashboard) guide newcomers, let advanced users tinker, and track quiz progress with localStorage persistence.
 - Ship more visualisations (e.g., animated heatmaps) for large traces while maintaining performance.

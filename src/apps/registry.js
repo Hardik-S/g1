@@ -181,7 +181,21 @@ export const APP_REGISTRY = {
     created: '2024-05-01',
     featured: true
   }),
+  'zen-go': withDefaults({
+    id: 'zen-go',
+    title: 'Zen Go',
+    description: 'Play 9×9 Go against a lightweight GNU Go engine with rank presets and handicaps.',
+    icon: '⚫',
+    category: 'Games',
+    component: null,
+    loader: () => import('./ZenGoApp'),
+    path: '/apps/zen-go',
+    tags: ['game', 'board', 'go', 'ai', 'wasm'],
+    created: '2025-09-22',
+    featured: true,
+  }),
   'catnap-leap': withDefaults({
+
     id: 'catnap-leap',
     title: 'CatNap Leap',
     description: 'Guide a drowsy cat through floating pillows, chase scores, and sip dreamy powerups.',

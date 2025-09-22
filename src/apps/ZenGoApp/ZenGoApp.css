@@ -1,0 +1,87 @@
+.zen-go-embed {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  color: #111827;
+}
+
+.zen-go-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: linear-gradient(135deg, rgba(248, 244, 234, 0.9), rgba(241, 232, 214, 0.9));
+  border-radius: 18px;
+  padding: 20px 24px;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.zen-go-intro h1 {
+  margin: 0 0 8px;
+  font-size: clamp(1.8rem, 3vw, 2.2rem);
+  letter-spacing: -0.01em;
+}
+
+.zen-go-intro p {
+  margin: 0;
+  color: #4b5563;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.zen-go-highlights {
+  margin: 0;
+  padding-left: 20px;
+  color: #4b5563;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.zen-go-frame {
+  width: 100%;
+  min-height: 720px;
+  border: none;
+  border-radius: 20px;
+  background: #f8f4e8;
+  box-shadow: 0 24px 46px -24px rgba(15, 23, 42, 0.32);
+}
+
+.zen-go-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.zen-go-link {
+  font-weight: 600;
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.zen-go-link:hover {
+  text-decoration: underline;
+}
+
+.zen-go-back {
+  border: none;
+  background: rgba(37, 99, 235, 0.08);
+  color: #1f2937;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.zen-go-back:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px -12px rgba(37, 99, 235, 0.4);
+}
+
+@media (max-width: 768px) {
+  .zen-go-frame {
+    min-height: 560px;
+  }
+}
