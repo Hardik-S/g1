@@ -29,7 +29,6 @@ Gif coming soon
 * **Pong Ring**: rally inside a circular quartz arena.
 * **CatNap Leap**: glide between dreamy pillows while keeping a sleepy cat alert.
 * **Sudoku Roast**: solve handcrafted puzzles in a cozy café setting.
-* **Chessboard Summit**: play local chess or spar with Stockfish.
 
 ### Learning Tools
 
@@ -54,7 +53,6 @@ Gif coming soon
 
 * [`AGENTS.md`](AGENTS.md): contribution workflow, checks, and conventions.
 * [`APPS.md`](APPS.md): catalog of bundled micro-apps with behavior notes.
-* [`CHESS.md`](CHESS.md): chess-specific helpers and utilities.
 * [`GITSTORY.md`](GITSTORY.md): chronological log of commits, merges, and design decisions.
 
 ---

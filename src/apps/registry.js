@@ -170,19 +170,6 @@ export const APP_REGISTRY = {
     created: '2024-04-01',
     featured: true
   }),
-  chess: withDefaults({
-    id: 'chess',
-    title: 'Chessboard Summit',
-    description: 'Challenge a friend locally or face Stockfish with adjustable strength.',
-    icon: '♟️',
-    category: 'Games',
-    component: null,
-    loader: () => import('./ChessApp'),
-    path: '/apps/chess',
-    tags: ['game', 'board', 'stockfish', 'ai'],
-    created: '2024-05-01',
-    featured: true
-  }),
   'zen-go': withDefaults({
     id: 'zen-go',
     title: 'Zen Go',

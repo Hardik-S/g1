@@ -12,3 +12,4 @@ Use this file to track commits, pushes, merges, and noteworthy design choices. E
 - 2025-10-05 — feature+docs — Added Zen Do with gist-backed persistence, drag-and-drop planning, and docs updates across the catalog.
 - 2025-10-07 — feature+docs — Added Zen Go with a WebAssembly GNU Go engine, handicap presets, and launcher/documentation updates.
 - 2025-10-12 — feature+docs — Added Cosmos solar system simulator with Three.js physics subapp, launcher integration, and refreshed docs.
+- 2025-10-18 — removal — Retired the Chessboard Summit experience and deleted associated assets, tests, and documentation.

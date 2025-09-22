@@ -21,7 +21,6 @@ Welcome! This guide captures expectations for future coding agents collaborating
 ## When adding or changing apps
 - Register the app in `src/apps/registry.js` and verify the launcher entry in `src/components/AppLauncher` renders correctly.
 - Update `APPS.md` with a short blurb and usage tips for the new experience.
-- If chess-related features change, also revise `CHESS.md` accordingly.
 
 ## Documentation expectations
 - Keep this `AGENTS.md` file updated when conventions evolve.
