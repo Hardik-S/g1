@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import './ZenDoApp.css';
 import LandingView from './views/LandingView';
 import TodayView from './views/TodayView';
@@ -162,29 +162,29 @@ const ZenDoApp = ({ onBack }) => {
     });
   };
 
-  const handleAssignDay = (taskId, dayKey, position) => {
+  const handleAssignDay = useCallback((taskId, dayKey, position) => {
     placeTaskInDay(taskId, dayKey, position);
-  };
+  }, [placeTaskInDay]);
 
-  const handleReorderDay = (dayKey, orderedIds) => {
+  const handleReorderDay = useCallback((dayKey, orderedIds) => {
     reorderDay(dayKey, orderedIds);
-  };
+  }, [reorderDay]);
 
-  const handleAssignFocus = (taskId, bucket, position) => {
+  const handleAssignFocus = useCallback((taskId, bucket, position) => {
     placeInFocusBucket(taskId, bucket, position);
-  };
+  }, [placeInFocusBucket]);
 
-  const handleReorderFocus = (bucket, orderedIds) => {
+  const handleReorderFocus = useCallback((bucket, orderedIds) => {
     if (bucket === 'priority' || bucket === 'bonus') {
       reorderFocus(bucket, orderedIds);
     } else if (bucket === 'today') {
       reorderDay(todayKey, orderedIds);
     }
-  };
+  }, [reorderFocus, reorderDay, todayKey]);
 
-  const handleClearFocus = (taskId) => {
+  const handleClearFocus = useCallback((taskId) => {
     clearFocus(taskId);
-  };
+  }, [clearFocus]);
 
   const handleTabChange = (tabId) => {
     if (tabId === 'today') {
