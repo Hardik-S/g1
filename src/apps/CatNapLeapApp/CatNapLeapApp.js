@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import './CatNapLeapApp.css';
+import { createBirdSpawn, createPowerupSpawn, summarizeLoadout } from './spawnLogic';
 
 const LOCAL_STORAGE_KEY = 'catnap-leap-highscore';
 
@@ -96,6 +97,27 @@ const CAT_VARIATIONS = [
   },
 ];
 
+const SHOP_ITEMS = [
+  {
+    id: 'coffee',
+    name: 'Morning Brew',
+    cost: 2,
+    description: 'Shake off drowsiness at the start of your next run.',
+  },
+  {
+    id: 'yarn',
+    name: 'Bundle of Yarn',
+    cost: 3,
+    description: 'Extend the opening speed boost. Each bundle adds more pep.',
+  },
+  {
+    id: 'catnip',
+    name: 'Fresh Catnip',
+    cost: 4,
+    description: 'Begin with soothing slow motion. Stacks for longer calm.',
+  },
+];
+
 const CatSpritePreview = ({ appearance }) => {
   const { colors, pattern } = appearance;
   const { body, earOuter, earInner, eye, highlight, nose, mouth } = colors;
@@ -184,10 +206,13 @@ const createInitialState = (width, height, highScore, catAppearance, kittenMode 
   },
   pillows: [],
   powerups: [],
+  birds: [],
   pillowTimer: 0,
   pillowInterval: 1500,
   powerupTimer: 0,
   nextPowerupAt: 8500,
+  birdTimer: 0,
+  nextBirdAt: 10500,
   stats: {
     score: 0,
     perfects: 0,
@@ -214,19 +239,60 @@ const CatNapLeapApp = () => {
   const drowsinessRef = useRef(0);
   const audioContextRef = useRef(null);
 
-  const [phase, setPhase] = useState('selecting');
+  const [phase, setPhase] = useState('start');
   const [stats, setStats] = useState({ score: 0, perfects: 0, best: 0 });
   const [drowsiness, setDrowsiness] = useState(0);
-  const [message, setMessage] = useState('Pick your cat to begin the dream.');
+  const [message, setMessage] = useState('Tap or press space to wake Noodle the cat.');
   const [effects, setEffects] = useState([]);
   const [kittenMode, setKittenMode] = useState(false);
   const [selectedCatId, setSelectedCatId] = useState(CAT_VARIATIONS[0].id);
-  const [hasSelectedCat, setHasSelectedCat] = useState(false);
+  const [hasSelectedCat, setHasSelectedCat] = useState(true);
+  const [treats, setTreats] = useState(0);
+  const treatsRef = useRef(0);
+  const [pendingLoadout, setPendingLoadout] = useState({ coffee: 0, yarn: 0, catnip: 0 });
+  const pendingLoadoutRef = useRef(pendingLoadout);
+  const [startBoostIndicators, setStartBoostIndicators] = useState([]);
+  const [shopFeedback, setShopFeedback] = useState('');
+  const [focusedShopIndex, setFocusedShopIndex] = useState(0);
+  const shopFocusRef = useRef(0);
+  const [catFocusIndex, setCatFocusIndex] = useState(0);
+  const catFocusRef = useRef(0);
 
   const selectedAppearance = useMemo(
     () => CAT_VARIATIONS.find((cat) => cat.id === selectedCatId) || CAT_VARIATIONS[0],
     [selectedCatId],
   );
+  const queuedBoosts = useMemo(() => summarizeLoadout(pendingLoadout), [pendingLoadout]);
+
+  useEffect(() => {
+    const index = Math.max(0, CAT_VARIATIONS.findIndex((cat) => cat.id === selectedCatId));
+    setCatFocusIndex(index);
+    catFocusRef.current = index;
+  }, [selectedCatId]);
+
+  useEffect(() => {
+    pendingLoadoutRef.current = pendingLoadout;
+  }, [pendingLoadout]);
+
+  useEffect(() => {
+    shopFocusRef.current = focusedShopIndex;
+  }, [focusedShopIndex]);
+
+  useEffect(() => {
+    if (!shopFeedback) return undefined;
+    const timeout = setTimeout(() => {
+      setShopFeedback('');
+    }, 2400);
+    return () => clearTimeout(timeout);
+  }, [shopFeedback]);
+
+  useEffect(() => {
+    if (startBoostIndicators.length === 0) return undefined;
+    const timeout = setTimeout(() => {
+      setStartBoostIndicators([]);
+    }, 5200);
+    return () => clearTimeout(timeout);
+  }, [startBoostIndicators]);
 
   const ensureAudioContext = () => {
     if (audioContextRef.current) {
@@ -336,8 +402,8 @@ const CatNapLeapApp = () => {
       };
       setStats({ score: 0, perfects: 0, best: storedHigh });
       setDrowsiness(0);
-      setPhase(hasSelectedCat ? 'ready' : 'selecting');
-      setMessage(hasSelectedCat ? 'Tap or press space to wake Noodle the cat.' : 'Pick your cat to begin the dream.');
+      setPhase('start');
+      setMessage('Tap or press space to wake Noodle the cat.');
     } else {
       const state = stateRef.current;
       state.canvasWidth = adjustedWidth;
@@ -364,10 +430,15 @@ const CatNapLeapApp = () => {
     drowsinessRef.current = 0;
     setStats({ score: 0, perfects: 0, best: highScore });
     setEffects([]);
+    setStartBoostIndicators([]);
     setDrowsiness(0);
-    const targetPhase = options.forcePhase || ((hasSelectedCat || options.catAppearance) ? 'ready' : 'selecting');
+    const targetPhase = options.forcePhase || (hasSelectedCat || options.catAppearance ? 'ready' : 'start');
     setPhase(targetPhase);
-    setMessage(targetPhase === 'ready' ? 'Tap or press space to wake Noodle the cat.' : 'Pick your cat to begin the dream.');
+    if (targetPhase === 'ready') {
+      setMessage('Tap or press space to wake Noodle the cat.');
+    } else if (targetPhase === 'start') {
+      setMessage('Tap or press space to wake Noodle the cat.');
+    }
   };
 
   const startPlaying = () => {
@@ -375,7 +446,7 @@ const CatNapLeapApp = () => {
     if (!state || state.phase === 'playing') return;
     if (!hasSelectedCat) {
       setPhase('selecting');
-      setMessage('Pick your cat to begin the dream.');
+      setMessage('Choose a dreamer to begin leaping.');
       return;
     }
     state.phase = 'playing';
@@ -386,11 +457,48 @@ const CatNapLeapApp = () => {
     state.lastReason = '';
     state.effects.yarnUntil = 0;
     state.effects.catnipUntil = 0;
+    state.powerups = [];
+    state.birds = [];
+    state.powerupTimer = 0;
+    state.nextPowerupAt = 7500 + Math.random() * 2800;
+    state.birdTimer = 0;
+    state.nextBirdAt = 9000 + Math.random() * 4200;
     state.kittenMode = kittenMode;
     state.catAppearance = selectedAppearance;
+
+    const loadout = pendingLoadoutRef.current;
+    const loadoutSummary = summarizeLoadout(loadout);
+    const now = performance.now();
+    if (loadoutSummary.length > 0) {
+      const indicatorLabels = [];
+      loadoutSummary.forEach(({ type, count }) => {
+        switch (type) {
+          case 'coffee':
+            state.drowsiness = 0;
+            indicatorLabels.push(`Morning Brew ×${count}`);
+            break;
+          case 'yarn':
+            state.effects.yarnUntil = now + 4000 * count;
+            indicatorLabels.push(`Yarn Boost ×${count}`);
+            break;
+          case 'catnip':
+            state.effects.catnipUntil = now + 3000 * count;
+            indicatorLabels.push(`Catnip Calm ×${count}`);
+            break;
+          default:
+            break;
+        }
+      });
+      setStartBoostIndicators(indicatorLabels);
+      pendingLoadoutRef.current = { coffee: 0, yarn: 0, catnip: 0 };
+      setPendingLoadout({ coffee: 0, yarn: 0, catnip: 0 });
+    } else {
+      setStartBoostIndicators([]);
+    }
+
     publishStats(0, 0, state.highScore);
     publishDrowsiness(state.drowsiness);
-    publishEffects([]);
+    publishEffects(getActiveEffectLabels(state.effects, now));
     setPhase('playing');
     setMessage('Leap between pillows and sip coffee before sleep wins!');
   };
@@ -473,7 +581,24 @@ const CatNapLeapApp = () => {
     if (state) {
       state.catAppearance = variation;
     }
-    resetGameState({ catAppearance: variation, forcePhase: 'ready' });
+    resetGameState({ catAppearance: variation, forcePhase: phase === 'start' ? 'start' : 'ready' });
+  };
+
+  const handlePurchase = (item) => {
+    if (!item) return;
+    if (treatsRef.current < item.cost) {
+      setShopFeedback('Not enough treats yet. Catch more birds!');
+      return;
+    }
+    treatsRef.current -= item.cost;
+    setTreats(treatsRef.current);
+    const next = {
+      ...pendingLoadoutRef.current,
+      [item.id]: (pendingLoadoutRef.current[item.id] || 0) + 1,
+    };
+    pendingLoadoutRef.current = next;
+    setPendingLoadout(next);
+    setShopFeedback(`${item.name} queued for your next dream!`);
   };
 
   const updateGame = (timestamp) => {
@@ -544,16 +669,21 @@ const CatNapLeapApp = () => {
       state.powerupTimer += deltaMs;
       if (state.powerupTimer >= state.nextPowerupAt) {
         state.powerupTimer = 0;
-        state.nextPowerupAt = 7000 + Math.random() * 3000;
-        const available = ['coffee', 'yarn', 'catnip'];
-        const selection = available[Math.floor(Math.random() * available.length)];
-        const radius = Math.max(12, width * 0.025);
-        state.powerups.push({
-          type: selection,
-          x: width + 40,
-          y: clamp(Math.random() * (height - 160) + 80, 80, height - 80),
-          radius,
-        });
+        state.nextPowerupAt = 7000 + Math.random() * 3200;
+        const spawned = createPowerupSpawn(state);
+        if (spawned) {
+          state.powerups.push(spawned);
+        }
+      }
+
+      state.birdTimer += deltaMs;
+      if (state.birdTimer >= state.nextBirdAt) {
+        state.birdTimer = 0;
+        state.nextBirdAt = 10000 + Math.random() * 4500;
+        const bird = createBirdSpawn(state);
+        if (bird) {
+          state.birds.push(bird);
+        }
       }
 
       state.pillows = state.pillows.filter((pillow) => {
@@ -594,6 +724,24 @@ const CatNapLeapApp = () => {
           return false;
         }
         return powerup.x + powerup.radius > -40;
+      });
+
+      state.birds = state.birds.filter((bird) => {
+        bird.x += bird.speed * delta * bird.direction;
+
+        const dx = bird.x - state.cat.x;
+        const dy = bird.y - state.cat.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < bird.radius + state.cat.radius * 0.75) {
+          treatsRef.current += 1;
+          setTreats(treatsRef.current);
+          playChime();
+          return false;
+        }
+
+        const offRight = bird.direction === 1 && bird.x - bird.radius > width + 80;
+        const offLeft = bird.direction === -1 && bird.x + bird.radius < -80;
+        return !(offRight || offLeft);
       });
 
       if (state.cat.y + state.cat.radius >= height - 4) {
@@ -653,6 +801,10 @@ const CatNapLeapApp = () => {
 
     state.powerups.forEach((powerup) => {
       drawPowerup(ctx, powerup);
+    });
+
+    state.birds.forEach((bird) => {
+      drawBird(ctx, bird, state.time);
     });
 
     drawCat(ctx, state);
@@ -774,6 +926,48 @@ const CatNapLeapApp = () => {
         ctx.stroke();
         break;
     }
+    ctx.restore();
+  };
+
+  const drawBird = (ctx, bird, time) => {
+    ctx.save();
+    ctx.translate(bird.x, bird.y);
+    ctx.scale(bird.direction, 1);
+
+    const flap = Math.sin(time * 0.012 + bird.flapOffset) * 0.8;
+
+    ctx.fillStyle = '#ffe5a4';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, bird.radius * 1.05, bird.radius * 0.7, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#fbd276';
+    ctx.beginPath();
+    ctx.ellipse(-bird.radius * 0.2, -bird.radius * 0.15, bird.radius * 0.7, bird.radius * 0.42, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.save();
+    ctx.translate(-bird.radius * 0.15, -bird.radius * 0.1);
+    ctx.rotate(flap * 0.6);
+    ctx.fillStyle = '#f7b45a';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, bird.radius * 0.9, bird.radius * 0.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.fillStyle = '#ff9c5f';
+    ctx.beginPath();
+    ctx.moveTo(bird.radius * 0.95, -bird.radius * 0.1);
+    ctx.lineTo(bird.radius * 1.35, 0);
+    ctx.lineTo(bird.radius * 0.95, bird.radius * 0.1);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = '#2f2a45';
+    ctx.beginPath();
+    ctx.arc(bird.radius * 0.4, -bird.radius * 0.15, bird.radius * 0.16, 0, Math.PI * 2);
+    ctx.fill();
+
     ctx.restore();
   };
 
@@ -950,13 +1144,20 @@ const CatNapLeapApp = () => {
     const state = stateRef.current;
     if (!state) return;
     ensureAudioContext();
-    if (phase === 'ready') {
+    if (phase === 'start') {
+      if (!hasSelectedCat) {
+        setPhase('selecting');
+        return;
+      }
+      startPlaying();
+      applyJump();
+    } else if (phase === 'ready') {
       startPlaying();
       applyJump();
     } else if (phase === 'playing') {
       applyJump();
     } else if (phase === 'gameover') {
-      resetGameState();
+      resetGameState({ forcePhase: 'ready' });
     }
   };
 
@@ -968,6 +1169,47 @@ const CatNapLeapApp = () => {
     window.addEventListener('resize', handleResize);
 
     const handleKeyDown = (event) => {
+      if (phase === 'shop') {
+        if (event.key === 'ArrowRight') {
+          event.preventDefault();
+          const next = (shopFocusRef.current + 1) % SHOP_ITEMS.length;
+          setFocusedShopIndex(next);
+          return;
+        }
+        if (event.key === 'ArrowLeft') {
+          event.preventDefault();
+          const next = (shopFocusRef.current - 1 + SHOP_ITEMS.length) % SHOP_ITEMS.length;
+          setFocusedShopIndex(next);
+          return;
+        }
+        if (event.key === 'Enter' || event.code === 'Space') {
+          event.preventDefault();
+          handlePurchase(SHOP_ITEMS[shopFocusRef.current]);
+          return;
+        }
+      } else if (phase === 'selecting') {
+        const columns = 3;
+        const index = catFocusRef.current;
+        let nextIndex = index;
+        if (event.key === 'ArrowRight') {
+          nextIndex = Math.min(index + 1, CAT_VARIATIONS.length - 1);
+        } else if (event.key === 'ArrowLeft') {
+          nextIndex = Math.max(index - 1, 0);
+        } else if (event.key === 'ArrowDown') {
+          nextIndex = Math.min(index + columns, CAT_VARIATIONS.length - 1);
+        } else if (event.key === 'ArrowUp') {
+          nextIndex = Math.max(index - columns, 0);
+        }
+        if (nextIndex !== index) {
+          event.preventDefault();
+          const nextCat = CAT_VARIATIONS[nextIndex];
+          if (nextCat) {
+            handleSelectCat(nextCat);
+          }
+          return;
+        }
+      }
+
       if (event.code === 'Space') {
         event.preventDefault();
         handlePrimaryAction();
@@ -1014,14 +1256,29 @@ const CatNapLeapApp = () => {
             <span className="value">{stats.score}</span>
           </div>
           <div className="score-item">
-            <span className="label">Perfect Leaps</span>
-            <span className="value">{stats.perfects}</span>
-          </div>
-          <div className="score-item">
             <span className="label">Best</span>
             <span className="value">{stats.best}</span>
           </div>
+          <div className="score-item treats">
+            <span className="label">Treats</span>
+            <span className="value">{treats}</span>
+          </div>
+          <div className="score-item">
+            <span className="label">Perfect Leaps</span>
+            <span className="value">{stats.perfects}</span>
+          </div>
         </div>
+
+        {startBoostIndicators.length > 0 && (
+          <div className="start-boost-banner" aria-live="polite">
+            <span className="boost-label">Shop Boosts Active</span>
+            <ul>
+              {startBoostIndicators.map((boost) => (
+                <li key={boost}>{boost}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <div className="drowsiness-meter" aria-label="Drowsiness meter">
           <div className="meter-header">
@@ -1048,11 +1305,70 @@ const CatNapLeapApp = () => {
         <canvas ref={canvasRef} className="catnap-canvas" />
         {phase !== 'playing' && (
           <div className={`catnap-overlay ${phase}`}>
-            <div className={`overlay-card ${phase === 'selecting' ? 'selecting' : ''}`}>
+            <div
+              className={`overlay-card ${phase === 'selecting' ? 'selecting' : ''} ${phase === 'shop' ? 'shop' : ''} ${phase === 'start' ? 'start' : ''}`}
+            >
+              {phase === 'start' && (
+                <>
+                  <h2>CatNap Leap</h2>
+                  <p>Spend treats on boosts, pick your dreamer, then leap for the high score.</p>
+                  <div className="start-overview">
+                    <div className="start-preview">
+                      <CatSpritePreview appearance={selectedAppearance} />
+                      <div className="start-preview-copy">
+                        <span className="cat-name">{selectedAppearance.name}</span>
+                        <span className="start-stats">Best: {stats.best} · Treats: {treats}</span>
+                        <span className="start-tip">Use arrow keys or tap buttons to explore.</span>
+                      </div>
+                    </div>
+                    <div className="queued-boosts">
+                      <span className="queued-title">Queued Boosts</span>
+                      {queuedBoosts.length > 0 ? (
+                        <ul>
+                          {queuedBoosts.map(({ type, count }) => (
+                            <li key={type}>
+                              {type === 'coffee' ? 'Morning Brew' : type === 'yarn' ? 'Yarn Boost' : 'Catnip Calm'} ×{count}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p>Catch flying birds to earn treats and stack bonuses.</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="start-actions">
+                    <button
+                      type="button"
+                      className="overlay-button"
+                      onClick={() => {
+                        setPhase('ready');
+                        setMessage('Tap or press space to wake Noodle the cat.');
+                      }}
+                    >
+                      Begin Run
+                    </button>
+                    <button type="button" className="overlay-button secondary" onClick={() => setPhase('selecting')}>
+                      Customize Cat
+                    </button>
+                    <button
+                      type="button"
+                      className="overlay-button secondary"
+                      onClick={() => {
+                        setPhase('shop');
+                        setShopFeedback('');
+                        setFocusedShopIndex(0);
+                        shopFocusRef.current = 0;
+                      }}
+                    >
+                      Visit Shop
+                    </button>
+                  </div>
+                </>
+              )}
               {phase === 'selecting' && (
                 <>
                   <h2>Choose Your Dreamer</h2>
-                  <p>Tap a sprite to pick your leaping companion. You can swap cats from the lobby later.</p>
+                  <p>Tap a sprite or use arrow keys to highlight your leaping companion.</p>
                   <div className="cat-selection-grid">
                     {CAT_VARIATIONS.map((variation) => (
                       <button
@@ -1067,21 +1383,79 @@ const CatNapLeapApp = () => {
                       </button>
                     ))}
                   </div>
+                  <div className="overlay-actions">
+                    <button
+                      type="button"
+                      className="overlay-button secondary"
+                      onClick={() => {
+                        setPhase('start');
+                        setMessage('Tap or press space to wake Noodle the cat.');
+                      }}
+                    >
+                      Back to Lobby
+                    </button>
+                  </div>
+                </>
+              )}
+              {phase === 'shop' && (
+                <>
+                  <h2>Dream Treat Shop</h2>
+                  <p>Spend treats on starting boosts. Arrow keys or taps select an item.</p>
+                  <div className="shop-inventory">
+                    {SHOP_ITEMS.map((item, index) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className={`shop-item ${focusedShopIndex === index ? 'is-focused' : ''}`}
+                        onClick={() => handlePurchase(item)}
+                        aria-label={`${item.name} costs ${item.cost} treats`}
+                      >
+                        <div className="shop-item-header">
+                          <span className="shop-name">{item.name}</span>
+                          <span className="shop-cost">{item.cost} treats</span>
+                        </div>
+                        <p>{item.description}</p>
+                        <span className="queued-count">Queued: {pendingLoadout[item.id] || 0}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="shop-footer">
+                    <span className="shop-treats">Treats: {treats}</span>
+                    {shopFeedback && <span className="shop-feedback">{shopFeedback}</span>}
+                  </div>
+                  <div className="overlay-actions">
+                    <button type="button" className="overlay-button secondary" onClick={() => setPhase('start')}>
+                      Back to Lobby
+                    </button>
+                  </div>
                 </>
               )}
               {phase === 'ready' && (
                 <>
-                  <h2>CatNap Leap</h2>
+                  <h2>Ready to Leap</h2>
                   <p>{message}</p>
                   <ul className="overlay-list">
                     <li>Space, click, or tap to leap.</li>
                     <li>Thread pillows, avoid the ground and ceiling.</li>
                     <li>Collect coffee to reset drowsiness.</li>
-                    <li>Yarn speeds time, catnip slows it.</li>
+                    <li>Catch flying birds for treats and shop boosts.</li>
                     <li>Press <kbd>K</kbd> anytime for Kitten Mode.</li>
                   </ul>
                   <div className="overlay-actions">
-                    <button type="button" className="overlay-button secondary" onClick={() => { setPhase('selecting'); setMessage('Pick your cat to begin the dream.'); }}>
+                    <button type="button" className="overlay-button" onClick={() => startPlaying()}>
+                      Begin Dream
+                    </button>
+                    <button
+                      type="button"
+                      className="overlay-button secondary"
+                      onClick={() => {
+                        setPhase('start');
+                        setMessage('Tap or press space to wake Noodle the cat.');
+                      }}
+                    >
+                      Back to Lobby
+                    </button>
+                    <button type="button" className="overlay-button secondary" onClick={() => setPhase('selecting')}>
                       Choose Another Cat
                     </button>
                   </div>
@@ -1091,9 +1465,24 @@ const CatNapLeapApp = () => {
                 <>
                   <h2>Dream Over</h2>
                   <p>{message}</p>
-                  <button type="button" className="overlay-button" onClick={() => resetGameState({ forcePhase: hasSelectedCat ? 'ready' : 'selecting' })}>
-                    Restart Dream
-                  </button>
+                  <p className="treat-summary">Treats this session: {treats}</p>
+                  <div className="overlay-actions">
+                    <button type="button" className="overlay-button" onClick={() => resetGameState({ forcePhase: 'ready' })}>
+                      Restart Dream
+                    </button>
+                    <button
+                      type="button"
+                      className="overlay-button secondary"
+                      onClick={() => {
+                        setPhase('shop');
+                        setShopFeedback('');
+                        setFocusedShopIndex(0);
+                        shopFocusRef.current = 0;
+                      }}
+                    >
+                      Visit Shop
+                    </button>
+                  </div>
                 </>
               )}
             </div>
@@ -1107,7 +1496,7 @@ const CatNapLeapApp = () => {
           <span>Kitten Mode: <kbd>K</kbd></span>
         </div>
         <div className="tips">
-          Perfect leaps now perk Noodle up—each one drains 7% drowsiness.
+          Perfect leaps perk Noodle up and catching birds earns treats for lobby boosts.
         </div>
       </div>
     </div>
