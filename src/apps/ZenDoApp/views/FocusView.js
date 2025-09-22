@@ -102,11 +102,15 @@ const FocusView = ({
           <div className="zen-timer-label">{phaseLabel}</div>
           <div className="zen-timer-display">{formattedTime}</div>
           <div className="zen-timer-controls">
-            <button type="button" onClick={handlePauseToggle}>
-              {paused ? 'Resume' : 'Pause'}
+            <button
+              type="button"
+              onClick={handlePauseToggle}
+              aria-label={paused ? 'Resume timer' : 'Pause timer'}
+            >
+              {paused ? '▶️' : '⏸️'}
             </button>
-            <button type="button" onClick={handleSkip}>
-              Skip
+            <button type="button" onClick={handleSkip} aria-label="Skip phase">
+              ⏭️
             </button>
           </div>
         </div>
