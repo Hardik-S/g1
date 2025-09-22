@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import './CatNapLeapApp.css';
 import { createBirdSpawn, createPowerupSpawn, summarizeLoadout } from './spawnLogic';
 
@@ -257,6 +257,8 @@ const CatNapLeapApp = () => {
   const shopFocusRef = useRef(0);
   const [catFocusIndex, setCatFocusIndex] = useState(0);
   const catFocusRef = useRef(0);
+  const drowsinessLabelId = useId();
+  const drowsinessValueId = useId();
 
   const selectedAppearance = useMemo(
     () => CAT_VARIATIONS.find((cat) => cat.id === selectedCatId) || CAT_VARIATIONS[0],
@@ -1247,28 +1249,67 @@ const CatNapLeapApp = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const drowsinessPercent = Math.round(drowsiness);
+
   return (
     <div className="catnap-app" ref={containerRef}>
       <div className="catnap-canvas-wrapper">
         <canvas ref={canvasRef} className="catnap-canvas" />
         <div className="catnap-hud-overlay">
           <div className="catnap-hud">
-            <div className="scoreboard" aria-live="polite">
-              <div className="score-item">
-                <span className="label">Score</span>
-                <span className="value">{stats.score}</span>
+            <div className="catnap-hud-panel">
+              <div className="hud-metrics" aria-live="polite">
+                <div className="hud-metric primary">
+                  <span className="hud-metric-label">Score</span>
+                  <span className="hud-metric-value">{stats.score}</span>
+                </div>
+                <div className="hud-metric secondary">
+                  <span className="hud-metric-label">Best</span>
+                  <span className="hud-metric-value">{stats.best}</span>
+                </div>
+                <div className="hud-metric-group" role="group" aria-label="Bonus stats">
+                  <div className="hud-metric treats">
+                    <span className="hud-metric-label">Treats</span>
+                    <span className="hud-metric-value">{treats}</span>
+                  </div>
+                  <div className="hud-metric perfects">
+                    <span className="hud-metric-label">Perfect Leaps</span>
+                    <span className="hud-metric-value">{stats.perfects}</span>
+                  </div>
+                </div>
               </div>
-              <div className="score-item">
-                <span className="label">Best</span>
-                <span className="value">{stats.best}</span>
-              </div>
-              <div className="score-item treats">
-                <span className="label">Treats</span>
-                <span className="value">{treats}</span>
-              </div>
-              <div className="score-item">
-                <span className="label">Perfect Leaps</span>
-                <span className="value">{stats.perfects}</span>
+
+              <div className="hud-meter">
+                <div className="hud-meter-header">
+                  <div className="hud-meter-title" id={drowsinessLabelId}>
+                    <span className="hud-sleepy-icon" aria-hidden="true">😴</span>
+                    <span className="hud-meter-label">Drowsiness</span>
+                  </div>
+                  <span className="hud-meter-value" id={drowsinessValueId} aria-live="polite">
+                    {drowsinessPercent}%
+                  </span>
+                </div>
+                <div className={`mode-indicator ${kittenMode ? 'active' : ''}`} aria-live="polite">
+                  {kittenMode ? 'Kitten Mode · Cozy pacing' : 'Cat Mode · Classic challenge'}
+                </div>
+                <div
+                  className="meter-track"
+                  role="progressbar"
+                  aria-labelledby={drowsinessLabelId}
+                  aria-describedby={drowsinessValueId}
+                  aria-valuenow={drowsinessPercent}
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                >
+                  <div className="meter-fill" style={{ width: `${clamp(drowsiness, 0, 100)}%` }} />
+                </div>
+                {effects.length > 0 && (
+                  <ul className="active-effects">
+                    {effects.map((effect) => (
+                      <li key={effect}>{effect}</li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </div>
 
@@ -1282,32 +1323,6 @@ const CatNapLeapApp = () => {
                 </ul>
               </div>
             )}
-
-            <div className="drowsiness-meter" aria-label="Drowsiness meter">
-              <div className="meter-header">
-                <span>Drowsiness</span>
-                <span>{Math.round(drowsiness)}%</span>
-              </div>
-              <div className={`mode-indicator ${kittenMode ? 'active' : ''}`} aria-live="polite">
-                {kittenMode ? 'Kitten Mode · Cozy pacing' : 'Cat Mode · Classic challenge'}
-              </div>
-              <div
-                className="meter-track"
-                role="progressbar"
-                aria-valuenow={Math.round(drowsiness)}
-                aria-valuemin="0"
-                aria-valuemax="100"
-              >
-                <div className="meter-fill" style={{ width: `${clamp(drowsiness, 0, 100)}%` }} />
-              </div>
-              {effects.length > 0 && (
-                <ul className="active-effects">
-                  {effects.map((effect) => (
-                    <li key={effect}>{effect}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
           </div>
         </div>
         {phase !== 'playing' && (

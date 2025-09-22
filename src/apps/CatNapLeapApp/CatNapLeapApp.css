@@ -20,58 +20,96 @@
   z-index: 2;
 }
 
+
 .catnap-hud {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 0.75rem;
   align-items: stretch;
   width: 100%;
+  max-width: 420px;
 }
 
-.catnap-hud .scoreboard,
-.catnap-hud .start-boost-banner,
-.catnap-hud .drowsiness-meter {
+.catnap-hud-panel,
+.catnap-hud .start-boost-banner {
   pointer-events: auto;
 }
 
-.scoreboard {
-  flex: 1 1 320px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  background: rgba(255, 255, 255, 0.85);
-  border-radius: 16px;
-  padding: 0.75rem 1rem;
-  box-shadow: 0 12px 24px rgba(47, 42, 69, 0.08);
-  backdrop-filter: blur(8px);
-}
-
-.score-item {
+.catnap-hud-panel {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(246, 241, 255, 0.85));
+  border-radius: 20px;
+  padding: 1rem 1.3rem;
+  box-shadow: 0 18px 36px rgba(47, 42, 69, 0.12);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.hud-metrics {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+.hud-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  color: #2f2a45;
+}
+
+.hud-metric.primary .hud-metric-value {
+  font-size: 2.05rem;
+  line-height: 1.1;
+}
+
+.hud-metric.secondary {
+  align-self: flex-start;
+}
+
+.hud-metric.secondary .hud-metric-value {
+  font-size: 1.4rem;
+}
+
+.hud-metric-group {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 16px;
+  background: rgba(128, 111, 199, 0.12);
+}
+
+.hud-metric-group .hud-metric {
   gap: 0.2rem;
 }
 
-.score-item .label {
+.hud-metric-label {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: #746c9a;
 }
 
-.score-item .value {
+.hud-metric-value {
   font-size: 1.6rem;
   font-weight: 700;
   color: #2f2a45;
 }
 
-.score-item.treats .value {
+.hud-metric.treats .hud-metric-value {
   color: #f47c9c;
 }
 
+.hud-metric.perfects .hud-metric-value {
+  color: #6f5fb7;
+}
+
 .start-boost-banner {
-  flex: 1 1 100%;
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -105,23 +143,51 @@
   font-weight: 600;
 }
 
-.drowsiness-meter {
-  flex: 1 1 220px;
-  background: rgba(255, 255, 255, 0.85);
-  border-radius: 16px;
-  padding: 0.75rem 1rem;
-  box-shadow: 0 12px 24px rgba(47, 42, 69, 0.08);
+.hud-meter {
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  min-width: 220px;
 }
 
-.meter-header {
+.hud-meter-header {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
   font-weight: 600;
   color: #5b5185;
+}
+
+.hud-meter-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.hud-sleepy-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #ffe7ef, #fcd6e5);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  box-shadow: 0 6px 12px rgba(244, 124, 156, 0.25);
+}
+
+.hud-meter-label {
+  font-size: 0.95rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.hud-meter-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2f2a45;
+  min-width: 3ch;
+  text-align: right;
 }
 
 .mode-indicator {
@@ -185,6 +251,10 @@
   border-radius: 999px;
   background: rgba(140, 118, 200, 0.16);
   font-weight: 600;
+}
+
+.catnap-hud-overlay .active-effects {
+  margin-top: 0.1rem;
 }
 
 .catnap-canvas-wrapper {
@@ -543,17 +613,36 @@
   font-size: 0.85rem;
 }
 
+@media (min-width: 540px) {
+  .catnap-hud {
+    max-width: 460px;
+  }
+
+  .hud-metrics {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  }
+
+  .hud-metric.secondary {
+    align-self: stretch;
+    justify-content: center;
+  }
+}
+
 @media (max-width: 600px) {
   .catnap-app {
     gap: 1rem;
   }
 
-  .scoreboard {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .catnap-hud {
+    max-width: 100%;
   }
 
-  .drowsiness-meter {
-    min-width: unset;
+  .catnap-hud-panel {
+    padding: 0.9rem 1.1rem;
+  }
+
+  .hud-metric-group {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .overlay-card {
