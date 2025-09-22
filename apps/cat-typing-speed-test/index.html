@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cat Typing Speed Test</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell" aria-live="polite">
+      <header class="app-header">
+        <h1>Cat Typing Speed Test</h1>
+        <p>Warm up your paws and measure typing speed with Kimchi, Rythm, and Siella.</p>
+      </header>
+
+      <section class="card" id="start-screen">
+        <h2>Choose a test duration</h2>
+        <div class="duration-options" role="group" aria-label="Test duration">
+          <button type="button" class="duration-btn" data-duration="15">15 seconds</button>
+          <button type="button" class="duration-btn" data-duration="30">30 seconds</button>
+        </div>
+        <p class="start-hint">Each test pulls fresh sentences from the cat chronicles.</p>
+      </section>
+
+      <section class="card hidden" id="test-screen" aria-hidden="true">
+        <div class="test-meta">
+          <div class="timer" id="timer" aria-live="assertive">00:15</div>
+          <dl class="stat-line" aria-label="Live typing statistics">
+            <div>
+              <dt>WPM</dt>
+              <dd id="wpm">0</dd>
+            </div>
+            <div>
+              <dt>CPM</dt>
+              <dd id="cpm">0</dd>
+            </div>
+            <div>
+              <dt>Accuracy</dt>
+              <dd id="accuracy">100%</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="text-panel" id="text-display" aria-label="Typing passage"></div>
+
+        <label class="input-wrapper" for="typing-input">
+          <span class="label">Type the passage exactly as shown</span>
+          <textarea id="typing-input" rows="5" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="Start typing here when the timer begins..." aria-describedby="timer"></textarea>
+        </label>
+
+        <div class="actions">
+          <button type="button" class="secondary" id="restart-btn">↺ Restart</button>
+          <button type="button" class="ghost" id="back-btn">← Back to menu</button>
+        </div>
+      </section>
+
+      <section class="card hidden" id="results-screen" aria-hidden="true">
+        <h2>Your results</h2>
+        <div class="results-grid" role="presentation">
+          <div>
+            <span class="result-label">Words per minute</span>
+            <span class="result-value" id="final-wpm">0</span>
+          </div>
+          <div>
+            <span class="result-label">Characters per minute</span>
+            <span class="result-value" id="final-cpm">0</span>
+          </div>
+          <div>
+            <span class="result-label">Accuracy</span>
+            <span class="result-value" id="final-accuracy">0%</span>
+          </div>
+        </div>
+        <p class="results-note" id="results-note"></p>
+        <div class="actions">
+          <button type="button" class="primary" id="results-retry">Try again</button>
+          <button type="button" class="ghost" id="results-menu">Back to menu</button>
+        </div>
+      </section>
+    </main>
+
+    <script src="main.js" defer></script>
+  </body>
+</html>

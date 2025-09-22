@@ -26,4 +26,14 @@ describe('app registry', () => {
     expect(catpad.icon).toBe('😺');
     expect(catpad.path).toBe('/apps/catpad');
   });
+
+  it('registers the Cat Typing Speed Test metadata', () => {
+    const typingTest = getAppById('cat-typing-speed-test');
+
+    expect(typingTest).toBeTruthy();
+    expect(typingTest.title).toBe('Cat Typing Speed Test');
+    expect(typingTest.category).toBe('Education');
+    expect(typingTest.icon).toBe('⌨️');
+    expect(typingTest.path).toBe('/apps/cat-typing-speed-test');
+  });
 });

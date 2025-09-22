@@ -1,0 +1,89 @@
+.cat-typing-wrapper {
+  display: grid;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: linear-gradient(145deg, rgba(255, 248, 252, 0.75), rgba(230, 242, 255, 0.75));
+  border-radius: 1.25rem;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.18);
+}
+
+.cat-typing-intro p {
+  margin: 0;
+  color: #475569;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.cat-typing-frame {
+  width: 100%;
+  border: none;
+  min-height: 640px;
+  border-radius: 1rem;
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.35);
+  background: #fff;
+}
+
+.cat-typing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.cat-typing-link,
+.cat-typing-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.65rem 1.2rem;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cat-typing-link {
+  background: #ec4899;
+  color: #fff;
+  box-shadow: 0 12px 22px rgba(236, 72, 153, 0.35);
+}
+
+.cat-typing-link:hover,
+.cat-typing-link:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 28px rgba(236, 72, 153, 0.4);
+}
+
+.cat-typing-link:focus-visible,
+.cat-typing-back:focus-visible {
+  outline: 3px solid rgba(236, 72, 153, 0.45);
+  outline-offset: 3px;
+}
+
+.cat-typing-back {
+  border: none;
+  background: #fff;
+  color: #ec4899;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 2px rgba(236, 72, 153, 0.2);
+}
+
+.cat-typing-back:hover,
+.cat-typing-back:focus-visible {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 640px) {
+  .cat-typing-frame {
+    min-height: 520px;
+  }
+
+  .cat-typing-actions {
+    flex-direction: column;
+  }
+
+  .cat-typing-link,
+  .cat-typing-back {
+    justify-content: center;
+  }
+}
