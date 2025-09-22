@@ -55,6 +55,13 @@ module.exports = {
       patterns: (() => {
         const patterns = [
           { from: path.resolve(__dirname, 'public/hexa-snake'), to: 'hexa-snake' },
+          {
+            from: path.resolve(
+              __dirname,
+              'src/apps/CatConnectFourApp/public/cat-connect-four'
+            ),
+            to: 'cat-connect-four',
+          },
           { from: path.resolve(__dirname, 'apps/cat-typing-speed-test'), to: 'apps/cat-typing-speed-test' },
           { from: path.resolve(__dirname, 'apps/cosmos'), to: 'apps/cosmos' },
           { from: path.resolve(__dirname, 'apps/zen-go'), to: 'apps/zen-go' },
@@ -76,6 +83,9 @@ module.exports = {
       },
       {
         directory: path.join(__dirname, 'apps'),
+      },
+      {
+        directory: path.join(__dirname, 'src/apps/CatConnectFourApp/public'),
       },
     ],
     compress: true,

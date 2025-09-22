@@ -1,4 +1,11 @@
-import React, { Suspense, useCallback, useEffect, useMemo } from 'react';
+import React, {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import AppLauncher from './AppLauncher';
 import './AppContainer.css';
@@ -19,6 +26,8 @@ const AppContainer = () => {
   const navigate = useNavigate();
 
   const apps = useMemo(() => getAllApps(), []);
+  const [appLoadAttempt, setAppLoadAttempt] = useState(0);
+  const lastLoadedAppIdRef = useRef(null);
   const normalizedPath = useMemo(
     () => normalizePath(location.pathname),
     [location.pathname]
@@ -51,6 +60,18 @@ const AppContainer = () => {
     navigate('/');
   }, [navigate]);
 
+  useEffect(() => {
+    const activeAppId = activeApp ? activeApp.id : null;
+    if (lastLoadedAppIdRef.current !== activeAppId) {
+      lastLoadedAppIdRef.current = activeAppId;
+      setAppLoadAttempt(0);
+    }
+  }, [activeApp]);
+
+  const handleRetryLoad = useCallback(() => {
+    setAppLoadAttempt((attempt) => attempt + 1);
+  }, []);
+
   const renderActiveApp = () => {
     if (!activeApp) {
       return null;
@@ -75,13 +96,18 @@ const AppContainer = () => {
       );
     }
 
-    const attemptKey = `${currentApp.id}-${appLoadAttempt}`;
+    const attemptKey = `${activeApp.id}-${appLoadAttempt}`;
 
     return (
-      <LazyAppComponent
+      <AppErrorBoundary
         key={attemptKey}
         onBack={handleBackToLauncher}
-      />
+        onRetry={handleRetryLoad}
+      >
+        <LazyAppComponent
+          onBack={handleBackToLauncher}
+        />
+      </AppErrorBoundary>
     );
   };
 
