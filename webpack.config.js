@@ -23,6 +23,26 @@ const cacheLabDir = path.resolve(__dirname, 'src/apps/cache-lab');
 const cacheLabWorkspaceDir = path.resolve(__dirname, 'apps/cache-lab');
 const relocatedSubAppDirs = [cacheLabDir, cacheLabWorkspaceDir];
 
+const resolveFirstExistingPath = (relativePaths) => {
+  for (const relativePath of relativePaths) {
+    const candidate = path.resolve(__dirname, relativePath);
+
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+
+  return null;
+};
+
+const addCopyPattern = (patterns, relativePaths, to) => {
+  const existingPath = resolveFirstExistingPath(relativePaths);
+
+  if (existingPath) {
+    patterns.push({ from: existingPath, to });
+  }
+};
+
 module.exports = {
   entry: './src/index.js',
   output: {
@@ -58,19 +78,21 @@ module.exports = {
     }),
     new CopyWebpackPlugin({
       patterns: (() => {
-        const patterns = [
-          { from: path.resolve(__dirname, 'public/hexa-snake'), to: 'hexa-snake' },
-          {
-            from: path.resolve(
-              __dirname,
-              'src/apps/CatConnectFourApp/public/cat-connect-four'
-            ),
-            to: 'cat-connect-four',
-          },
-          { from: path.resolve(__dirname, 'apps/cat-typing-speed-test'), to: 'apps/cat-typing-speed-test' },
-          { from: path.resolve(__dirname, 'apps/cosmos'), to: 'apps/cosmos' },
-          { from: path.resolve(__dirname, 'apps/zen-go'), to: 'apps/zen-go' },
-        ];
+        const patterns = [];
+
+        addCopyPattern(patterns, ['public/hexa-snake', 'src/apps/hexa-snake'], 'hexa-snake');
+        addCopyPattern(
+          patterns,
+          ['src/apps/CatConnectFourApp/public/cat-connect-four'],
+          'cat-connect-four'
+        );
+        addCopyPattern(
+          patterns,
+          ['apps/cat-typing-speed-test', 'src/apps/cat-typing-speed-test'],
+          'apps/cat-typing-speed-test'
+        );
+        addCopyPattern(patterns, ['apps/cosmos', 'src/apps/cosmos'], 'apps/cosmos');
+        addCopyPattern(patterns, ['apps/zen-go', 'src/apps/zen-go'], 'apps/zen-go');
 
         const cacheLabSource = path.resolve(__dirname, 'src/apps/cache-lab/dist');
         if (fs.existsSync(cacheLabSource)) {
