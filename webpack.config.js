@@ -82,7 +82,12 @@ module.exports = {
         directory: path.join(__dirname, 'public'),
       },
       {
-        directory: path.join(__dirname, 'apps'),
+        directory: path.join(__dirname, 'src/apps'),
+        publicPath: '/apps',
+      },
+      {
+        directory: path.join(__dirname, 'src/apps/hexa-snake'),
+        publicPath: '/hexa-snake',
       },
       {
         directory: path.join(__dirname, 'src/apps/CatConnectFourApp/public'),
