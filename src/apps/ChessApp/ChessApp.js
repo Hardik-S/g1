@@ -12,7 +12,7 @@ const CHESSBOARD_SCRIPT_URL =
   'https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js';
 const CHESS_RULES_SCRIPT_URL =
   'https://cdn.jsdelivr.net/npm/chess.js@0.13.4/chess.min.js';
-const STOCKFISH_SCRIPT_URL =
+const STOCKFISH_WORKER_URL =
   'https://cdn.jsdelivr.net/npm/stockfish@16.0.0/src/stockfish-nnue-16.js';
 
 const resourcePromises = new Map();
@@ -136,7 +136,6 @@ function loadChessResources() {
     loadStylesheet('chessboard-style', CHESSBOARD_STYLE_URL),
     loadScript('chessboard-script', CHESSBOARD_SCRIPT_URL),
     loadScript('chess-rules-script', CHESS_RULES_SCRIPT_URL),
-    loadScript('stockfish-script', STOCKFISH_SCRIPT_URL),
   ]);
 }
 
@@ -220,11 +219,11 @@ const ChessApp = () => {
     setStatusInfo(describeStatus(manager.game));
   }, []);
 
-  const ensureEngine = useCallback(() => {
+  const ensureEngine = useCallback((options = {}) => {
     if (engineRef.current) {
       return engineRef.current;
     }
-    const engineInstance = new StockfishEngine();
+    const engineInstance = new StockfishEngine(options);
     engineRef.current = engineInstance;
     return engineInstance;
   }, []);
@@ -242,7 +241,7 @@ const ChessApp = () => {
     const requestId = ++engineRequestIdRef.current;
 
     try {
-      const engine = ensureEngine();
+      const engine = ensureEngine({ workerUrl: STOCKFISH_WORKER_URL });
       const fen = manager.getFen();
       const move = await engine.requestMove(fen);
 
@@ -316,7 +315,7 @@ const ChessApp = () => {
     }
 
     if (mode === 'single') {
-      const engine = ensureEngine();
+      const engine = ensureEngine({ workerUrl: STOCKFISH_WORKER_URL });
       engine.setSkillLevel(skill);
       manager.setPlayers({ white: 'human', black: 'engine' });
       triggerEngineMoveRef.current();
@@ -338,7 +337,7 @@ const ChessApp = () => {
       return;
     }
 
-    const engine = ensureEngine();
+    const engine = ensureEngine({ workerUrl: STOCKFISH_WORKER_URL });
     engine.setSkillLevel(skill);
   }, [mode, resourcesReady, skill, ensureEngine]);
 
@@ -369,7 +368,7 @@ const ChessApp = () => {
 
     manager.reset();
     if (mode === 'single') {
-      const engineInstance = ensureEngine();
+      const engineInstance = ensureEngine({ workerUrl: STOCKFISH_WORKER_URL });
       engineInstance.setSkillLevel(skill);
       manager.setPlayers({ white: 'human', black: 'engine' });
       triggerEngineMoveRef.current();
