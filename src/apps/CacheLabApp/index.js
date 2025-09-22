@@ -1,9 +1,18 @@
 import React from 'react';
 import './styles.css';
 
-const CacheLabApp = ({ onBack }) => {
+const resolveCacheLabUrl = () => {
+  if (process.env.NODE_ENV === 'development') {
+    return process.env.CACHE_LAB_DEV_URL || 'http://localhost:4173/';
+  }
+
   const base = process.env.PUBLIC_URL || '';
-  const embeddedUrl = `${base}/cache-lab/`;
+  const normalizedBase = base.endsWith('/') ? base.slice(0, -1) : base;
+  return `${normalizedBase}/cache-lab/`;
+};
+
+const CacheLabApp = ({ onBack }) => {
+  const embeddedUrl = resolveCacheLabUrl();
 
   return (
     <div className="cache-lab-embed">
