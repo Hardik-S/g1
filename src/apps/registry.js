@@ -236,6 +236,19 @@ export const APP_REGISTRY = {
     created: '2024-07-01',
     featured: true
   }),
+  'quantum-playground': withDefaults({
+    id: 'quantum-playground',
+    title: 'Quantum Playground',
+    description: 'Design circuits, run a 4-qubit simulator, and visualize state-vector measurements.',
+    icon: '🧬',
+    category: 'Education',
+    component: null,
+    loader: () => import('./quantum-playground'),
+    path: '/apps/quantum-playground',
+    tags: ['quantum', 'simulator', 'visualization', 'education'],
+    created: '2024-12-01',
+    featured: true,
+  }),
   'app-3': withDefaults({
     id: 'app-3',
     title: 'Coming Soon',
