@@ -72,12 +72,6 @@ Sudoku Roast brings a cozy café vibe to the classic logic puzzle with parchment
 - Offer colourblind-friendly palettes and alternate fonts for improved readability.
 - Publish a daily featured puzzle with shareable completion cards.
 
-## Chessboard Summit
-Chessboard Summit bundles a draggable board, polished status panel, and optional Stockfish sparring partner into the launcher. It dynamically loads Chessboard.js, Chess.js, and Stockfish from CDNs so the experience stays lightweight while remaining fully featured for casual study sessions or friendly matches.
-- Add move history with PGN export for study or sharing.
-- Surface clocks and increment options to support blitz and rapid play.
-- Explore online multiplayer via WebRTC or WebSockets for remote matches.
-
 ## Zen Go
 Zen Go invites quick 9×9 sparring against a lightweight GNU Go engine compiled to WebAssembly. WGo.js renders captures, ko, and coordinates while a Web Worker streams moves based on kyu/dan difficulty presets, handicap setups, and ELO guidance.
 - Expand support to 13×13 and 19×19 boards while keeping load times in check.
