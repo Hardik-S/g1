@@ -3,8 +3,8 @@ import '../../../css/chess.css';
 import BoardManagerModule from '../../../js/boardManager';
 import StockfishEngineModule from '../../../js/stockfishEngine';
 
-const BoardManager = BoardManagerModule.default || BoardManagerModule;
-const StockfishEngine = StockfishEngineModule.default || StockfishEngineModule;
+const BoardManager = BoardManagerModule?.default ?? BoardManagerModule;
+const StockfishEngine = StockfishEngineModule?.default ?? StockfishEngineModule;
 
 const CHESSBOARD_STYLE_URL =
   'https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css';
