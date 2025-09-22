@@ -145,7 +145,10 @@ export function simulateCache(
     amat,
   };
 
-  const perAccess = internal.perAccess.map((item) => ({ ...item, missType: undefined }));
+  const perAccess: CacheSimulationResult['perAccess'] = internal.perAccess.map((item) => ({
+    ...item,
+    missType: undefined,
+  }));
 
   if (options.classifyMisses) {
     const classification = classifyMisses(trace, config);

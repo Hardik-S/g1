@@ -2,11 +2,11 @@ import { useEffect, useMemo } from 'react';
 import styles from './ModuleCard.module.css';
 import { useCacheLabStore } from '../state/useCacheLabStore';
 import { simulateCache } from '../lib/cacheSimulator';
-import { CacheConfig, ReplacementPolicy } from '../lib/types';
+import { Access, CacheConfig, ReplacementPolicy } from '../lib/types';
 
 const policies: ReplacementPolicy[] = ['LRU', 'FIFO', 'Random'];
 
-function runPolicy(config: CacheConfig, policy: ReplacementPolicy, accesses = config ? [] : []) {
+function runPolicy(config: CacheConfig, policy: ReplacementPolicy, accesses: Access[] = []) {
   const nextConfig = { ...config, replacementPolicy: policy } as CacheConfig;
   return simulateCache(accesses, nextConfig, { trackSets: true });
 }
