@@ -482,8 +482,14 @@ const CatConnectFourApp = () => {
     </div>
   );
 
+  const publicUrl = (process.env.PUBLIC_URL || '').replace(/\/$/, '');
+  const backgroundImagePath = `${publicUrl}/cat-connect-four/cat-cafe-illustration.svg`;
+
   return (
-    <div className="cat-connect-four-app">
+    <div
+      className="cat-connect-four-app"
+      style={{ backgroundImage: `url(${backgroundImagePath})` }}
+    >
       <div className="cafe-overlay" />
       <div className="app-shell">
         <header className="app-header">

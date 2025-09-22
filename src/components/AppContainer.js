@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import AppLauncher from './AppLauncher';
 import './AppContainer.css';
 import { getAllApps, getAppLoader } from '../apps/registry';
+import AppErrorBoundary from './AppErrorBoundary';
 
 const normalizePath = (path) => {
   if (!path) {
@@ -27,6 +28,7 @@ const AppContainer = () => {
     if (normalizedPath === '/') {
       return null;
     }
+
 
     return apps.find((app) => normalizePath(app.path) === normalizedPath) || null;
   }, [apps, normalizedPath]);
@@ -73,7 +75,14 @@ const AppContainer = () => {
       );
     }
 
-    return <LazyAppComponent onBack={handleBackToLauncher} />;
+    const attemptKey = `${currentApp.id}-${appLoadAttempt}`;
+
+    return (
+      <LazyAppComponent
+        key={attemptKey}
+        onBack={handleBackToLauncher}
+      />
+    );
   };
 
   return (
