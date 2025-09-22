@@ -1,32 +1,21 @@
 import React from 'react';
 
 const DEFAULT_AUTHOR = 'Hardik-s';
-const VERSION_RANGE = {
-  min: { major: 1, minor: 1, patch: 0 },
-  max: { major: 7, minor: 8, patch: 5 },
+const VERSION_CONSTRAINTS = {
+  majors: [1, 2, 3, 4, 5],
+  minorPrefixes: [0, 1],
+  minorSuffixes: [2, 3, 4, 5, 6, 7, 8],
+  patch: '00',
 };
 
-const versionToNumber = ({ major, minor, patch }) => (major * 10000) + (minor * 100) + patch;
-
-const numberToVersion = (value) => {
-  const major = Math.floor(value / 10000);
-  const minor = Math.floor((value % 10000) / 100);
-  const patch = value % 100;
-  return `${major}.${minor}.${patch}`;
-};
-
-const MIN_VERSION_VALUE = versionToNumber(VERSION_RANGE.min);
-const MAX_VERSION_VALUE = versionToNumber(VERSION_RANGE.max);
+const pickRandom = (values) => values[Math.floor(Math.random() * values.length)];
 
 const generateRandomVersion = () => {
-  const availableRange = MAX_VERSION_VALUE - MIN_VERSION_VALUE - 1;
-
-  if (availableRange <= 0) {
-    throw new Error('Version range must contain at least one valid version');
-  }
-
-  const randomValue = Math.floor(Math.random() * availableRange) + MIN_VERSION_VALUE + 1;
-  return numberToVersion(randomValue);
+  const major = pickRandom(VERSION_CONSTRAINTS.majors);
+  const minorPrefix = pickRandom(VERSION_CONSTRAINTS.minorPrefixes);
+  const minorSuffix = pickRandom(VERSION_CONSTRAINTS.minorSuffixes);
+  const minor = `${minorPrefix}${minorSuffix}`;
+  return `${major}.${minor}.${VERSION_CONSTRAINTS.patch}`;
 };
 
 const withDefaults = (app) => ({

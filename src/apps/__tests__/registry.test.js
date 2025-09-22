@@ -39,6 +39,14 @@ describe('app registry', () => {
     expect(typingTest.path).toBe('/apps/cat-typing-speed-test');
   });
 
+  it('assigns default versions that match the x.yz.dd format', () => {
+    const versionPattern = /^[1-5]\.(?:0[2-8]|1[2-8])\.00$/;
+
+    getAllApps().forEach((app) => {
+      expect(app.version).toMatch(versionPattern);
+    });
+  });
+
 });
 
 describe('getAppLoader', () => {
