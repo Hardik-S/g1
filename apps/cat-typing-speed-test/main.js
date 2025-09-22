@@ -19,6 +19,26 @@
 
   const durationButtons = Array.from(document.querySelectorAll('.duration-btn'));
 
+  const loginForm = document.getElementById('login-form');
+  const aliasInput = document.getElementById('alias-input');
+  const gistIdInput = document.getElementById('gist-id-input');
+  const tokenInput = document.getElementById('token-input');
+  const loginButton = document.getElementById('login-button');
+  const logoutButton = document.getElementById('logout-button');
+  const loginStatus = document.getElementById('login-status');
+  const aliasDisplayRow = document.getElementById('alias-display');
+  const currentAliasEl = document.getElementById('current-alias');
+  const historyEmpty = document.getElementById('history-empty');
+  const historyTable = document.getElementById('history-table');
+  const historyRows = document.getElementById('history-rows');
+  const startHint = document.getElementById('start-hint');
+
+  const GIST_FILENAME = 'cat-typing-speed-test.json';
+  const STORAGE_KEY = 'catTypingSettings';
+  const SESSION_TOKEN_KEY = 'catTypingSessionToken';
+
+  const defaultStartHint = startHint ? startHint.textContent : '';
+
   let corpusCache = null;
   let corpusPromise = null;
   let countdownSeconds = 0;
@@ -29,6 +49,368 @@
   let charSpans = [];
   let correctChars = 0;
   let typedChars = 0;
+
+  let gistStore = {};
+  let currentAlias = '';
+  let gistId = '';
+  let gistToken = '';
+  let syncInFlight = false;
+  let syncPending = false;
+
+  const loadStoredSettings = () => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return {};
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (error) {
+      console.warn('Unable to parse stored Cat Typing settings.', error);
+      return {};
+    }
+  };
+
+  const persistLocalSettings = (aliasValue, gistValue) => {
+    try {
+      const payload = { alias: aliasValue || '', gistId: gistValue || '' };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    } catch (error) {
+      console.warn('Unable to persist Cat Typing settings.', error);
+    }
+  };
+
+  const getSessionToken = () => {
+    try {
+      return sessionStorage.getItem(SESSION_TOKEN_KEY) || '';
+    } catch (error) {
+      console.warn('Session storage unavailable.', error);
+      return '';
+    }
+  };
+
+  const setSessionToken = (value) => {
+    try {
+      if (value) {
+        sessionStorage.setItem(SESSION_TOKEN_KEY, value);
+      } else {
+        sessionStorage.removeItem(SESSION_TOKEN_KEY);
+      }
+    } catch (error) {
+      console.warn('Unable to persist session token.', error);
+    }
+  };
+
+  const setLoginStatus = (message, tone = 'info') => {
+    if (!loginStatus) return;
+    loginStatus.textContent = message;
+    loginStatus.dataset.tone = tone;
+  };
+
+  const updateAliasBadge = () => {
+    if (!aliasDisplayRow || !currentAliasEl) return;
+    if (currentAlias) {
+      currentAliasEl.textContent = currentAlias;
+      aliasDisplayRow.hidden = false;
+    } else {
+      currentAliasEl.textContent = '';
+      aliasDisplayRow.hidden = true;
+    }
+  };
+
+  const updateStartHint = (loggedIn) => {
+    if (!startHint) return;
+    if (loggedIn) {
+      startHint.textContent = defaultStartHint;
+    } else {
+      startHint.textContent = 'Log in above to sync your scores to GitHub. You can still practice without signing in.';
+    }
+  };
+
+  const setLoginState = (loggedIn) => {
+    if (logoutButton) {
+      logoutButton.disabled = !loggedIn;
+    }
+    updateStartHint(loggedIn);
+  };
+
+  const ensureAliasHistory = () => {
+    if (!gistStore || typeof gistStore !== 'object') {
+      gistStore = {};
+    }
+    if (!currentAlias) {
+      return [];
+    }
+    if (!Array.isArray(gistStore[currentAlias])) {
+      gistStore[currentAlias] = [];
+    }
+    return gistStore[currentAlias];
+  };
+
+  const renderScoreHistory = () => {
+    if (!historyTable || !historyRows || !historyEmpty) return;
+    historyRows.innerHTML = '';
+
+    if (!currentAlias) {
+      historyTable.classList.add('hidden');
+      historyEmpty.classList.remove('hidden');
+      historyEmpty.textContent = 'Log in to view saved scores.';
+      return;
+    }
+
+    const history = ensureAliasHistory()
+      .slice()
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    if (!history.length) {
+      historyTable.classList.add('hidden');
+      historyEmpty.classList.remove('hidden');
+      historyEmpty.textContent = 'No scores yet — finish a test to record your first run.';
+      return;
+    }
+
+    historyEmpty.classList.add('hidden');
+    historyTable.classList.remove('hidden');
+
+    const formatter = new Intl.DateTimeFormat(undefined, {
+      dateStyle: 'short',
+      timeStyle: 'short',
+    });
+
+    history.forEach((entry) => {
+      const row = document.createElement('tr');
+
+      const dateCell = document.createElement('td');
+      const entryDate = entry && entry.date ? new Date(entry.date) : null;
+      dateCell.textContent = entryDate && !Number.isNaN(entryDate.getTime())
+        ? formatter.format(entryDate)
+        : 'Unknown';
+      row.appendChild(dateCell);
+
+      const durationCell = document.createElement('td');
+      const durationValue = Number(entry && entry.duration);
+      durationCell.textContent = Number.isFinite(durationValue) ? `${durationValue}s` : '—';
+      row.appendChild(durationCell);
+
+      const wpmCell = document.createElement('td');
+      const wpmValue = Number(entry && entry.wpm);
+      wpmCell.textContent = Number.isFinite(wpmValue) ? wpmValue.toFixed(1) : '0.0';
+      row.appendChild(wpmCell);
+
+      const accuracyCell = document.createElement('td');
+      const accuracyValue = Number(entry && entry.accuracy);
+      accuracyCell.textContent = Number.isFinite(accuracyValue)
+        ? `${accuracyValue.toFixed(1)}%`
+        : '0.0%';
+      row.appendChild(accuracyCell);
+
+      historyRows.appendChild(row);
+    });
+  };
+
+  const fetchGistFromGitHub = async () => {
+    if (!gistId || !gistToken) {
+      throw new Error('Missing GitHub configuration.');
+    }
+
+    // GitHub API: Fetch the gist that stores typing score history for all aliases.
+    const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+      headers: {
+        Accept: 'application/vnd.github+json',
+        Authorization: `token ${gistToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        gistStore = {};
+        throw new Error('GitHub gist not found. Double-check the ID.');
+      }
+      throw new Error(`GitHub API error (${response.status}).`);
+    }
+
+    const payload = await response.json();
+    const file = payload.files && payload.files[GIST_FILENAME];
+
+    if (file && typeof file.content === 'string') {
+      try {
+        const parsed = JSON.parse(file.content);
+        gistStore = parsed && typeof parsed === 'object' ? parsed : {};
+      } catch (error) {
+        console.warn('Gist content is not valid JSON. Starting with an empty history.', error);
+        gistStore = {};
+      }
+    } else {
+      gistStore = {};
+    }
+
+    ensureAliasHistory();
+  };
+
+  const syncGist = async () => {
+    if (!gistId || !gistToken) {
+      throw new Error('Missing GitHub credentials for syncing.');
+    }
+
+    const body = JSON.stringify({
+      files: {
+        [GIST_FILENAME]: {
+          content: JSON.stringify(gistStore, null, 2),
+        },
+      },
+    });
+
+    // GitHub API: Persist the updated score history to the configured gist file.
+    const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+      method: 'PATCH',
+      headers: {
+        Accept: 'application/vnd.github+json',
+        Authorization: `token ${gistToken}`,
+        'Content-Type': 'application/json',
+      },
+      body,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to sync with GitHub (${response.status}).`);
+    }
+
+    await response.json().catch(() => null);
+  };
+
+  const queueSync = () => {
+    if (!currentAlias || !gistId || !gistToken) return;
+
+    if (syncInFlight) {
+      syncPending = true;
+      return;
+    }
+
+    syncInFlight = true;
+    setLoginStatus('Saving score to GitHub…');
+
+    syncGist()
+      .then(() => {
+        setLoginStatus('Score synced to GitHub.', 'success');
+      })
+      .catch((error) => {
+        console.error(error);
+        setLoginStatus(error.message || 'Unable to sync with GitHub.', 'error');
+      })
+      .finally(() => {
+        syncInFlight = false;
+        if (syncPending) {
+          syncPending = false;
+          queueSync();
+        }
+      });
+  };
+
+  const persistResult = (result) => {
+    if (!currentAlias) {
+      setLoginStatus('Result not saved — log in to store your history.', 'error');
+      return;
+    }
+
+    const history = ensureAliasHistory();
+    history.push(result);
+    history.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    if (history.length > 50) {
+      history.length = 50;
+    }
+
+    renderScoreHistory();
+    queueSync();
+  };
+
+  const applyInputWidth = () => {
+    if (!typingInput || !textDisplay) return;
+    const width = textDisplay.getBoundingClientRect().width;
+    if (width > 0) {
+      typingInput.style.width = `${width}px`;
+    }
+  };
+
+  const observeTextPanel = () => {
+    if (!textDisplay) return;
+    if (typeof ResizeObserver !== 'undefined') {
+      const observer = new ResizeObserver(() => {
+        applyInputWidth();
+      });
+      observer.observe(textDisplay);
+    } else {
+      window.addEventListener('resize', applyInputWidth);
+    }
+  };
+
+  const handleLogin = async (isAuto = false) => {
+    if (!loginForm) return;
+
+    const aliasValue = aliasInput ? aliasInput.value.trim() : '';
+    const gistValue = gistIdInput ? gistIdInput.value.trim() : '';
+    const tokenValue = (tokenInput ? tokenInput.value.trim() : '') || getSessionToken();
+
+    if (!aliasValue) {
+      setLoginStatus('Enter an alias to continue.', 'error');
+      return;
+    }
+    if (!gistValue) {
+      setLoginStatus('Add the GitHub gist ID to store your scores.', 'error');
+      return;
+    }
+    if (!tokenValue) {
+      setLoginStatus('Provide a GitHub personal access token with gist access.', 'error');
+      return;
+    }
+
+    if (loginButton) {
+      loginButton.disabled = true;
+    }
+    setLoginStatus('Loading score history…');
+
+    currentAlias = aliasValue;
+    gistId = gistValue;
+    gistToken = tokenValue;
+
+    try {
+      await fetchGistFromGitHub();
+      persistLocalSettings(aliasValue, gistValue);
+      setSessionToken(tokenValue);
+      setLoginState(true);
+      updateAliasBadge();
+      renderScoreHistory();
+      setLoginStatus(`Signed in as ${aliasValue}.`, 'success');
+    } catch (error) {
+      console.error(error);
+      gistStore = {};
+      currentAlias = '';
+      gistToken = '';
+      setSessionToken('');
+      setLoginState(false);
+      updateAliasBadge();
+      renderScoreHistory();
+      setLoginStatus(error.message || 'Login failed.', 'error');
+      if (!isAuto && tokenInput) {
+        tokenInput.focus();
+      }
+    } finally {
+      if (loginButton) {
+        loginButton.disabled = false;
+      }
+    }
+  };
+
+  const handleLogout = () => {
+    persistLocalSettings(aliasInput ? aliasInput.value.trim() : '', gistIdInput ? gistIdInput.value.trim() : '');
+    setSessionToken('');
+    gistStore = {};
+    currentAlias = '';
+    gistToken = '';
+    syncInFlight = false;
+    syncPending = false;
+    setLoginState(false);
+    updateAliasBadge();
+    renderScoreHistory();
+    setLoginStatus('Signed out. Enter your details to sync scores again.');
+  };
 
   const formatTime = (seconds) => {
     const safeSeconds = Math.max(0, Math.floor(seconds));
@@ -188,26 +570,36 @@
     const elapsedSeconds = Math.max((performance.now() - startTimestamp) / 1000, 0.1);
     const minutes = elapsedSeconds / 60;
     const words = correctChars / 5;
-    const cpm = (correctChars / elapsedSeconds) * 60;
-    const accuracy = typedChars === 0 ? 0 : (correctChars / typedChars) * 100;
+    const wpmValue = minutes > 0 ? words / minutes : 0;
+    const cpmValue = elapsedSeconds > 0 ? (correctChars / elapsedSeconds) * 60 : 0;
+    const accuracyValue = typedChars === 0 ? 0 : (correctChars / typedChars) * 100;
 
-    finalWpm.textContent = (words / minutes || 0).toFixed(1);
-    finalCpm.textContent = (cpm || 0).toFixed(0);
-    finalAccuracy.textContent = `${Math.max(0, Math.min(100, accuracy)).toFixed(1)}%`;
+    finalWpm.textContent = wpmValue.toFixed(1);
+    finalCpm.textContent = Math.round(cpmValue || 0).toString();
+    finalAccuracy.textContent = `${Math.max(0, Math.min(100, accuracyValue)).toFixed(1)}%`;
 
     const summary = reason === 'completed'
       ? 'Purrfect focus! You finished the story before the timer ran out.'
       : "Time's up! Scroll back for another lap with the cats.";
     resultsNote.textContent = summary;
 
+    persistResult({
+      date: new Date().toISOString(),
+      duration: Number.isFinite(testDuration) ? Number(testDuration) : 0,
+      wpm: Number.isFinite(wpmValue) ? Number(wpmValue.toFixed(1)) : 0,
+      accuracy: Number.isFinite(accuracyValue) ? Number(Math.max(0, Math.min(100, accuracyValue)).toFixed(1)) : 0,
+    });
+
     setScreen(resultsScreen);
     resultsRetry.focus();
+    startTimestamp = null;
   };
 
   const resetTestState = () => {
     stopTimer();
     typingInput.value = '';
     typingInput.disabled = false;
+    typingInput.style.width = '';
     startTimestamp = null;
     targetText = '';
     charSpans = [];
@@ -225,17 +617,20 @@
       resetStats();
       typingInput.value = '';
       typingInput.disabled = false;
-      typingInput.focus();
 
       countdownSeconds = testDuration;
       updateHighlights('');
       timerEl.textContent = formatTime(countdownSeconds);
 
       setScreen(testScreen);
+      requestAnimationFrame(() => {
+        typingInput.focus();
+        typingInput.setSelectionRange(typingInput.value.length, typingInput.value.length);
+        applyInputWidth();
+      });
+
       startTimestamp = performance.now();
       setupTimer();
-
-      // Align timer display immediately.
       timerEl.textContent = formatTime(countdownSeconds);
     } catch (error) {
       resetTestState();
@@ -254,6 +649,17 @@
       finishTest('completed');
     }
   };
+
+  if (loginForm) {
+    loginForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      handleLogin();
+    });
+  }
+
+  if (logoutButton) {
+    logoutButton.addEventListener('click', handleLogout);
+  }
 
   durationButtons.forEach((button) => {
     button.addEventListener('click', () => {
@@ -291,6 +697,29 @@
     resetTestState();
     setScreen(startScreen);
   });
+
+  observeTextPanel();
+
+  const storedSettings = loadStoredSettings();
+  if (aliasInput && storedSettings.alias) {
+    aliasInput.value = storedSettings.alias;
+  }
+  if (gistIdInput && storedSettings.gistId) {
+    gistIdInput.value = storedSettings.gistId;
+  }
+  const sessionToken = getSessionToken();
+  if (tokenInput && sessionToken) {
+    tokenInput.value = sessionToken;
+  }
+
+  updateAliasBadge();
+  setLoginState(false);
+  renderScoreHistory();
+  setLoginStatus('Log in with your alias to start tracking scores.');
+
+  if (sessionToken && storedSettings.alias && storedSettings.gistId) {
+    handleLogin(true);
+  }
 
   setScreen(startScreen);
 

@@ -46,6 +46,130 @@ body {
   font-size: 1.05rem;
 }
 
+.alias-display {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.alias-display span {
+  font-weight: 600;
+  color: var(--accent-dark);
+}
+
+.login-card {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.login-intro {
+  margin: 0;
+  color: var(--muted);
+}
+
+.login-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.field span {
+  font-weight: 600;
+}
+
+.login-grid input {
+  border-radius: 0.85rem;
+  border: 2px solid rgba(236, 72, 153, 0.18);
+  background: rgba(255, 255, 255, 0.85);
+  padding: 0.8rem 1rem;
+  font-size: 1rem;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-grid input:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.25);
+  outline: none;
+}
+
+.login-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.login-actions button {
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 0.9rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-actions button:focus-visible {
+  outline: 3px solid rgba(236, 72, 153, 0.45);
+  outline-offset: 3px;
+}
+
+.login-submit {
+  background: var(--accent);
+  color: #fff;
+}
+
+.login-submit:hover,
+.login-submit:focus-visible {
+  background: var(--accent-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(236, 72, 153, 0.25);
+}
+
+.login-logout {
+  background: transparent;
+  border: 2px solid rgba(107, 114, 128, 0.35);
+  color: var(--muted);
+}
+
+.login-logout:hover,
+.login-logout:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+}
+
+.login-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+  transform: none;
+}
+
+.login-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.status-message {
+  margin: 0;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.status-message[data-tone='success'] {
+  color: var(--success);
+}
+
+.status-message[data-tone='error'] {
+  color: var(--error);
+}
+
 .card {
   background: rgba(255, 255, 255, 0.92);
   border-radius: 1.5rem;
@@ -84,6 +208,13 @@ body {
   background: var(--accent-dark);
   transform: translateY(-2px);
   box-shadow: 0 10px 24px rgba(236, 72, 153, 0.35);
+}
+
+.duration-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .duration-btn:focus-visible {
@@ -185,6 +316,7 @@ body {
 
 textarea {
   width: 100%;
+  max-width: 100%;
   border-radius: 1rem;
   border: 2px solid transparent;
   padding: 1rem 1.1rem;
@@ -193,6 +325,7 @@ textarea {
   resize: vertical;
   min-height: 140px;
   transition: border 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
 }
 
 textarea:focus-visible {
@@ -281,6 +414,47 @@ textarea:disabled {
   color: var(--muted);
 }
 
+.score-history {
+  border-top: 1px solid rgba(209, 213, 219, 0.6);
+  padding-top: 1.25rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.score-history h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.history-empty {
+  margin: 0;
+  color: var(--muted);
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.25);
+}
+
+.history-table th,
+.history-table td {
+  text-align: left;
+  padding: 0.65rem 0.9rem;
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.history-table thead {
+  background: rgba(236, 72, 153, 0.08);
+}
+
+.history-table tbody tr:nth-child(even) {
+  background: rgba(15, 23, 42, 0.04);
+}
+
 @media (max-width: 640px) {
   .card {
     padding: 1.75rem;
@@ -297,6 +471,18 @@ textarea:disabled {
   }
 
   .actions button {
+    flex: 1;
+  }
+
+  .login-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .login-actions {
+    justify-content: stretch;
+  }
+
+  .login-actions button {
     flex: 1;
   }
 }
