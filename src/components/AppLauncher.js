@@ -152,15 +152,28 @@ const AppLauncher = () => {
 
   const allApps = useMemo(() => getAllApps(), []);
 
-  const filteredApps = useMemo(() => allApps
-    .filter((app) => {
-      const matchesCategory = selectedCategory === 'All' || app.category === selectedCategory;
-      const matchesSearch = app.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         app.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         app.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-      return matchesCategory && matchesSearch && !app.disabled;
-    })
-    .sort((a, b) => a.title.localeCompare(b.title)), [allApps, selectedCategory, searchQuery]);
+  const filteredApps = useMemo(() => {
+    const favoriteSet = new Set(favoriteIds);
+    return allApps
+      .filter((app) => {
+        const matchesCategory = selectedCategory === 'All' || app.category === selectedCategory;
+        const matchesSearch = app.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           app.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           app.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+        return matchesCategory && matchesSearch && !app.disabled;
+      })
+      .sort((a, b) => {
+        const aFavorited = favoriteSet.has(a.id);
+        const bFavorited = favoriteSet.has(b.id);
+        if (aFavorited && !bFavorited) {
+          return -1;
+        }
+        if (!aFavorited && bFavorited) {
+          return 1;
+        }
+        return a.title.localeCompare(b.title);
+      });
+  }, [allApps, favoriteIds, searchQuery, selectedCategory]);
 
   const featuredApps = useMemo(() => allApps
     .filter((app) => app.featured && !app.disabled)
