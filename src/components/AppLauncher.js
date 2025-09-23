@@ -290,10 +290,34 @@ const AppLauncher = () => {
     });
   };
 
-  const handleAppClick = (app) => {
-    if (app.disabled) return;
+  const handleAppClick = useCallback((app) => {
+    if (!app || app.disabled) {
+      return;
+    }
     navigate(app.path);
-  };
+  }, [navigate]);
+
+  const handleRandomLaunch = useCallback(() => {
+    const candidatesSource = filteredApps.length > 0 ? filteredApps : allApps;
+    const launchableApps = candidatesSource.filter((app) => !app.disabled);
+
+    if (launchableApps.length === 0) {
+      return;
+    }
+
+    const randomIndex = Math.floor(Math.random() * launchableApps.length);
+    const randomApp = launchableApps[randomIndex];
+
+    if (!randomApp) {
+      return;
+    }
+
+    if (handleAppClick) {
+      handleAppClick(randomApp);
+    } else {
+      navigate(randomApp.path);
+    }
+  }, [allApps, filteredApps, handleAppClick, navigate]);
 
   const handleGistInputChange = (field) => (event) => {
     const { value } = event.target;
@@ -408,6 +432,14 @@ const AppLauncher = () => {
           </div>
 
           <div className="view-controls">
+            <button
+              type="button"
+              className="random-launch-btn"
+              onClick={handleRandomLaunch}
+              aria-label="Launch a random app"
+            >
+              🎲
+            </button>
             <div className="view-toggle-group">
               <button
                 type="button"
