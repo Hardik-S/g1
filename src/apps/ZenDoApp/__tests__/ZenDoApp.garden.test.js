@@ -77,9 +77,11 @@ describe('ZenDoApp garden navigation', () => {
 
     fireEvent.click(gardenButton);
 
-    expect(screen.getByRole('heading', { name: 'Priority Trees' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Bonus Bushes' })).toBeInTheDocument();
-    expect(screen.getAllByText('Nothing planted yet.')).toHaveLength(2);
+    expect(
+      screen.getByText('Assign tasks to the Priority or Bonus focus lists to watch seedlings sprout here.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Priority Grove' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Bonus Blooms' })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Landing' }));
     expect(screen.getByRole('heading', { name: 'All Tasks' })).toBeInTheDocument();

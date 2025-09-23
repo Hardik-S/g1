@@ -41,9 +41,11 @@ describe('GardenView', () => {
 
     render(<GardenView priority={[entry]} bonus={[]} />);
 
-    expect(screen.getByRole('heading', { name: 'Priority Trees' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Priority Grove' })).toBeInTheDocument();
     expect(screen.getByText('Morning priority')).toBeInTheDocument();
-    expect(screen.getByText('Stage 2 / 4')).toBeInTheDocument();
+    expect(
+      screen.getByLabelText('Morning priority is at growth stage 3 of 4'),
+    ).toBeInTheDocument();
   });
 
   it('labels completed focus snapshots as persisted for the current day', () => {
@@ -66,16 +68,18 @@ describe('GardenView', () => {
 
     render(<GardenView priority={[]} bonus={[snapshotEntry]} />);
 
-    expect(screen.getByRole('heading', { name: 'Bonus Bushes' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Bonus Blooms' })).toBeInTheDocument();
     expect(screen.getByText('Finished bonus bloom')).toBeInTheDocument();
-    expect(screen.getByText('Persisted')).toBeInTheDocument();
-    expect(screen.getByText('Stage 3 / 3')).toBeInTheDocument();
+    expect(screen.getByText('Persisted bloom')).toBeInTheDocument();
+    expect(screen.getByLabelText('Finished bonus bloom is fully grown')).toBeInTheDocument();
   });
 
   it('announces empty buckets with readable fallback copy', () => {
     render(<GardenView priority={[]} bonus={[]} />);
 
-    const hints = screen.getAllByText('Nothing planted yet.');
-    expect(hints).toHaveLength(2);
+    const callout = screen.getByRole('status');
+    expect(callout).toHaveTextContent(
+      'Assign tasks to the Priority or Bonus focus lists to watch seedlings sprout here.',
+    );
   });
 });
