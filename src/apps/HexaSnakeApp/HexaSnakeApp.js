@@ -181,7 +181,7 @@ pygame_stub.install_stub()
 
         await pyodide.runPythonAsync(`
 from hexa_snake_game import HexaSnakeGame
-game = HexaSnakeGame(canvas_id='${canvas?.id}', pixel_width=${width}, pixel_height=${height})
+game = HexaSnakeGame(canvas_id='${canvas?.id}', pixel_width=${width}, pixel_height=${height}, radius=6)
 `);
         if (cancelled) return;
 
