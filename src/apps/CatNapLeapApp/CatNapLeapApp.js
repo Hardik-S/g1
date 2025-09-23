@@ -120,8 +120,8 @@ const SHOP_ITEMS = [
 
 
 const HUD_SCALE = 1;
-// 194px matches the measured compact HUD height (panel + banner + internal gap).
-const COMPACT_HUD_HEIGHT = 194 * HUD_SCALE;
+// 60px matches the measured slim HUD strip (panel plus overlay padding).
+const COMPACT_HUD_HEIGHT = 60 * HUD_SCALE;
 // Leave a little breathing room below the HUD footprint for early obstacles.
 const HUD_SAFE_ZONE = COMPACT_HUD_HEIGHT + 16 * HUD_SCALE;
 const SHOP_ITEM_LABELS = SHOP_ITEMS.reduce((acc, item) => {
@@ -1639,7 +1639,7 @@ const CatNapLeapApp = () => {
         <div className="catnap-hud-overlay">
           <div className="catnap-hud">
             <div className="catnap-hud-panel">
-              <div className="hud-metrics" aria-live="polite">
+              <div className="hud-score-block" aria-live="polite">
                 <div className="hud-metric primary">
                   <span className="hud-metric-label">Score</span>
                   <span className="hud-metric-value">{stats.score}</span>
@@ -1648,15 +1648,16 @@ const CatNapLeapApp = () => {
                   <span className="hud-metric-label">Best</span>
                   <span className="hud-metric-value">{stats.best}</span>
                 </div>
-                <div className="hud-metric-group" role="group" aria-label="Bonus stats">
-                  <div className="hud-metric treats">
-                    <span className="hud-metric-label">Treats</span>
-                    <span className="hud-metric-value">{treats}</span>
-                  </div>
-                  <div className="hud-metric perfects">
-                    <span className="hud-metric-label">Perfect Leaps</span>
-                    <span className="hud-metric-value">{stats.perfects}</span>
-                  </div>
+              </div>
+
+              <div className="hud-metric-group" role="group" aria-label="Bonus stats">
+                <div className="hud-metric treats">
+                  <span className="hud-metric-label">Treats</span>
+                  <span className="hud-metric-value">{treats}</span>
+                </div>
+                <div className="hud-metric perfects">
+                  <span className="hud-metric-label">Perfect Leaps</span>
+                  <span className="hud-metric-value">{stats.perfects}</span>
                 </div>
               </div>
 
@@ -1670,9 +1671,6 @@ const CatNapLeapApp = () => {
                     {drowsinessPercent}%
                   </span>
                 </div>
-                <div className={`mode-indicator ${kittenMode ? 'active' : ''}`} aria-live="polite">
-                  {kittenMode ? 'Kitten Mode · Cozy pacing' : 'Cat Mode · Classic challenge'}
-                </div>
                 <div
                   className="meter-track"
                   role="progressbar"
@@ -1684,26 +1682,31 @@ const CatNapLeapApp = () => {
                 >
                   <div className="meter-fill" style={{ width: `${clamp(drowsiness, 0, 100)}%` }} />
                 </div>
-                {effects.length > 0 && (
-                  <ul className="active-effects">
-                    {effects.map((effect) => (
-                      <li key={effect}>{effect}</li>
+                <div className="hud-meter-footer">
+                  <div className={`mode-indicator ${kittenMode ? 'active' : ''}`} aria-live="polite">
+                    {kittenMode ? 'Kitten Mode · Cozy pacing' : 'Cat Mode · Classic challenge'}
+                  </div>
+                  {effects.length > 0 && (
+                    <ul className="active-effects">
+                      {effects.map((effect) => (
+                        <li key={effect}>{effect}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+
+              {startBoostIndicators.length > 0 && (
+                <div className="start-boost-banner" aria-live="polite">
+                  <span className="boost-label">Shop Boosts Active</span>
+                  <ul>
+                    {startBoostIndicators.map((boost) => (
+                      <li key={boost}>{boost}</li>
                     ))}
                   </ul>
-                )}
-              </div>
+                </div>
+              )}
             </div>
-
-            {startBoostIndicators.length > 0 && (
-              <div className="start-boost-banner" aria-live="polite">
-                <span className="boost-label">Shop Boosts Active</span>
-                <ul>
-                  {startBoostIndicators.map((boost) => (
-                    <li key={boost}>{boost}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </div>
         </div>
         {phase !== 'playing' && (
