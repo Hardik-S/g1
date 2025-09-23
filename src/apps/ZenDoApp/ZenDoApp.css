@@ -427,6 +427,17 @@
   overflow-y: auto;
 }
 
+.zen-today-list.is-hovered,
+.zen-focus-drop.is-hovered {
+  box-shadow: inset 0 0 0 2px rgba(108, 161, 143, 0.6);
+  background: rgba(214, 235, 225, 0.7);
+}
+
+.zen-today-list.has-placeholder,
+.zen-focus-drop.has-placeholder {
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
 .zen-focus-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -448,6 +459,13 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+
+.zen-task-placeholder {
+  height: 3.2rem;
+  border-radius: 12px;
+  border: 2px dashed rgba(108, 161, 143, 0.65);
+  background: rgba(149, 217, 195, 0.25);
 }
 
 .zen-focus-footer {
