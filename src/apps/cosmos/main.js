@@ -2,15 +2,25 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { loadBodyData, createBodyMeshes, createSunLight, updateBodyMeshes } from './bodies.js';
 import { SolarSystemSimulation, SCALE } from './simulation.js';
-import { setupControlPanel } from './controls.js';
+import { setupControlPanel, TIME_SPEED_RANGE, DEFAULT_TRAIL_LENGTH } from './controls.js';
 
 const viewport = document.querySelector('.cosmos-viewport');
 const statusEl = document.querySelector('.cosmos-loader');
 const legendEl = document.querySelector('.cosmos-legend');
 const legendToggle = legendEl?.querySelector('.cosmos-legend__toggle');
 const legendPanel = legendEl?.querySelector('.cosmos-legend__panel');
+const timerEl = viewport?.querySelector('.cosmos-timer');
+const timerValueEl = timerEl?.querySelector('.cosmos-timer__value');
 
 const LEGEND_STORAGE_KEY = 'cosmos.legend.collapsed';
+
+const SECONDS_PER_YEAR = 60 * 60 * 24 * 365.25;
+const SECONDS_PER_MEGAYEAR = SECONDS_PER_YEAR * 1e6;
+const slowSpeedColor = new THREE.Color('#0f4f33');
+const fastSpeedColor = new THREE.Color('#6dffb7');
+const timerColor = new THREE.Color();
+const NARROW_NBSP = String.fromCharCode(0x202f);
+const TIMER_UNIT = `${NARROW_NBSP}Myr`;
 
 let renderer;
 let camera;
@@ -22,6 +32,9 @@ let moonGroups = new Map();
 let showTrails = true;
 let timeSpeed = 4000;
 let gravityMultiplier = 1;
+let trailLength = DEFAULT_TRAIL_LENGTH;
+let accumulatedSimSeconds = 0;
+let lastTimerColorHex = null;
 
 const keyboardState = {
   orbitLeft: false,
@@ -70,6 +83,38 @@ function setKeyState(event, isPressed) {
   }
   keyboardState[action] = isPressed;
   event.preventDefault();
+}
+
+function clamp01(value) {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  return Math.min(Math.max(value, 0), 1);
+}
+
+function updateTimerDisplay() {
+  if (!timerValueEl) {
+    return;
+  }
+  const megaYears = accumulatedSimSeconds / SECONDS_PER_MEGAYEAR;
+  timerValueEl.textContent = `${megaYears.toFixed(4)}${TIMER_UNIT}`;
+}
+
+function updateTimerColor(speed) {
+  if (!timerEl) {
+    return;
+  }
+
+  const { min, max } = TIME_SPEED_RANGE;
+  const span = max - min;
+  const normalized = span <= 0 ? 0 : clamp01((speed - min) / span);
+  timerColor.copy(slowSpeedColor).lerp(fastSpeedColor, normalized);
+  const hex = `#${timerColor.getHexString()}`;
+
+  if (hex !== lastTimerColorHex) {
+    timerEl.style.setProperty('--timer-color', hex);
+    lastTimerColorHex = hex;
+  }
 }
 
 function setupKeyboardShortcuts() {
@@ -314,7 +359,7 @@ async function init() {
 
   try {
     const bodies = await loadBodyData('./data/bodies.json');
-    simulation = new SolarSystemSimulation(bodies, { historyLimit: 720 });
+    simulation = new SolarSystemSimulation(bodies, { historyLimit: trailLength });
     const { group, visuals: createdVisuals, moonGroups: createdMoonGroups } = createBodyMeshes(
       simulation.bodies,
       { scale: SCALE },
@@ -327,9 +372,25 @@ async function init() {
     scene.add(sunLight);
 
     setupControlPanel(simulation.bodies, {
-      onTimeSpeedChange: (value) => { timeSpeed = value; },
+      onTimeSpeedChange: (value) => {
+        if (!Number.isFinite(value)) {
+          return;
+        }
+        timeSpeed = value;
+        updateTimerColor(timeSpeed);
+      },
       onGravityChange: (value) => { gravityMultiplier = value; },
       onTrailsToggle: (value) => { showTrails = value; },
+      onTrailLengthChange: (value) => {
+        const numericValue = Number(value);
+        if (!Number.isFinite(numericValue)) {
+          return;
+        }
+        trailLength = Math.max(0, Math.round(numericValue));
+        if (simulation) {
+          simulation.setHistoryLimit(trailLength);
+        }
+      },
       onMoonsToggle: (planetName, visible) => {
         const groupRef = moonGroups.get(planetName);
         if (groupRef) {
@@ -347,7 +408,12 @@ async function init() {
     function animate() {
       requestAnimationFrame(animate);
       const deltaSeconds = clock.getDelta();
+      const simulatedDeltaSeconds = deltaSeconds * timeSpeed;
       simulation.step(deltaSeconds, { timeScale: timeSpeed, gravityMultiplier });
+      if (Number.isFinite(simulatedDeltaSeconds) && simulatedDeltaSeconds > 0) {
+        accumulatedSimSeconds += simulatedDeltaSeconds;
+        updateTimerDisplay();
+      }
       updateBodyMeshes(visuals, simulation.bodies, { scale: SCALE, showTrails });
       const sunVisual = visuals.find((item) => item.name === 'Sun');
       if (sunVisual && sunLight) {
@@ -364,6 +430,9 @@ async function init() {
     setStatus('Failed to load solar system data.', true);
   }
 }
+
+updateTimerDisplay();
+updateTimerColor(timeSpeed);
 
 setupLegend();
 init();

@@ -469,7 +469,42 @@
           divided_by: '/',
         };
 
-        const skipTokens = new Set(['and']);
+        const skipTokens = new Set([
+          'and',
+          'of',
+          'the',
+          'what',
+          'is',
+          'please',
+          'calculate',
+          'compute',
+          'value',
+          'for',
+          'a',
+          'an',
+        ]);
+
+        const constantsMap = {
+          pi: 'pi',
+          tau: 'tau',
+        };
+
+        const functionNameMap = {
+          sqrt: 'sqrt',
+          exp: 'exp',
+          log10: 'log10',
+          log2: 'log2',
+          ln: 'log',
+          sin: 'sin',
+          cos: 'cos',
+          tan: 'tan',
+          factorial: 'factorial',
+        };
+
+        const allowedIdentifiers = new Set([
+          ...Object.values(functionNameMap),
+          ...Object.values(constantsMap),
+        ]);
 
         const onesMap = {
           zero: 0,
@@ -512,9 +547,7 @@
         let runtimeReady = false;
 
         const formatTokenDisplay = (token) => `"${token.replace(/_/g, ' ')}"`;
-
-        const formatConvertedDisplay = (value) =>
-          typeof value === 'number' ? value.toString() : `"${value}"`;
+        const formatConvertedDisplay = (token) => `"${token}"`;
 
         const clearSteps = () => {
           stepsList.innerHTML = '';
@@ -601,7 +634,19 @@
         };
 
         const sanitizeExpression = (expression) => {
-          return /^[\d\s+\-*/]+$/.test(expression);
+          if (!expression || !/^[0-9+\-*/().\sA-Za-z_]+$/.test(expression)) {
+            return false;
+          }
+
+          const identifierPattern = /[A-Za-z_][A-Za-z0-9_]*/g;
+          let match;
+          while ((match = identifierPattern.exec(expression)) !== null) {
+            if (!allowedIdentifiers.has(match[0])) {
+              return false;
+            }
+          }
+
+          return true;
         };
 
         const consumeNumber = (tokens, startIndex) => {
@@ -609,7 +654,7 @@
 
           if (/^\d+$/.test(current)) {
             const numeric = Number.parseInt(current, 10);
-            if (!Number.isFinite(numeric) || numeric < 0 || numeric > 99) {
+            if (!Number.isFinite(numeric) || numeric < 0 || numeric > 1000000) {
               return null;
             }
             return { value: numeric, consumed: 1 };
@@ -642,20 +687,30 @@
 
         const parseQuery = (raw) => {
           if (!raw) {
-            return null;
+            return { error: 'No input provided', steps: [] };
           }
 
           let prepared = raw
             .toLowerCase()
-            .replace(/[^a-z0-9\s-]/g, ' ')
             .replace(/-/g, ' ')
+            .replace(/\b(open|left|opening)\s+(?:parenthesis|parentheses|paren|bracket|brackets)\b/g, 'open_paren')
+            .replace(/\b(close|right|closing)\s+(?:parenthesis|parentheses|paren|bracket|brackets)\b/g, 'close_paren')
             .replace(/multiplied\s+by/g, 'multiplied_by')
             .replace(/divided\s+by/g, 'divided_by')
+            .replace(/open\s+brackets?/g, 'open_paren')
+            .replace(/close\s+brackets?/g, 'close_paren')
+            .replace(/open\s+parentheses/g, 'open_paren')
+            .replace(/close\s+parentheses/g, 'close_paren')
+            .replace(/open\s+paren/g, 'open_paren')
+            .replace(/close\s+paren/g, 'close_paren')
+            .replace(/\(/g, ' open_paren ')
+            .replace(/\)/g, ' close_paren ')
+            .replace(/[^a-z0-9_\s]/g, ' ')
             .replace(/\s+/g, ' ')
             .trim();
 
           if (!prepared) {
-            return null;
+            return { error: 'Could not understand the request', steps: [] };
           }
 
           const steps = [];
@@ -663,59 +718,137 @@
 
           const tokens = prepared.split(' ').filter(Boolean);
           if (!tokens.length) {
-            return null;
+            return { error: 'Could not parse query', steps };
           }
 
           steps.push(`Tokenize → [${tokens.map(formatTokenDisplay).join(', ')}]`);
 
-          const pieces = [];
-          const convertedPieces = [];
-          let expectingNumber = true;
-          let index = 0;
+          const filteredTokens = tokens.filter((token) => !skipTokens.has(token));
 
-          while (index < tokens.length) {
-            const token = tokens[index];
+          if (!filteredTokens.length) {
+            steps.push('Filter filler words → []');
+            return { error: 'Need a number, constant, or function to evaluate', steps };
+          }
 
-            if (skipTokens.has(token)) {
-              index += 1;
-              continue;
+          if (filteredTokens.length !== tokens.length) {
+            steps.push(`Filter filler words → [${filteredTokens.map(formatTokenDisplay).join(', ')}]`);
+          }
+
+          const normalizedTokens = filteredTokens.map((token) => {
+            if (token === 'open_paren') return '(';
+            if (token === 'close_paren') return ')';
+            return token;
+          });
+
+          if (
+            normalizedTokens.length !== filteredTokens.length ||
+            normalizedTokens.some((token, index) => token !== filteredTokens[index])
+          ) {
+            steps.push(`Replace bracket phrases → [${normalizedTokens.map(formatTokenDisplay).join(', ')}]`);
+          }
+
+          let position = 0;
+
+          const parseValue = () => {
+            if (position >= normalizedTokens.length) {
+              throw new Error('Expected a value but reached the end of the query');
             }
 
-            if (expectingNumber) {
-              const numberResult = consumeNumber(tokens, index);
-              if (!numberResult) {
-                return null;
+            const current = normalizedTokens[position];
+
+            if (current === ')') {
+              throw new Error('Unexpected closing bracket');
+            }
+
+            if (current === '(') {
+              position += 1;
+              const inner = parseExpression();
+              if (position >= normalizedTokens.length || normalizedTokens[position] !== ')') {
+                throw new Error('Missing closing bracket for "("');
               }
-              pieces.push(String(numberResult.value));
-              convertedPieces.push(numberResult.value);
-              index += numberResult.consumed;
-              expectingNumber = false;
-              continue;
+              position += 1;
+              return `(${inner})`;
             }
 
-            if (!Object.prototype.hasOwnProperty.call(operatorMap, token)) {
-              return null;
+            if (Object.prototype.hasOwnProperty.call(functionNameMap, current)) {
+              const functionName = functionNameMap[current];
+              position += 1;
+              if (position >= normalizedTokens.length) {
+                throw new Error(`Function "${current}" needs a value or bracketed expression`);
+              }
+              const argument = parseValue();
+              if (argument.startsWith('(') && argument.endsWith(')')) {
+                return `${functionName}${argument}`;
+              }
+              return `${functionName}(${argument})`;
             }
 
-            const operatorSymbol = operatorMap[token];
-            pieces.push(operatorSymbol);
-            convertedPieces.push(operatorSymbol);
-            index += 1;
-            expectingNumber = true;
+            if (Object.prototype.hasOwnProperty.call(constantsMap, current)) {
+              position += 1;
+              return constantsMap[current];
+            }
+
+            const numberResult = consumeNumber(normalizedTokens, position);
+            if (numberResult) {
+              position += numberResult.consumed;
+              return String(numberResult.value);
+            }
+
+            if (/^\d+(?:\.\d+)?$/.test(current)) {
+              position += 1;
+              return current;
+            }
+
+            throw new Error(`Unrecognized token "${current}"`);
+          };
+
+          const parseExpression = () => {
+            const firstValue = parseValue();
+            const segments = [firstValue];
+
+            while (position < normalizedTokens.length) {
+              const nextToken = normalizedTokens[position];
+              if (nextToken === ')') {
+                break;
+              }
+
+              if (!Object.prototype.hasOwnProperty.call(operatorMap, nextToken)) {
+                throw new Error(`Expected an operator but found "${nextToken}"`);
+              }
+
+              const operatorSymbol = operatorMap[nextToken];
+              position += 1;
+              const nextValue = parseValue();
+              segments.push(operatorSymbol, nextValue);
+            }
+
+            return segments.join(' ');
+          };
+
+          let expression;
+          try {
+            expression = parseExpression();
+          } catch (error) {
+            return { error: error.message || 'Could not parse query', steps };
           }
 
-          if (!pieces.length || expectingNumber) {
-            return null;
+          if (!expression) {
+            return { error: 'Could not parse query', steps };
           }
 
-          steps.push(`Convert words → [${convertedPieces.map(formatConvertedDisplay).join(', ')}]`);
+          if (position < normalizedTokens.length) {
+            const remaining = normalizedTokens[position];
+            if (remaining === ')') {
+              return { error: 'Missing opening bracket for ")"', steps };
+            }
+            return { error: `Unexpected token "${remaining}"`, steps };
+          }
 
-          const expression = pieces.join(' ');
           if (!sanitizeExpression(expression)) {
-            return null;
+            return { error: 'Expression contains unsupported content', steps };
           }
 
-          steps.push(`Build expression → ${expression}`);
+          steps.push(`Interpret tokens → ${expression}`);
 
           return { expression, steps };
         };
@@ -742,9 +875,13 @@
           }
 
           const parsed = parseQuery(query);
-          if (!parsed) {
-            clearSteps();
-            setResult('Could not parse query', 'error');
+          if (!parsed || parsed.error) {
+            if (parsed && parsed.steps) {
+              renderSteps(parsed.steps);
+            } else {
+              clearSteps();
+            }
+            setResult(parsed?.error || 'Could not parse query', 'error');
             return;
           }
 
@@ -801,6 +938,18 @@
               { input: 'thirteen minus eight', expected: '5' },
               { input: 'six times seven', expected: '42' },
               { input: 'forty divided by five', expected: '8' },
+              { input: 'factorial of five', expected: '120' },
+              { input: 'Tau divided by two', expected: '3.141593' },
+              { input: 'pi plus one', expected: '4.141593' },
+              { input: 'sqrt 100', expected: '10' },
+              { input: 'exp 1', expected: '2.718282' },
+              { input: 'log10 1000', expected: '3' },
+              { input: 'log2 32', expected: '5' },
+              { input: 'ln 1', expected: '0' },
+              { input: 'sin 0', expected: '0' },
+              { input: 'cos 0', expected: '1' },
+              { input: 'tan 0', expected: '0' },
+              { input: 'open bracket three plus five close bracket times two', expected: '16' },
             ];
 
             smokeTests.forEach((test) => {
