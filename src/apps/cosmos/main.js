@@ -2,7 +2,12 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { loadBodyData, createBodyMeshes, createSunLight, updateBodyMeshes } from './bodies.js';
 import { SolarSystemSimulation, SCALE } from './simulation.js';
-import { setupControlPanel, TIME_SPEED_RANGE, DEFAULT_TRAIL_LENGTH } from './controls.js';
+import {
+  setupControlPanel,
+  TIME_SPEED_RANGE,
+  DEFAULT_TRAIL_LENGTH,
+  DEFAULT_TIME_SPEED,
+} from './controls.js';
 
 const viewport = document.querySelector('.cosmos-viewport');
 const statusEl = document.querySelector('.cosmos-loader');
@@ -30,7 +35,7 @@ let simulation;
 let visuals;
 let moonGroups = new Map();
 let showTrails = true;
-let timeSpeed = 4000;
+let timeSpeed = DEFAULT_TIME_SPEED;
 let gravityMultiplier = 1;
 let trailLength = DEFAULT_TRAIL_LENGTH;
 let accumulatedSimSeconds = 0;
@@ -419,7 +424,8 @@ async function init() {
         if (!Number.isFinite(value)) {
           return;
         }
-        timeSpeed = value;
+        const clamped = Math.min(Math.max(value, TIME_SPEED_RANGE.min), TIME_SPEED_RANGE.max);
+        timeSpeed = clamped;
         updateTimerColor(timeSpeed);
       },
       onGravityChange: (value) => { gravityMultiplier = value; },
