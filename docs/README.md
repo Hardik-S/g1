@@ -18,7 +18,7 @@ Gif coming soon
 
 * **Day Switcher**: cycle through the week with animated transitions.
 * **CatPad**: cat-themed note editor with GitHub gist syncing.
-* **Zen Do**: manage tasks in a zen-styled weekly garden with focus mode and gist sync.
+* **Zen Do**: manage tasks in a zen-styled weekly garden with focus mode, gist sync, and a rebuilt SortableJS drag system that clones tasks from the tree into weekly and focus buckets. 【F:src/apps/ZenDoApp/views/LandingView.js†L24-L91】【F:src/apps/ZenDoApp/views/TodayView.js†L34-L99】
 * **N-Pomodoro**: orchestrate multi-activity pomodoro sessions.
 
 ### Games
@@ -37,6 +37,23 @@ Gif coming soon
 * **Cache Lab**: explore cache mapping, replacement, hierarchy, and assessments via `/cache-lab`.
 * **Cosmos Simulator**: orbit a scaled solar system with live Newtonian physics, camera fly-to controls, and keyboard navigation (arrows to orbit, WASD to pan, Q/E or +/- to dolly).
 * **LangMath**: convert natural-language arithmetic into validated expressions evaluated with Pyodide.
+
+#### Zen Do developer tips
+
+Use the launcher dev server to iterate on drag gestures and console logging:
+
+```bash
+npm start
+```
+
+Target Zen Do scheduling helpers during debugging with Jest’s path filter or watch mode:
+
+```bash
+npm test -- src/apps/ZenDoApp/__tests__/taskUtils.test.js
+npm test -- --watch src/apps/ZenDoApp/__tests__/taskUtils.test.js
+```
+
+Both commands are provided by the standard launcher scripts in `package.json`. 【F:package.json†L9-L21】
 
 ---
 
