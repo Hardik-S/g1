@@ -12,11 +12,9 @@ function toVector3(source, label) {
   if (source instanceof THREE.Vector3) {
     return source.clone();
   }
-
   if (Array.isArray(source) && source.length === 3) {
     return new THREE.Vector3().fromArray(source);
   }
-
   throw new Error(`Invalid ${label} vector supplied`);
 }
 
@@ -38,6 +36,7 @@ function instantiateBody(definition, {
     mass: definition.mass,
     radius: definition.radius,
     color: definition.color ?? '#ffffff',
+    ring: definition.ring ? { ...definition.ring } : undefined, // ✅ keep ring support
     position: toVector3(positionSource, `${definition.name} position`),
     velocity: toVector3(velocitySource, `${definition.name} velocity`),
     acceleration: new THREE.Vector3(),
@@ -50,13 +49,11 @@ function instantiateBody(definition, {
 
 function computeMoonInitialState(moonDefinition, parentBody) {
   const orbit = moonDefinition.orbit;
-
   if (!orbit) {
     throw new Error(`Moon ${moonDefinition.name} is missing orbit parameters`);
   }
 
   const { semiMajorAxis, period } = orbit;
-
   if (!semiMajorAxis || !period) {
     throw new Error(`Moon ${moonDefinition.name} requires orbit.semiMajorAxis and orbit.period`);
   }
@@ -76,17 +73,14 @@ function computeMoonInitialState(moonDefinition, parentBody) {
     position.applyAxisAngle(Z_AXIS, phase);
     velocity.applyAxisAngle(Z_AXIS, phase);
   }
-
   if (argumentOfPeriapsis !== 0) {
     position.applyAxisAngle(Z_AXIS, argumentOfPeriapsis);
     velocity.applyAxisAngle(Z_AXIS, argumentOfPeriapsis);
   }
-
   if (inclination !== 0) {
     position.applyAxisAngle(X_AXIS, inclination);
     velocity.applyAxisAngle(X_AXIS, inclination);
   }
-
   if (ascendingNode !== 0) {
     position.applyAxisAngle(Z_AXIS, ascendingNode);
     velocity.applyAxisAngle(Z_AXIS, ascendingNode);
@@ -124,12 +118,14 @@ export class SolarSystemSimulation {
       }
     });
 
+    // Resolve parent indices
     const indexByName = new Map(this.bodies.map((body, index) => [body.name, index]));
     this.bodies.forEach((body) => {
       if (body.parentName) {
         body.parentIndex = indexByName.get(body.parentName) ?? null;
       }
     });
+
     this._accelerations = this.bodies.map(() => new THREE.Vector3());
     this.updateAccelerations(this.gravityMultiplier);
   }
@@ -176,10 +172,7 @@ export class SolarSystemSimulation {
 
   step(deltaSeconds, { timeScale = 1, gravityMultiplier = this.gravityMultiplier } = {}) {
     const dt = deltaSeconds * timeScale;
-
-    if (!Number.isFinite(dt) || dt <= 0) {
-      return;
-    }
+    if (!Number.isFinite(dt) || dt <= 0) return;
 
     const previousAccelerations = this._accelerations.map((accel) => accel.clone());
 
@@ -203,10 +196,7 @@ export class SolarSystemSimulation {
   }
 
   _recordHistory(body) {
-    if (this.historyLimit <= 0) {
-      return;
-    }
-
+    if (this.historyLimit <= 0) return;
     body.history.push(body.position.clone());
     if (body.history.length > this.historyLimit) {
       body.history.shift();
