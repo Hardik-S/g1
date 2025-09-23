@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="earth-ocean" cx="50%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="#72c2ff"/>
+      <stop offset="55%" stop-color="#2c7dd1"/>
+      <stop offset="100%" stop-color="#0f3c8a"/>
+    </radialGradient>
+    <linearGradient id="earth-clouds" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.45"/>
+      <stop offset="40%" stop-color="#eaf4ff" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#94b8e6" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#earth-ocean)"/>
+  <g fill="#4cb062">
+    <path d="M120 180c40-50 120-90 170-70s80 90 20 120-120 30-170-10c-16-12-26-26-20-40z"/>
+    <path d="M300 210c34 8 76 42 90 72s-4 70-48 74-92-24-96-64 20-80 54-82z"/>
+    <path d="M140 340c18-14 54-14 80 10s36 70-10 88-104-10-106-42 18-42 36-56z"/>
+  </g>
+  <g fill="#9ed49b">
+    <path d="M150 210c18-20 58-40 86-32s34 36-8 48-70 6-78-16z"/>
+    <path d="M312 248c24 6 56 32 60 50s-18 34-44 30-48-30-38-52 20-28 22-28z"/>
+  </g>
+  <rect width="512" height="512" fill="url(#earth-clouds)" opacity="0.35"/>
+</svg>

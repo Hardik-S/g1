@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="mercury-base" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#f5f1eb"/>
+      <stop offset="45%" stop-color="#c4bbae"/>
+      <stop offset="100%" stop-color="#6f6458"/>
+    </radialGradient>
+    <linearGradient id="mercury-strata" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.15"/>
+      <stop offset="40%" stop-color="#b9b2a6" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#423f3c" stop-opacity="0.45"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#mercury-base)"/>
+  <g fill="url(#mercury-strata)">
+    <ellipse cx="180" cy="190" rx="160" ry="120"/>
+    <ellipse cx="350" cy="280" rx="200" ry="150"/>
+    <ellipse cx="260" cy="360" rx="110" ry="70"/>
+  </g>
+  <g fill="#d8d1c6" opacity="0.45">
+    <circle cx="210" cy="140" r="46"/>
+    <circle cx="330" cy="210" r="58"/>
+    <circle cx="250" cy="280" r="36"/>
+    <circle cx="356" cy="360" r="42"/>
+  </g>
+</svg>

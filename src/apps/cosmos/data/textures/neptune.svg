@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="neptune-base" cx="50%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#8cc6ff"/>
+      <stop offset="55%" stop-color="#386dd8"/>
+      <stop offset="100%" stop-color="#163485"/>
+    </radialGradient>
+    <linearGradient id="neptune-bands" x1="0%" y1="45%" x2="100%" y2="55%">
+      <stop offset="0%" stop-color="#b1d8ff" stop-opacity="0.35"/>
+      <stop offset="40%" stop-color="#4a7be0" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#1f3f9b" stop-opacity="0.4"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#neptune-base)"/>
+  <g fill="url(#neptune-bands)">
+    <rect y="130" width="512" height="70" opacity="0.9"/>
+    <rect y="220" width="512" height="60" opacity="0.75"/>
+    <rect y="310" width="512" height="70" opacity="0.85"/>
+  </g>
+  <ellipse cx="360" cy="260" rx="120" ry="80" fill="#9dc2ff" opacity="0.28"/>
+</svg>

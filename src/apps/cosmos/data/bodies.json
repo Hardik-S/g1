@@ -7,14 +7,7 @@
     "velocity": [0, 0, 0],
     "color": {
       "base": "#f7c84b",
-      "gradient": {
-        "orientation": "radial",
-        "stops": [
-          { "offset": 0, "color": "#fff7d9" },
-          { "offset": 0.45, "color": "#fcd16b" },
-          { "offset": 1, "color": "#f28e1c" }
-        ]
-      }
+      "texture": "./data/textures/sun.svg"
     }
   },
   {
@@ -25,13 +18,9 @@
     "velocity": [0, 47400, 0],
     "color": {
       "base": "#97897b",
-      "gradient": {
-        "orientation": "vertical",
-        "stops": [
-          { "offset": 0, "color": "#c3b6ac" },
-          { "offset": 1, "color": "#6f6258" }
-        ]
-      }
+      "texture": "./data/textures/mercury.svg",
+      "roughness": 0.85,
+      "metalness": 0.08
     }
   },
   {
@@ -42,14 +31,9 @@
     "velocity": [0, 35000, 0],
     "color": {
       "base": "#d0a25f",
-      "gradient": {
-        "orientation": "vertical",
-        "stops": [
-          { "offset": 0, "color": "#f3d59b" },
-          { "offset": 0.6, "color": "#d0a25f" },
-          { "offset": 1, "color": "#b58448" }
-        ]
-      }
+      "texture": "./data/textures/venus.svg",
+      "roughness": 0.82,
+      "metalness": 0.06
     }
   },
   {
@@ -75,17 +59,9 @@
     ],
     "color": {
       "base": "#2f7fd6",
-      "gradient": {
-        "orientation": "horizontal",
-        "stops": [
-          { "offset": 0, "color": "#2f7fd6" },
-          { "offset": 0.35, "color": "#2a65a0" },
-          { "offset": 0.55, "color": "#3da86c" },
-          { "offset": 0.7, "color": "#98c264" },
-          { "offset": 0.9, "color": "#d7e7f6" },
-          { "offset": 1, "color": "#2f7fd6" }
-        ]
-      }
+      "texture": "./data/textures/earth.svg",
+      "roughness": 0.68,
+      "metalness": 0.18
     }
   },
   {
@@ -124,14 +100,9 @@
     ],
     "color": {
       "base": "#c24f34",
-      "gradient": {
-        "orientation": "vertical",
-        "stops": [
-          { "offset": 0, "color": "#f1a06f" },
-          { "offset": 0.4, "color": "#d0603a" },
-          { "offset": 1, "color": "#82281f" }
-        ]
-      }
+      "texture": "./data/textures/mars.svg",
+      "roughness": 0.78,
+      "metalness": 0.07
     }
   },
   {
@@ -202,19 +173,10 @@
     },
     "color": {
       "base": "#c79b6e",
-      "gradient": {
-        "orientation": "vertical",
-        "stops": [
-          { "offset": 0, "color": "#f3d9b5" },
-          { "offset": 0.12, "color": "#b27d4d" },
-          { "offset": 0.24, "color": "#f4d7aa" },
-          { "offset": 0.36, "color": "#a06438" },
-          { "offset": 0.5, "color": "#f0d0a0" },
-          { "offset": 0.64, "color": "#a46b3f" },
-          { "offset": 0.78, "color": "#e9c596" },
-          { "offset": 1, "color": "#8d5a33" }
-        ]
-      }
+      "texture": "./data/textures/jupiter.svg",
+      "roughness": 0.52,
+      "metalness": 0.12,
+      "emissiveIntensity": 0.45
     }
   },
   {
@@ -272,14 +234,9 @@
     },
     "color": {
       "base": "#d8bc83",
-      "gradient": {
-        "orientation": "vertical",
-        "stops": [
-          { "offset": 0, "color": "#f5e2b9" },
-          { "offset": 0.5, "color": "#d8bc83" },
-          { "offset": 1, "color": "#b7935f" }
-        ]
-      }
+      "texture": "./data/textures/saturn.svg",
+      "roughness": 0.56,
+      "metalness": 0.1
     }
   },
   {
@@ -324,14 +281,9 @@
     },
     "color": {
       "base": "#74d0e2",
-      "gradient": {
-        "orientation": "vertical",
-        "stops": [
-          { "offset": 0, "color": "#a9f1fb" },
-          { "offset": 0.55, "color": "#74d0e2" },
-          { "offset": 1, "color": "#3a9bbf" }
-        ]
-      }
+      "texture": "./data/textures/uranus.svg",
+      "roughness": 0.62,
+      "metalness": 0.08
     }
   },
   {
@@ -363,14 +315,9 @@
     },
     "color": {
       "base": "#3e59d4",
-      "gradient": {
-        "orientation": "vertical",
-        "stops": [
-          { "offset": 0, "color": "#6f8bf4" },
-          { "offset": 0.45, "color": "#3e59d4" },
-          { "offset": 1, "color": "#1f377e" }
-        ]
-      }
+      "texture": "./data/textures/neptune.svg",
+      "roughness": 0.6,
+      "metalness": 0.09
     }
   }
 ]

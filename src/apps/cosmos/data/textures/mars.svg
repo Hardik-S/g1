@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="mars-base" cx="45%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="#f6a274"/>
+      <stop offset="55%" stop-color="#c65b33"/>
+      <stop offset="100%" stop-color="#7a271a"/>
+    </radialGradient>
+    <linearGradient id="mars-bands" x1="0%" y1="30%" x2="100%" y2="70%">
+      <stop offset="0%" stop-color="#ffcea9" stop-opacity="0.25"/>
+      <stop offset="40%" stop-color="#d77445" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#8a3d27" stop-opacity="0.35"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#mars-base)"/>
+  <g fill="url(#mars-bands)">
+    <path d="M-10 180c110-70 280-80 350-40s100 120 160 146v60c-90-8-146-56-220-72s-170 6-290 78z"/>
+  </g>
+  <g fill="#f5cbaa" opacity="0.35">
+    <ellipse cx="180" cy="180" rx="140" ry="70"/>
+    <ellipse cx="360" cy="260" rx="160" ry="60"/>
+  </g>
+  <g fill="#7f3924" opacity="0.45">
+    <path d="M60 360c40-46 140-74 220-46s140 62 172 58v40c-80 24-164 18-232-12s-132-32-160-40z"/>
+  </g>
+</svg>
