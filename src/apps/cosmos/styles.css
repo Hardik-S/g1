@@ -101,10 +101,23 @@ body {
   max-width: 240px;
   font-size: 0.85rem;
   z-index: 10;
+  --text-color: #ffffff;
+  --title-text-color: #ffffff;
+  --number-color: #ffffff;
+  --string-color: #ffffff;
+  color: var(--text-color) !important;
 }
 
-.cosmos-gui .name {
-  color: #051635 !important;
+.cosmos-gui .title,
+.cosmos-gui .controller,
+.cosmos-gui .controller .name,
+.cosmos-gui .controller .widget,
+.cosmos-gui .controller .value,
+.cosmos-gui .controller .display,
+.cosmos-gui .controller button,
+.cosmos-gui .controller select,
+.cosmos-gui .controller input {
+  color: inherit !important;
 }
 
 @media (max-width: 900px) {
