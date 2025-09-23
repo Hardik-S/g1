@@ -1,10 +1,59 @@
-import React, { useEffect, useRef } from 'react';
-import Sortable from 'sortablejs';
+import React, { useCallback } from 'react';
 import { FOCUS_BUCKETS } from '../constants';
+import DroppableBucket from './DroppableBucket';
+import useSharedDragController from './useSharedDragController';
 
-const createSortable = (element, options) => {
-  if (!element) return null;
-  return Sortable.create(element, options);
+const buildOrder = (tasks, taskId, index) => {
+  const ids = tasks.filter((task) => task.id !== taskId).map((task) => task.id);
+  const clampedIndex = Math.max(0, Math.min(index, ids.length));
+  ids.splice(clampedIndex, 0, taskId);
+  return ids;
+};
+
+const getBucketList = (bucket, lists) => {
+  if (bucket === 'today') return lists.todayList;
+  if (bucket === 'priority') return lists.priorityList;
+  if (bucket === 'bonus') return lists.bonusList;
+  return [];
+};
+
+const TaskCard = ({ bucketId, dragController, index, onCompleteTask, task }) => {
+  const handleDragStart = useCallback((event) => {
+    if (event.dataTransfer) {
+      try {
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', task.id);
+      } catch (error) {
+        // Ignore errors from unsupported dataTransfer operations in tests.
+      }
+    }
+    dragController.beginDrag(task.id, bucketId, index);
+  }, [bucketId, dragController, index, task.id]);
+
+  const handleDragEnd = useCallback(() => {
+    dragController.cancelDrag();
+  }, [dragController]);
+
+  return (
+    <div
+      className="zen-focus-card"
+      data-task-id={task.id}
+      draggable
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="zen-card-title-row">
+        <span>{task.title}</span>
+        <input
+          type="checkbox"
+          checked={task.completed}
+          onChange={() => onCompleteTask(task.id, !task.completed)}
+          aria-label="Toggle completion"
+        />
+      </div>
+      {task.dueDate && <div className="zen-card-meta">Due {task.dueDate}</div>}
+    </div>
+  );
 };
 
 const TodayView = ({
@@ -18,110 +67,48 @@ const TodayView = ({
   onOpenFocus,
   onCompleteTask,
 }) => {
-  const todayRef = useRef(null);
-  const priorityRef = useRef(null);
-  const bonusRef = useRef(null);
-  const sortablesRef = useRef({});
+  const dragController = useSharedDragController();
 
-  useEffect(() => {
-    const discardSortableClone = (evt) => {
-      const cloneNode = evt.clone || evt.item;
-      if (cloneNode && cloneNode.parentNode) {
-        cloneNode.parentNode.removeChild(cloneNode);
-      }
-    };
+  const handleDrop = useCallback((targetBucket) => ({ taskId, sourceBucket, index }) => {
+    if (!taskId) {
+      return;
+    }
+    const bucketLists = { todayList, priorityList, bonusList };
+    const targetList = getBucketList(targetBucket, bucketLists);
+    const clampedIndex = Math.max(0, Math.min(index ?? targetList.length, targetList.length));
 
-    sortablesRef.current.today = createSortable(todayRef.current, {
-      group: { name: 'zen-today', pull: 'clone', put: true },
-      animation: 150,
-      dataIdAttr: 'data-task-id',
-      fallbackOnBody: true,
-      onAdd: (evt) => {
-        const taskId = evt.item?.dataset?.taskId;
-        if (taskId) {
-          onClearBucket(taskId);
-          const order = Array.from(evt.to.querySelectorAll('[data-task-id]')).map((el) => el.dataset.taskId);
-          onReorderBucket('today', order);
-        }
-        discardSortableClone(evt);
-      },
-      onRemove: (evt) => {
-        const order = Array.from(evt.from.querySelectorAll('[data-task-id]')).map((el) => el.dataset.taskId);
-        onReorderBucket('today', order);
-      },
-    });
+    if (targetBucket === 'today') {
+      onClearBucket(taskId);
+      const nextOrder = buildOrder(targetList, taskId, clampedIndex);
+      onReorderBucket('today', nextOrder);
+    } else if (targetBucket === 'priority' || targetBucket === 'bonus') {
+      onAssignToBucket(taskId, targetBucket, clampedIndex);
+      const nextOrder = buildOrder(targetList, taskId, clampedIndex);
+      onReorderBucket(targetBucket, nextOrder);
+    }
 
-    sortablesRef.current.priority = createSortable(priorityRef.current, {
-      group: { name: 'zen-today', pull: 'clone', put: true },
-      animation: 150,
-      dataIdAttr: 'data-task-id',
-      fallbackOnBody: true,
-      onAdd: (evt) => {
-        const taskId = evt.item?.dataset?.taskId;
-        if (taskId) {
-          onAssignToBucket(taskId, 'priority', evt.newIndex);
-          const order = Array.from(evt.to.querySelectorAll('[data-task-id]')).map((el) => el.dataset.taskId);
-          onReorderBucket('priority', order);
-        }
-        discardSortableClone(evt);
-      },
-      onUpdate: (evt) => {
-        const order = Array.from(evt.to.querySelectorAll('[data-task-id]')).map((el) => el.dataset.taskId);
-        onReorderBucket('priority', order);
-      },
-      onRemove: (evt) => {
-        const order = Array.from(evt.from.querySelectorAll('[data-task-id]')).map((el) => el.dataset.taskId);
-        onReorderBucket('priority', order);
-      },
-    });
+    const knownBuckets = ['today', 'priority', 'bonus'];
+    if (sourceBucket && sourceBucket !== targetBucket && knownBuckets.includes(sourceBucket)) {
+      const sourceList = getBucketList(sourceBucket, bucketLists);
+      const sourceOrder = sourceList.filter((task) => task.id !== taskId).map((task) => task.id);
+      onReorderBucket(sourceBucket, sourceOrder);
+    } else if (sourceBucket && sourceBucket === targetBucket && knownBuckets.includes(sourceBucket)) {
+      const sourceList = getBucketList(sourceBucket, bucketLists);
+      const nextOrder = buildOrder(sourceList, taskId, clampedIndex);
+      onReorderBucket(sourceBucket, nextOrder);
+    }
+  }, [bonusList, onAssignToBucket, onClearBucket, onReorderBucket, priorityList, todayList]);
 
-    sortablesRef.current.bonus = createSortable(bonusRef.current, {
-      group: { name: 'zen-today', pull: 'clone', put: true },
-      animation: 150,
-      dataIdAttr: 'data-task-id',
-      fallbackOnBody: true,
-      onAdd: (evt) => {
-        const taskId = evt.item?.dataset?.taskId;
-        if (taskId) {
-          onAssignToBucket(taskId, 'bonus', evt.newIndex);
-          const order = Array.from(evt.to.querySelectorAll('[data-task-id]')).map((el) => el.dataset.taskId);
-          onReorderBucket('bonus', order);
-        }
-        discardSortableClone(evt);
-      },
-      onUpdate: (evt) => {
-        const order = Array.from(evt.to.querySelectorAll('[data-task-id]')).map((el) => el.dataset.taskId);
-        onReorderBucket('bonus', order);
-      },
-      onRemove: (evt) => {
-        const order = Array.from(evt.from.querySelectorAll('[data-task-id]')).map((el) => el.dataset.taskId);
-        onReorderBucket('bonus', order);
-      },
-    });
-
-    return () => {
-      Object.values(sortablesRef.current).forEach((instance) => {
-        if (instance) {
-          instance.destroy();
-        }
-      });
-    };
-  }, [onAssignToBucket, onReorderBucket, onClearBucket]);
-
-  const renderCard = (task) => (
-    <div key={task.id} className="zen-focus-card" data-task-id={task.id}>
-      <div className="zen-card-title-row">
-        <span>{task.title}</span>
-        <input
-          type="checkbox"
-          checked={task.completed}
-          onChange={() => onCompleteTask(task.id, !task.completed)}
-          aria-label="Toggle completion"
-        />
-      </div>
-      {task.dueDate && <div className="zen-card-meta">Due {task.dueDate}</div>}
-    </div>
-  );
+  const renderTask = useCallback((task, index, bucketId) => (
+    <TaskCard
+      key={task.id}
+      task={task}
+      index={index}
+      bucketId={bucketId}
+      dragController={dragController}
+      onCompleteTask={onCompleteTask}
+    />
+  ), [dragController, onCompleteTask]);
 
   return (
     <div className="zen-today-layout">
@@ -132,13 +119,16 @@ const TodayView = ({
           </button>
           <h2>Today&apos;s Flow</h2>
         </header>
-        <div className="zen-today-list" ref={todayRef}>
-          {todayList.length === 0 ? (
-            <p className="zen-empty-hint">Drag tasks from the week buckets or create something new.</p>
-          ) : (
-            todayList.map(renderCard)
-          )}
-        </div>
+        <DroppableBucket
+          bucketId="today"
+          className="zen-today-list"
+          dragController={dragController}
+          emptyHint="Drag tasks from the week buckets or create something new."
+          items={todayList}
+          onDrop={handleDrop('today')}
+          renderItem={renderTask}
+          testId="today-drop-zone"
+        />
       </section>
       <section className="zen-today-column">
         <header className="zen-section-header">
@@ -147,15 +137,29 @@ const TodayView = ({
         <div className="zen-focus-grid">
           <div className="zen-focus-column">
             <h3>{FOCUS_BUCKETS.priority.title}</h3>
-            <div className="zen-focus-drop" ref={priorityRef}>
-              {priorityList.length === 0 ? <p className="zen-empty-hint">Set your core intentions here.</p> : priorityList.map(renderCard)}
-            </div>
+            <DroppableBucket
+              bucketId="priority"
+              className="zen-focus-drop"
+              dragController={dragController}
+              emptyHint="Set your core intentions here."
+              items={priorityList}
+              onDrop={handleDrop('priority')}
+              renderItem={renderTask}
+              testId="priority-drop-zone"
+            />
           </div>
           <div className="zen-focus-column">
             <h3>{FOCUS_BUCKETS.bonus.title}</h3>
-            <div className="zen-focus-drop" ref={bonusRef}>
-              {bonusList.length === 0 ? <p className="zen-empty-hint">Reserve bonus blooms for extra energy.</p> : bonusList.map(renderCard)}
-            </div>
+            <DroppableBucket
+              bucketId="bonus"
+              className="zen-focus-drop"
+              dragController={dragController}
+              emptyHint="Reserve bonus blooms for extra energy."
+              items={bonusList}
+              onDrop={handleDrop('bonus')}
+              renderItem={renderTask}
+              testId="bonus-drop-zone"
+            />
           </div>
         </div>
         <div className="zen-focus-footer">
