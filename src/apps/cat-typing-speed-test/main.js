@@ -1,5 +1,6 @@
 (() => {
   const DEFAULT_DURATION = 15;
+  const HOLD_DURATION_MS = 1000;
 
   const testScreen = document.getElementById('test-screen');
   const resultsScreen = document.getElementById('results-screen');
@@ -15,6 +16,14 @@
   const finalAccuracy = document.getElementById('final-accuracy');
   const resultsNote = document.getElementById('results-note');
   const resultsRetry = document.getElementById('results-retry');
+  const durationOptions = Array.from(document.querySelectorAll('[data-duration-option]'));
+  const holdDisplays = Array.from(document.querySelectorAll('[data-hold-display]')).map(
+    (container) => ({
+      container,
+      text: container.querySelector('[data-hold-text]'),
+      fill: container.querySelector('[data-hold-fill]'),
+    }),
+  );
 
   if (!testScreen || !resultsScreen || !typingInput) {
     return;
@@ -44,6 +53,7 @@
   let corpusPromise = null;
   let countdownSeconds = DEFAULT_DURATION;
   let testDuration = DEFAULT_DURATION;
+  let selectedDuration = DEFAULT_DURATION;
   let timerId = null;
   let startTimestamp = null;
   let targetText = '';
@@ -51,12 +61,32 @@
   let correctChars = 0;
   let typedChars = 0;
   let activeScreen = testScreen;
+  let holdStartTime = null;
+  let holdFrameId = null;
+  let holdResetTimeout = null;
+  let holdState = 'idle';
 
   const scheduleNextFrame = (callback) => {
     if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
       window.requestAnimationFrame(callback);
     } else {
       setTimeout(callback, 0);
+    }
+  };
+
+  const requestHoldFrame = (callback) => {
+    if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+      return window.requestAnimationFrame(callback);
+    }
+    return setTimeout(callback, 16);
+  };
+
+  const cancelHoldFrame = (handle) => {
+    if (handle == null) return;
+    if (typeof window !== 'undefined' && typeof window.cancelAnimationFrame === 'function') {
+      window.cancelAnimationFrame(handle);
+    } else {
+      clearTimeout(handle);
     }
   };
 
@@ -111,6 +141,175 @@
       .padStart(2, '0');
     const secs = (safeSeconds % 60).toString().padStart(2, '0');
     return `${mins}:${secs}`;
+  };
+
+  const baseHoldMessage = () =>
+    `Hold Space for 1 second to restart a ${selectedDuration}-second run.`;
+
+  const renderHoldState = (state, elapsed = 0) => {
+    const progress = Math.max(0, Math.min(elapsed / HOLD_DURATION_MS, 1));
+    holdDisplays.forEach(({ container, text, fill }) => {
+      if (container) {
+        container.classList.toggle('is-active', state === 'active');
+        container.classList.toggle('is-complete', state === 'complete');
+        container.setAttribute('data-hold-state', state);
+      }
+      if (fill) {
+        const width = state === 'idle' ? 0 : state === 'complete' ? 1 : progress;
+        fill.style.width = `${Math.max(0, Math.min(1, width)) * 100}%`;
+      }
+      if (text) {
+        if (state === 'idle') {
+          text.textContent = baseHoldMessage();
+        } else if (state === 'active') {
+          const remainingMs = Math.max(0, HOLD_DURATION_MS - elapsed);
+          text.textContent = `Keep holding… ${(remainingMs / 1000).toFixed(1)}s left`;
+        } else if (state === 'complete') {
+          text.textContent = 'Restarting now…';
+        }
+      }
+    });
+  };
+
+  const setHoldState = (state, elapsed = 0) => {
+    holdState = state;
+    renderHoldState(state, elapsed);
+  };
+
+  const refreshHoldDisplays = () => {
+    if (!holdDisplays.length) return;
+    if (holdState === 'active') {
+      const elapsed = holdStartTime ? performance.now() - holdStartTime : 0;
+      renderHoldState('active', elapsed);
+    } else if (holdState === 'complete') {
+      renderHoldState('complete', HOLD_DURATION_MS);
+    } else {
+      renderHoldState('idle', 0);
+    }
+  };
+
+  const clearHoldResetTimeout = () => {
+    if (holdResetTimeout) {
+      clearTimeout(holdResetTimeout);
+      holdResetTimeout = null;
+    }
+  };
+
+  const scheduleHoldIdle = (delay = 400) => {
+    if (!holdDisplays.length) return;
+    clearHoldResetTimeout();
+    holdResetTimeout = setTimeout(() => {
+      holdResetTimeout = null;
+      setHoldState('idle', 0);
+    }, delay);
+  };
+
+  const handleHoldFrame = () => {
+    if (holdStartTime == null) {
+      return;
+    }
+    const elapsed = performance.now() - holdStartTime;
+    if (elapsed >= HOLD_DURATION_MS) {
+      holdStartTime = null;
+      cancelHoldFrame(holdFrameId);
+      holdFrameId = null;
+      clearHoldResetTimeout();
+      setHoldState('complete', HOLD_DURATION_MS);
+      beginTest(selectedDuration || DEFAULT_DURATION);
+      scheduleHoldIdle(600);
+      return;
+    }
+    setHoldState('active', elapsed);
+    holdFrameId = requestHoldFrame(handleHoldFrame);
+  };
+
+  const startHoldTracking = () => {
+    if (!holdDisplays.length) return;
+    if (holdStartTime != null) {
+      return;
+    }
+    clearHoldResetTimeout();
+    holdStartTime = performance.now();
+    setHoldState('active', 0);
+    cancelHoldFrame(holdFrameId);
+    holdFrameId = requestHoldFrame(handleHoldFrame);
+  };
+
+  const cancelHoldTracking = () => {
+    if (holdStartTime == null) {
+      if (holdState === 'active') {
+        setHoldState('idle', 0);
+      }
+      return;
+    }
+    holdStartTime = null;
+    cancelHoldFrame(holdFrameId);
+    holdFrameId = null;
+    clearHoldResetTimeout();
+    setHoldState('idle', 0);
+  };
+
+  const syncDurationOptions = () => {
+    durationOptions.forEach((input) => {
+      input.checked = Number(input.value) === selectedDuration;
+    });
+  };
+
+  const updateSelectedDuration = (value) => {
+    const numericValue = Number(value);
+    selectedDuration = Number.isFinite(numericValue) && numericValue > 0 ? Math.floor(numericValue) : DEFAULT_DURATION;
+    syncDurationOptions();
+    refreshHoldDisplays();
+  };
+
+  const shouldIgnoreHoldTarget = (target) => {
+    if (!target || !(target instanceof HTMLElement)) {
+      return false;
+    }
+    if (target === typingInput) {
+      return false;
+    }
+    if (target.matches('input, button, select, textarea') || target.isContentEditable) {
+      return true;
+    }
+    if (target.closest('input, button, select, textarea')) {
+      return true;
+    }
+    return false;
+  };
+
+  const handleGlobalKeyDown = (event) => {
+    if (event.defaultPrevented) return;
+    const isSpace = event.code === 'Space' || event.key === ' ' || event.key === 'Spacebar';
+    if (!isSpace) return;
+    if (event.repeat) return;
+    if (!isScreenActive(testScreen) && !isScreenActive(resultsScreen)) {
+      return;
+    }
+    if (shouldIgnoreHoldTarget(event.target)) {
+      return;
+    }
+    startHoldTracking();
+  };
+
+  const handleGlobalKeyUp = (event) => {
+    const isSpace = event.code === 'Space' || event.key === ' ' || event.key === 'Spacebar';
+    if (!isSpace) return;
+    cancelHoldTracking();
+  };
+
+  const handleVisibilityChange = () => {
+    if (document.hidden) {
+      clearHoldResetTimeout();
+      if (holdStartTime != null) {
+        holdStartTime = null;
+        cancelHoldFrame(holdFrameId);
+        holdFrameId = null;
+      }
+      if (holdState !== 'idle') {
+        setHoldState('idle', 0);
+      }
+    }
   };
 
   const resetStats = () => {
@@ -345,14 +544,24 @@
       resultsNote.textContent = summary;
     }
 
+    syncDurationOptions();
+    refreshHoldDisplays();
     setScreen('results', { focusTarget: resultsRetry });
     startTimestamp = null;
   };
 
   const beginTest = async (duration) => {
     try {
-      testDuration = Number(duration) > 0 ? Number(duration) : DEFAULT_DURATION;
+      const numericDuration = Number(duration);
+      const resolvedDuration =
+        Number.isFinite(numericDuration) && numericDuration > 0
+          ? Math.floor(numericDuration)
+          : DEFAULT_DURATION;
+
+      testDuration = resolvedDuration;
       countdownSeconds = testDuration;
+      updateSelectedDuration(resolvedDuration);
+      cancelHoldTracking();
 
       resetTestState();
       typingInput.disabled = true;
@@ -400,16 +609,33 @@
 
   typingInput.addEventListener('input', handleInput);
 
+  durationOptions.forEach((input) => {
+    input.addEventListener('change', () => {
+      if (!input.checked) {
+        return;
+      }
+      updateSelectedDuration(input.value);
+    });
+  });
+
   if (restartBtn) {
     restartBtn.addEventListener('click', () => {
-      beginTest(testDuration || DEFAULT_DURATION);
+      beginTest(selectedDuration || DEFAULT_DURATION);
     });
   }
 
   if (resultsRetry) {
     resultsRetry.addEventListener('click', () => {
-      beginTest(testDuration || DEFAULT_DURATION);
+      beginTest(selectedDuration || DEFAULT_DURATION);
     });
+  }
+
+  if (holdDisplays.length) {
+    refreshHoldDisplays();
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    window.addEventListener('keyup', handleGlobalKeyUp);
+    window.addEventListener('blur', cancelHoldTracking);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
   }
 
   observeTextPanel();
