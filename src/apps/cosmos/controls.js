@@ -4,6 +4,7 @@ const DEFAULTS = {
   timeSpeed: 4000,
   gravityMultiplier: 1,
   showTrails: true,
+  trailLength: 720,
 };
 
 export function setupControlPanel(bodies, handlers = {}, overrides = {}) {
@@ -25,10 +26,28 @@ export function setupControlPanel(bodies, handlers = {}, overrides = {}) {
     .name('Gravity (×)')
     .onChange((value) => handlers.onGravityChange?.(value));
 
+  let trailLengthController;
+
   gui
     .add(settings, 'showTrails')
     .name('Show trails')
-    .onChange((value) => handlers.onTrailsToggle?.(value));
+    .onChange((value) => {
+      if (value) {
+        trailLengthController.enable();
+      } else {
+        trailLengthController.disable();
+      }
+      handlers.onTrailsToggle?.(value);
+    });
+
+  trailLengthController = gui
+    .add(settings, 'trailLength', 0, 720, 10)
+    .name('Trail length')
+    .onChange((value) => handlers.onTrailLengthChange?.(value));
+
+  if (!settings.showTrails) {
+    trailLengthController.disable();
+  }
 
   const cameraFolder = gui.addFolder('Camera');
   bodies.forEach((body) => {
@@ -81,6 +100,7 @@ export function setupControlPanel(bodies, handlers = {}, overrides = {}) {
   handlers.onTimeSpeedChange?.(settings.timeSpeed);
   handlers.onGravityChange?.(settings.gravityMultiplier);
   handlers.onTrailsToggle?.(settings.showTrails);
+  handlers.onTrailLengthChange?.(settings.trailLength);
 
   return { gui, settings };
 }
