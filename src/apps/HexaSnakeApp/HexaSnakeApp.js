@@ -108,7 +108,10 @@ const HexaSnakeApp = ({ onBack }) => {
           return;
         }
 
-        const state = stateProxy?.toJs({ create_proxies: false });
+        const state = stateProxy?.toJs({
+          create_proxies: false,
+          dict_converter: Object.fromEntries,
+        });
         stateProxy?.destroy();
 
         if (!state) {
@@ -116,9 +119,21 @@ const HexaSnakeApp = ({ onBack }) => {
           return;
         }
 
-        setScore(state.score);
-        setSpeedLevel(state.speed_level);
-        setBestScore((prev) => (state.score > prev ? state.score : prev));
+        const {
+          score: currentScore = 0,
+          speed_level: currentSpeedLevel = 1,
+          best_score: bestScoreFromState,
+        } = state;
+
+        setScore(currentScore);
+        setSpeedLevel(currentSpeedLevel);
+        setBestScore((prev) => {
+          const candidate =
+            typeof bestScoreFromState === 'number'
+              ? bestScoreFromState
+              : currentScore;
+          return candidate > prev ? candidate : prev;
+        });
 
         if (state.game_over) {
           if (!gameOverRef.current) {
