@@ -9,6 +9,24 @@ export const generateId = () => {
 
 const coerceArray = (value) => (Array.isArray(value) ? value : []);
 
+const DEFAULT_SCHEDULE = {
+  day: null,
+  order: 0,
+  focusBucket: null,
+  focusOrder: 0,
+};
+
+export const normalizeSchedule = (schedule) => {
+  const source = schedule && typeof schedule === 'object' ? schedule : {};
+  return {
+    ...DEFAULT_SCHEDULE,
+    day: source.day || null,
+    order: typeof source.order === 'number' ? source.order : 0,
+    focusBucket: source.focusBucket || null,
+    focusOrder: typeof source.focusOrder === 'number' ? source.focusOrder : 0,
+  };
+};
+
 export const normalizeTask = (task, depth = 0) => {
   if (!task || depth > MAX_DEPTH) return null;
   const now = new Date().toISOString();
@@ -26,13 +44,7 @@ export const normalizeTask = (task, depth = 0) => {
     completed: Boolean(task.completed),
     completedAt: task.completed ? (task.completedAt || now) : null,
     subtasks,
-    schedule: {
-      day: task.schedule?.day || null,
-      order: typeof task.schedule?.order === 'number' ? task.schedule.order : 0,
-      focusBucket: task.schedule?.focusBucket || null,
-      focusOrder:
-        typeof task.schedule?.focusOrder === 'number' ? task.schedule.focusOrder : 0,
-    },
+    schedule: normalizeSchedule(task.schedule),
   };
 
   return recalculateCompletion(normalized);
@@ -273,26 +285,31 @@ const cascadeRecalculate = (task) => {
 export const recalculateTaskTree = (tasks) => coerceArray(tasks).map(cascadeRecalculate);
 
 export const assignTaskToDay = (tasks, taskId, dayKey, order = 0) => {
-  return updateTask(tasks, taskId, (task) => ({
-    ...task,
-    schedule: {
-      ...task.schedule,
-      day: dayKey,
-      order,
-      focusBucket: dayKey === task.schedule?.day ? task.schedule.focusBucket : null,
-      focusOrder: dayKey === task.schedule?.day ? task.schedule.focusOrder : 0,
-    },
-  }));
+  return updateTask(tasks, taskId, (task) => {
+    const schedule = normalizeSchedule(task.schedule);
+    const sameDay = dayKey === schedule.day;
+    return {
+      ...task,
+      schedule: {
+        ...schedule,
+        day: dayKey,
+        order,
+        focusBucket: sameDay ? schedule.focusBucket : null,
+        focusOrder: sameDay ? schedule.focusOrder : 0,
+      },
+    };
+  });
 };
 
 export const reorderDayAssignments = (tasks, dayKey, orderedIds) => {
   const idToIndex = new Map(orderedIds.map((id, index) => [id, index]));
   return recalculateTaskTree(coerceArray(tasks).map((task) => {
     if (task.schedule?.day === dayKey && idToIndex.has(task.id)) {
+      const schedule = normalizeSchedule(task.schedule);
       return {
         ...task,
         schedule: {
-          ...task.schedule,
+          ...schedule,
           order: idToIndex.get(task.id),
         },
       };
@@ -308,24 +325,28 @@ export const reorderDayAssignments = (tasks, dayKey, orderedIds) => {
 };
 
 export const assignFocusBucket = (tasks, taskId, bucket, order = 0) => {
-  return updateTask(tasks, taskId, (task) => ({
-    ...task,
-    schedule: {
-      ...task.schedule,
-      focusBucket: bucket,
-      focusOrder: order,
-    },
-  }));
+  return updateTask(tasks, taskId, (task) => {
+    const schedule = normalizeSchedule(task.schedule);
+    return {
+      ...task,
+      schedule: {
+        ...schedule,
+        focusBucket: bucket,
+        focusOrder: order,
+      },
+    };
+  });
 };
 
 export const reorderFocusBucket = (tasks, bucket, orderedIds) => {
   const idToIndex = new Map(orderedIds.map((id, index) => [id, index]));
   return recalculateTaskTree(coerceArray(tasks).map((task) => {
     if (task.schedule?.focusBucket === bucket && idToIndex.has(task.id)) {
+      const schedule = normalizeSchedule(task.schedule);
       return {
         ...task,
         schedule: {
-          ...task.schedule,
+          ...schedule,
           focusOrder: idToIndex.get(task.id),
         },
       };
@@ -341,27 +362,33 @@ export const reorderFocusBucket = (tasks, bucket, orderedIds) => {
 };
 
 export const removeFocusBucket = (tasks, taskId) => {
-  return updateTask(tasks, taskId, (task) => ({
-    ...task,
-    schedule: {
-      ...task.schedule,
-      focusBucket: null,
-      focusOrder: 0,
-    },
-  }));
+  return updateTask(tasks, taskId, (task) => {
+    const schedule = normalizeSchedule(task.schedule);
+    return {
+      ...task,
+      schedule: {
+        ...schedule,
+        focusBucket: null,
+        focusOrder: 0,
+      },
+    };
+  });
 };
 
 export const removeDayAssignment = (tasks, taskId) => {
-  return updateTask(tasks, taskId, (task) => ({
-    ...task,
-    schedule: {
-      ...task.schedule,
-      day: null,
-      order: 0,
-      focusBucket: null,
-      focusOrder: 0,
-    },
-  }));
+  return updateTask(tasks, taskId, (task) => {
+    const schedule = normalizeSchedule(task.schedule);
+    return {
+      ...task,
+      schedule: {
+        ...schedule,
+        day: null,
+        order: 0,
+        focusBucket: null,
+        focusOrder: 0,
+      },
+    };
+  });
 };
 
 export const recalculateCompletion = (task) => {
