@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LangMath Calculator</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Inter", "SF Pro Display", "Segoe UI", sans-serif;
+        background: #f2f4ff;
+        min-height: 100%;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2.5rem 1.25rem;
+        background: radial-gradient(circle at top, #f9f9ff 0%, #eef1ff 65%, #e6ebff 100%);
+        color: #1f2146;
+      }
+
+      main {
+        width: min(520px, 100%);
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+        background: rgba(255, 255, 255, 0.92);
+        border-radius: 20px;
+        padding: 2.5rem 2rem;
+        box-shadow: 0 34px 55px -45px rgba(56, 49, 235, 0.65), 0 18px 45px -35px rgba(15, 16, 60, 0.55);
+        backdrop-filter: blur(6px);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(1.75rem, 5vw, 2.3rem);
+        letter-spacing: -0.01em;
+      }
+
+      p {
+        margin: 0;
+        line-height: 1.6;
+        color: #5b5e7c;
+      }
+
+      .input-label {
+        font-size: 0.85rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: #7a7fb1;
+      }
+
+      .input-row {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+      }
+
+      input[type="text"] {
+        flex: 1 1 auto;
+        padding: 0.9rem 1.05rem;
+        border-radius: 14px;
+        border: 1px solid rgba(119, 126, 173, 0.35);
+        background: rgba(248, 249, 255, 0.9);
+        font-size: 1.05rem;
+        color: #22244c;
+        transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+      }
+
+      input[type="text"]::placeholder {
+        color: rgba(121, 124, 160, 0.68);
+      }
+
+      input[type="text"]:focus {
+        outline: none;
+        border-color: rgba(104, 93, 241, 0.9);
+        box-shadow: 0 18px 38px -30px rgba(104, 93, 241, 0.8), 0 0 0 3px rgba(104, 93, 241, 0.18);
+        transform: translateY(-1px);
+      }
+
+      button {
+        flex: 0 0 auto;
+        border: none;
+        border-radius: 14px;
+        padding: 0.92rem 1.55rem;
+        background: linear-gradient(135deg, #6c5ce7, #7f6bff);
+        color: white;
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        cursor: pointer;
+        transition: transform 150ms ease, box-shadow 150ms ease, opacity 150ms ease;
+        box-shadow: 0 24px 35px -28px rgba(108, 92, 231, 0.95);
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+        box-shadow: none;
+        transform: none;
+      }
+
+      button:not(:disabled):hover {
+        transform: translateY(-1.5px);
+        box-shadow: 0 28px 42px -30px rgba(96, 84, 225, 0.95);
+      }
+
+      button:not(:disabled):active {
+        transform: translateY(0);
+      }
+
+      .result-box {
+        border-radius: 14px;
+        padding: 1rem 1.15rem;
+        min-height: 3.25rem;
+        display: flex;
+        align-items: center;
+        background: rgba(243, 245, 255, 0.85);
+        border: 1px solid rgba(123, 130, 200, 0.25);
+        color: #31345f;
+        font-size: 1.05rem;
+        transition: background 200ms ease, color 200ms ease, border-color 200ms ease;
+      }
+
+      .result-box[data-state="loading"] {
+        font-style: italic;
+        color: #676b94;
+      }
+
+      .result-box[data-state="error"] {
+        background: rgba(255, 235, 238, 0.9);
+        border-color: rgba(220, 85, 98, 0.4);
+        color: #c2404d;
+      }
+
+      .result-box[data-state="result"] {
+        background: rgba(224, 255, 243, 0.92);
+        border-color: rgba(74, 201, 134, 0.45);
+        color: #1f7d52;
+        font-weight: 600;
+      }
+
+      .result-box[data-state="info"] {
+        background: rgba(237, 239, 255, 0.88);
+        border-color: rgba(131, 137, 211, 0.35);
+      }
+
+      .result-box.pulse {
+        animation: resultPulse 650ms ease;
+      }
+
+      @keyframes resultPulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(108, 92, 231, 0.18);
+        }
+        100% {
+          box-shadow: 0 0 0 28px rgba(108, 92, 231, 0);
+        }
+      }
+
+      @media (max-width: 640px) {
+        body {
+          padding: 2rem 1rem;
+        }
+
+        main {
+          padding: 2rem 1.5rem;
+        }
+
+        .input-row {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        button {
+          width: 100%;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 1ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0ms !important;
+          scroll-behavior: auto !important;
+        }
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>LangMath</h1>
+        <p>Speak your arithmetic. Try phrases like “twenty one times four” or “nine plus six”.</p>
+      </header>
+
+      <label class="input-label" for="langmath-query">Math prompt</label>
+      <div class="input-row">
+        <input
+          id="langmath-query"
+          type="text"
+          inputmode="text"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="e.g. forty two divided by six"
+          aria-describedby="langmath-result"
+        />
+        <button id="langmath-button" type="button">Calculate</button>
+      </div>
+
+      <div class="result-box" id="langmath-result" role="status" aria-live="polite" data-state="loading">
+        <span id="langmath-result-text">Loading Python runtime…</span>
+      </div>
+    </main>
+
+    <script>
+      (function () {
+        const input = document.getElementById('langmath-query');
+        const button = document.getElementById('langmath-button');
+        const resultBox = document.getElementById('langmath-result');
+        const resultText = document.getElementById('langmath-result-text');
+
+        const operatorMap = {
+          plus: '+',
+          minus: '-',
+          times: '*',
+          multiplied_by: '*',
+          divided_by: '/',
+        };
+
+        const skipTokens = new Set(['and']);
+
+        const onesMap = {
+          zero: 0,
+          one: 1,
+          two: 2,
+          three: 3,
+          four: 4,
+          five: 5,
+          six: 6,
+          seven: 7,
+          eight: 8,
+          nine: 9,
+          ten: 10,
+          eleven: 11,
+          twelve: 12,
+          thirteen: 13,
+          fourteen: 14,
+          fifteen: 15,
+          sixteen: 16,
+          seventeen: 17,
+          eighteen: 18,
+          nineteen: 19,
+        };
+
+        const tensMap = {
+          twenty: 20,
+          thirty: 30,
+          forty: 40,
+          fifty: 50,
+        };
+
+        const pyodideReady = loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/' });
+
+        let runtimeReady = false;
+
+        const setResult = (message, state) => {
+          resultBox.dataset.state = state;
+          resultText.textContent = message;
+          resultBox.classList.remove('pulse');
+          void resultBox.offsetWidth;
+          resultBox.classList.add('pulse');
+        };
+
+        const sanitizeExpression = (expression) => {
+          return /^[\d\s+\-*/]+$/.test(expression);
+        };
+
+        const consumeNumber = (tokens, startIndex) => {
+          const current = tokens[startIndex];
+
+          if (/^\d+$/.test(current)) {
+            const numeric = Number.parseInt(current, 10);
+            if (!Number.isFinite(numeric) || numeric < 0 || numeric > 50) {
+              return null;
+            }
+            return { value: numeric, consumed: 1 };
+          }
+
+          if (Object.prototype.hasOwnProperty.call(onesMap, current)) {
+            return { value: onesMap[current], consumed: 1 };
+          }
+
+          if (Object.prototype.hasOwnProperty.call(tensMap, current)) {
+            let value = tensMap[current];
+            let consumed = 1;
+            const next = tokens[startIndex + 1];
+            if (next && Object.prototype.hasOwnProperty.call(onesMap, next)) {
+              const onesValue = onesMap[next];
+              if (onesValue >= 10) {
+                return null;
+              }
+              if (value === 50 && onesValue > 0) {
+                return null;
+              }
+              value += onesValue;
+              consumed = 2;
+            }
+            if (value > 50) {
+              return null;
+            }
+            return { value, consumed };
+          }
+
+          return null;
+        };
+
+        const parseQuery = (raw) => {
+          if (!raw) {
+            return null;
+          }
+
+          let prepared = raw
+            .toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, ' ')
+            .replace(/-/g, ' ')
+            .replace(/multiplied\s+by/g, 'multiplied_by')
+            .replace(/divided\s+by/g, 'divided_by')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+          if (!prepared) {
+            return null;
+          }
+
+          const tokens = prepared.split(' ').filter(Boolean);
+          const pieces = [];
+          let expectingNumber = true;
+          let index = 0;
+
+          while (index < tokens.length) {
+            const token = tokens[index];
+
+            if (skipTokens.has(token)) {
+              index += 1;
+              continue;
+            }
+
+            if (expectingNumber) {
+              const numberResult = consumeNumber(tokens, index);
+              if (!numberResult) {
+                return null;
+              }
+              pieces.push(String(numberResult.value));
+              index += numberResult.consumed;
+              expectingNumber = false;
+              continue;
+            }
+
+            if (!Object.prototype.hasOwnProperty.call(operatorMap, token)) {
+              return null;
+            }
+
+            pieces.push(operatorMap[token]);
+            index += 1;
+            expectingNumber = true;
+          }
+
+          if (!pieces.length || expectingNumber) {
+            return null;
+          }
+
+          const expression = pieces.join(' ');
+          if (!sanitizeExpression(expression)) {
+            return null;
+          }
+
+          return expression;
+        };
+
+        const formatResult = (value) => {
+          const numeric = Number(value);
+          if (Number.isFinite(numeric)) {
+            if (Number.isInteger(numeric)) {
+              return numeric.toString();
+            }
+            const trimmed = Number.parseFloat(numeric.toFixed(6));
+            return trimmed.toString();
+          }
+          return value;
+        };
+
+        const handleCalculation = async () => {
+          const query = input.value.trim();
+          if (!query) {
+            setResult('Enter a math question using words to evaluate it.', 'info');
+            input.focus();
+            return;
+          }
+
+          const expression = parseQuery(query);
+          if (!expression) {
+            setResult('Could not parse query', 'error');
+            return;
+          }
+
+          if (!runtimeReady) {
+            setResult('Runtime still loading. Please wait a moment…', 'loading');
+            return;
+          }
+
+          setResult('Calculating…', 'loading');
+          button.disabled = true;
+
+          try {
+            const pyodide = await pyodideReady;
+            const python = `from math import *\nresult = eval(${JSON.stringify(expression)})\nstr(result)`;
+            let outcome;
+            try {
+              outcome = pyodide.runPython(python);
+            } catch (error) {
+              setResult('Invalid math expression', 'error');
+              console.error('[LangMath] Evaluation error', error);
+              return;
+            }
+
+            const message = formatResult(outcome);
+            setResult(message, 'result');
+          } finally {
+            button.disabled = false;
+          }
+        };
+
+        button.disabled = true;
+        setResult('Loading Python runtime…', 'loading');
+
+        pyodideReady
+          .then((pyodide) => {
+            runtimeReady = true;
+            button.disabled = false;
+            setResult('Ready when you are! Try “six times seven”.', 'info');
+            if (!input.value) {
+              input.focus();
+            }
+
+            const smokeTests = [
+              { input: 'two plus two', expected: '4' },
+              { input: 'thirteen minus eight', expected: '5' },
+              { input: 'six times seven', expected: '42' },
+              { input: 'forty divided by five', expected: '8' },
+            ];
+
+            smokeTests.forEach((test) => {
+              const expression = parseQuery(test.input);
+              if (!expression) {
+                console.warn('[LangMath] Failed to parse sample input:', test.input);
+                return;
+              }
+
+              try {
+                const python = `from math import *\nresult = eval(${JSON.stringify(expression)})\nstr(result)`;
+                const output = pyodide.runPython(python);
+                const formatted = formatResult(output);
+                const pass = formatted === test.expected;
+                console[pass ? 'info' : 'warn'](
+                  `[LangMath] Sample ${pass ? 'pass' : 'mismatch'} — "${test.input}" = ${formatted} (expected ${test.expected})`
+                );
+              } catch (error) {
+                console.error('[LangMath] Sample evaluation failed:', test.input, error);
+              }
+            });
+          })
+          .catch((error) => {
+            console.error('[LangMath] Failed to load Pyodide', error);
+            setResult('Could not start Python runtime', 'error');
+          });
+
+        button.addEventListener('click', handleCalculation);
+        input.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            handleCalculation();
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

@@ -90,6 +90,12 @@ Cosmos Simulator shrinks the solar system by 1×10⁻⁹ and renders it with Thr
 - Experiment with post-processing bloom for the sun and motion blur for orbital trails.
 - Persist custom gravity and time-speed presets to revisit favourite slow-motion or accelerated scenarios.
 
+## LangMath
+LangMath converts short natural-language math prompts into validated arithmetic expressions and evaluates them entirely in-browser through Pyodide. It recognises number words from zero through fifty, strips punctuation, and applies Python’s operator precedence so conversational questions return precise answers with a single tap.
+- Extend the vocabulary past fifty and introduce fractions or negative values for broader coverage.
+- Offer inline hints when parsing fails, suggesting supported operator phrasing.
+- Cache the Pyodide runtime between sessions to shorten subsequent cold starts.
+
 ## Cache Lab
 Cache Lab embeds the dedicated cache-learning subapp that lives under `/cache-lab`. Eight mini-modules cover mapping, replacement, parameter sweeps, locality visualisation, miss classification, hierarchy exploration, pipeline impact, and trace loading. Auxiliary tabs (Learn, Experiment, Assess, Dashboard) guide newcomers, let advanced users tinker, and track quiz progress with localStorage persistence.
 - Ship more visualisations (e.g., animated heatmaps) for large traces while maintaining performance.

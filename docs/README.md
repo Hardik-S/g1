@@ -36,6 +36,7 @@ Gif coming soon
 * **Quantum Playground**: design interactive circuits, run a four-qubit simulator, and visualize measurements.
 * **Cache Lab**: explore cache mapping, replacement, hierarchy, and assessments via `/cache-lab`.
 * **Cosmos Simulator**: orbit a scaled solar system with live Newtonian physics and camera fly-to controls.
+* **LangMath**: convert natural-language arithmetic into validated expressions evaluated with Pyodide.
 
 ---
 

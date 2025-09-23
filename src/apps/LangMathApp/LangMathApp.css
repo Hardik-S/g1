@@ -1,0 +1,108 @@
+.lang-math-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  color: #1d1f35;
+}
+
+.lang-math-intro {
+  display: grid;
+  gap: 1rem;
+  padding: 1.75rem;
+  background: linear-gradient(135deg, rgba(238, 240, 255, 0.9), rgba(210, 216, 255, 0.95));
+  border-radius: 22px;
+  box-shadow: 0 24px 50px -45px rgba(55, 63, 142, 0.6);
+}
+
+.lang-math-intro h1 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+  color: #22244b;
+}
+
+.lang-math-intro p {
+  margin: 0;
+  line-height: 1.7;
+  color: #4d5078;
+}
+
+.lang-math-points {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: #5a5f85;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.lang-math-frame {
+  width: 100%;
+  min-height: clamp(480px, 68vh, 720px);
+  border: none;
+  border-radius: 22px;
+  box-shadow: 0 32px 55px -45px rgba(47, 57, 128, 0.58);
+  background: radial-gradient(circle at top, #f9f9ff 0%, #e7ebff 100%);
+}
+
+.lang-math-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lang-math-link,
+.lang-math-back {
+  border-radius: 999px;
+  padding: 0.75rem 1.3rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+  transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lang-math-link {
+  background: rgba(108, 92, 231, 0.12);
+  color: #4c45c8;
+  box-shadow: 0 18px 32px -28px rgba(76, 69, 200, 0.7);
+}
+
+.lang-math-link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 22px 40px -32px rgba(76, 69, 200, 0.72);
+  background: rgba(108, 92, 231, 0.18);
+}
+
+.lang-math-back {
+  background: #22244b;
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 20px 42px -32px rgba(25, 27, 58, 0.65);
+}
+
+.lang-math-back:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 24px 48px -36px rgba(25, 27, 58, 0.7);
+}
+
+@media (max-width: 720px) {
+  .lang-math-frame {
+    min-height: 520px;
+  }
+
+  .lang-math-intro {
+    padding: 1.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lang-math-link,
+  .lang-math-back {
+    transition: none;
+  }
+}
