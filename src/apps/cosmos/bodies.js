@@ -1,7 +1,10 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.162/build/three.module.js';
 
 const TRAIL_LIMIT = 720;
-const MIN_RENDER_RADIUS = 0.35;
+const MIN_PLANET_RENDER_RADIUS = 0.08;
+const MIN_MOON_RENDER_RADIUS = 0.03;
+const PLANET_RADIUS_SCALE = 12;
+const MOON_RADIUS_SCALE = 30;
 
 const gradientTextureCache = new Map();
 const textureLoader = new THREE.TextureLoader();
@@ -212,13 +215,32 @@ export async function loadBodyData(url = './data/bodies.json') {
 
 function createMaterial(color, isSun) {
   const baseColor = resolveBaseColor(color);
+  const map = extractMaterialMap(color);
+
+  if (isSun) {
+    const sunMaterialConfig = {
+      color: new THREE.Color(baseColor),
+      emissive: new THREE.Color(baseColor).lerp(new THREE.Color('#ff8a1a'), 0.35),
+      emissiveIntensity: 2.5,
+      roughness: 0.25,
+      metalness: 0,
+    };
+
+    if (map) {
+      sunMaterialConfig.map = map;
+    }
+
+    return new THREE.MeshPhysicalMaterial(sunMaterialConfig);
+  }
+
   const materialConfig = {
     color: new THREE.Color(baseColor),
     roughness: 0.6,
     metalness: 0.1,
+    emissive: new THREE.Color(baseColor).lerp(new THREE.Color('#000000'), 0.55),
+    emissiveIntensity: 0.6,
   };
 
-  const map = extractMaterialMap(color);
   if (map) {
     materialConfig.map = map;
   }
@@ -231,11 +253,14 @@ function createMaterial(color, isSun) {
     if (typeof color.metalness === 'number') {
       materialConfig.metalness = clamp01(color.metalness);
     }
-  }
 
-  if (isSun) {
-    materialConfig.emissive = new THREE.Color('#fff4d3');
-    materialConfig.emissiveIntensity = 1.6;
+    if (typeof color.emissive === 'string') {
+      materialConfig.emissive = new THREE.Color(color.emissive);
+    }
+
+    if (typeof color.emissiveIntensity === 'number') {
+      materialConfig.emissiveIntensity = Math.max(color.emissiveIntensity, 0);
+    }
   }
 
   return new THREE.MeshStandardMaterial(materialConfig);
@@ -304,7 +329,9 @@ export function createBodyMeshes(bodies, { scale }) {
   const moonGroups = new Map();
 
   bodies.forEach((body) => {
-    const renderRadius = Math.max(body.radius * scale, MIN_RENDER_RADIUS);
+    const radiusScale = body.isMoon ? MOON_RADIUS_SCALE : PLANET_RADIUS_SCALE;
+    const minRadius = body.isMoon ? MIN_MOON_RENDER_RADIUS : MIN_PLANET_RENDER_RADIUS;
+    const renderRadius = Math.max(body.radius * scale * radiusScale, minRadius);
     const geometry = new THREE.SphereGeometry(renderRadius, 48, 32);
     const material = createMaterial(body.color, body.name === 'Sun');
     const mesh = new THREE.Mesh(geometry, material);
@@ -364,7 +391,7 @@ export function createBodyMeshes(bodies, { scale }) {
 }
 
 export function createSunLight(intensity = 3.5) {
-  const light = new THREE.PointLight('#fff2a3', intensity, 0, 2);
+  const light = new THREE.PointLight('#ffd27a', intensity, 0, 2);
   light.castShadow = false;
   light.position.set(0, 0, 0);
   return light;
