@@ -198,6 +198,19 @@
   padding-top: 0.15rem;
 }
 
+.zen-app-shell.is-fullscreen {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  z-index: 2000;
+}
+
+.zen-app-shell.is-fullscreen .zen-view {
+  overflow: auto;
+}
+
 .zen-toggle {
   width: 1.35rem;
   height: 1.35rem;
