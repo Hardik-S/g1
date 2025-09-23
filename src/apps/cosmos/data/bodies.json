@@ -45,7 +45,13 @@
     "radius": 6.9911e7,
     "position": [7.785e11, 0, 0],
     "velocity": [0, 13070, 0],
-    "color": "orange"
+    "color": "orange",
+    "ring": {
+      "innerRadius": 9.2e7,
+      "outerRadius": 1.29e8,
+      "tilt": 3.13,
+      "opacity": 0.35
+    }
   },
   {
     "name": "Saturn",
@@ -53,7 +59,13 @@
     "radius": 5.8232e7,
     "position": [1.433e12, 0, 0],
     "velocity": [0, 9680, 0],
-    "color": "goldenrod"
+    "color": "goldenrod",
+    "ring": {
+      "innerRadius": 7.4e7,
+      "outerRadius": 1.4e8,
+      "tilt": 26.73,
+      "opacity": 0.55
+    }
   },
   {
     "name": "Uranus",
@@ -61,7 +73,13 @@
     "radius": 2.5362e7,
     "position": [2.872e12, 0, 0],
     "velocity": [0, 6800, 0],
-    "color": "lightblue"
+    "color": "lightblue",
+    "ring": {
+      "innerRadius": 3.9e7,
+      "outerRadius": 9.8e7,
+      "tilt": 97.77,
+      "opacity": 0.45
+    }
   },
   {
     "name": "Neptune",
@@ -69,6 +87,12 @@
     "radius": 2.4622e7,
     "position": [4.495e12, 0, 0],
     "velocity": [0, 5430, 0],
-    "color": "darkblue"
+    "color": "darkblue",
+    "ring": {
+      "innerRadius": 4.2e7,
+      "outerRadius": 6.3e7,
+      "tilt": 28.32,
+      "opacity": 0.4
+    }
   }
 ]
