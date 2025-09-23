@@ -51,15 +51,6 @@ export function setupControlPanel(bodies, handlers = {}, overrides = {}) {
     });
 
   trailLengthController = gui
-    .add(settings, 'trailLength', 0, 720, 10)
-    .name('Trail length')
-    .onChange((value) => handlers.onTrailLengthChange?.(value));
-
-  if (!settings.showTrails) {
-    trailLengthController.disable();
-  }
-
-  gui
     .add(
       settings,
       'trailLength',
@@ -69,6 +60,10 @@ export function setupControlPanel(bodies, handlers = {}, overrides = {}) {
     )
     .name('Trail length')
     .onChange((value) => handlers.onTrailLengthChange?.(value));
+
+  if (!settings.showTrails) {
+    trailLengthController.disable();
+  }
 
   const cameraFolder = gui.addFolder('Camera');
   bodies.forEach((body) => {
