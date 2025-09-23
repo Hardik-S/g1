@@ -914,84 +914,214 @@
   color: #4a5f55;
 }
 
-.zen-garden-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
+.zen-garden-scene {
+  position: relative;
   flex: 1;
+  min-height: 420px;
+  border-radius: 22px;
+  overflow: hidden;
+  background: linear-gradient(
+    180deg,
+    rgba(214, 235, 225, 0.7) 0%,
+    rgba(243, 249, 245, 0.92) 48%,
+    rgba(255, 247, 232, 0.96) 100%
+  );
+  box-shadow: inset 0 0 0 1px rgba(160, 204, 185, 0.28);
 }
 
-.zen-garden-section {
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 18px;
-  padding: 1.25rem;
-  box-shadow: inset 0 0 0 1px rgba(160, 204, 185, 0.32);
+.zen-garden-scene__layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.zen-garden-scene__layer--sky {
+  background: linear-gradient(180deg, #e7f6ff 0%, rgba(231, 246, 255, 0.4) 60%, rgba(255, 255, 255, 0) 100%);
+}
+
+.zen-garden-scene__layer--hills {
+  bottom: 22%;
+  top: auto;
+  left: -18%;
+  right: -18%;
+  height: 48%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 3rem;
+}
+
+.zen-garden-hill {
+  flex: 1;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 60%, rgba(125, 188, 151, 0.75) 0%, rgba(88, 142, 115, 0.9) 70%);
+  filter: blur(0.5px);
+  opacity: 0.85;
+}
+
+.zen-garden-hill--left {
+  transform: scaleX(1.1) scaleY(1.05) translateX(-6%);
+}
+
+.zen-garden-hill--right {
+  transform: scaleX(1.2) scaleY(0.95) translateX(8%);
+  background: radial-gradient(circle at 50% 60%, rgba(190, 156, 193, 0.7) 0%, rgba(142, 109, 162, 0.88) 70%);
+}
+
+.zen-garden-scene__layer--path {
+  top: auto;
+  bottom: 0;
+  height: 32%;
+  background: linear-gradient(
+    180deg,
+    rgba(232, 214, 189, 0.32) 0%,
+    rgba(219, 198, 171, 0.65) 45%,
+    rgba(198, 173, 142, 0.8) 100%
+  );
+  box-shadow: inset 0 10px 24px rgba(148, 119, 88, 0.16);
+}
+
+.zen-garden-scene__content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  padding: 2.5rem 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.zen-garden-cluster {
+  position: absolute;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  max-width: min(320px, 90vw);
 }
 
-.zen-garden-section--priority {
-  background: linear-gradient(160deg, rgba(214, 235, 225, 0.9) 0%, rgba(190, 224, 209, 0.9) 100%);
+.zen-garden-cluster--priority {
+  left: 6%;
+  bottom: 7.5rem;
 }
 
-.zen-garden-section--bonus {
-  background: linear-gradient(160deg, rgba(236, 221, 233, 0.95) 0%, rgba(222, 210, 230, 0.9) 100%);
+.zen-garden-cluster--bonus {
+  right: 8%;
+  bottom: 3.75rem;
 }
 
-.zen-garden-section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  color: #3b6658;
-}
-
-.zen-garden-section-header h2 {
+.zen-garden-cluster-header {
   margin: 0;
-  font-size: 1.15rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  color: #3b6658;
+  box-shadow: inset 0 0 0 1px rgba(108, 161, 143, 0.28);
 }
 
-.zen-garden-section-count {
+.zen-garden-cluster-header h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.zen-garden-cluster-count {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 2rem;
   padding: 0.2rem 0.55rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.9);
   font-size: 0.85rem;
   font-weight: 600;
   color: #3b6658;
   box-shadow: inset 0 0 0 1px rgba(108, 161, 143, 0.2);
 }
 
-.zen-garden-empty {
-  margin: 0;
-  padding: 0.75rem 1rem;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.6);
-  color: #527165;
-  font-size: 0.95rem;
-  text-align: center;
-}
-
-.zen-garden-empty--global {
-  align-self: center;
-  max-width: 560px;
-}
-
-.zen-garden-plant-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.zen-garden-cluster-plants {
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
 }
 
-.zen-garden-plant-item {
+.zen-garden-scene-empty {
+  max-width: 420px;
+  padding: 1.25rem 1.5rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 18px 26px rgba(72, 116, 96, 0.18);
+  color: #527165;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.zen-garden-scene-empty p {
   margin: 0;
+}
+
+@media (max-width: 1024px) {
+  .zen-garden-scene {
+    min-height: 520px;
+  }
+
+  .zen-garden-cluster--priority {
+    left: 4%;
+    bottom: 8.5rem;
+  }
+
+  .zen-garden-cluster--bonus {
+    right: 4%;
+    bottom: 4.5rem;
+  }
+}
+
+@media (max-width: 860px) {
+  .zen-garden-scene {
+    min-height: 560px;
+  }
+
+  .zen-garden-scene__content {
+    padding: 2rem 1.75rem 3rem;
+    align-items: flex-end;
+  }
+
+  .zen-garden-cluster {
+    position: static;
+    width: 100%;
+  }
+
+  .zen-garden-cluster-plants {
+    width: 100%;
+  }
+
+  .zen-garden-scene__content {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .zen-garden-scene {
+    min-height: auto;
+  }
+
+  .zen-garden-scene__layer--hills {
+    display: none;
+  }
+
+  .zen-garden-scene__layer--path {
+    height: 38%;
+  }
+
+  .zen-garden-cluster-header {
+    align-self: flex-start;
+  }
 }
 
 .zen-garden-plant {
