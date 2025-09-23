@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import GardenView from '../views/GardenView';
 
 describe('GardenView', () => {
@@ -43,9 +43,7 @@ describe('GardenView', () => {
 
     expect(screen.getByRole('heading', { name: 'Priority Grove' })).toBeInTheDocument();
     expect(screen.getByText('Morning priority')).toBeInTheDocument();
-    expect(
-      screen.getByLabelText('Morning priority is at growth stage 3 of 4'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Morning priority is at growth stage 3 of 4')).toBeInTheDocument();
   });
 
   it('labels completed focus snapshots as persisted for the current day', () => {
@@ -68,10 +66,17 @@ describe('GardenView', () => {
 
     render(<GardenView priority={[]} bonus={[snapshotEntry]} />);
 
-    expect(screen.getByRole('heading', { name: 'Bonus Blooms' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Bonus Blooms/ })).toBeInTheDocument();
+    const flowerButton = screen.getByRole('button', { name: /Finished bonus bloom/i });
+    expect(flowerButton).toHaveAccessibleName(
+      'Finished bonus bloom. Fully bloomed. Persisted from a previous day.',
+    );
+
+    fireEvent.focus(flowerButton);
+
     expect(screen.getByText('Finished bonus bloom')).toBeInTheDocument();
     expect(screen.getByText('Persisted bloom')).toBeInTheDocument();
-    expect(screen.getByLabelText('Finished bonus bloom is fully grown')).toBeInTheDocument();
+    expect(screen.getByText('Completed bloom')).toBeInTheDocument();
   });
 
   it('announces empty buckets with readable fallback copy', () => {
