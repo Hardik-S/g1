@@ -1,17 +1,29 @@
 import React from 'react';
 import GardenPlant from './GardenPlant';
+import GardenTree from './GardenTree';
 
 const GardenScene = ({ priority = [], bonus = [] }) => {
   const hasPriority = priority.length > 0;
   const hasBonus = bonus.length > 0;
   const hasAny = hasPriority || hasBonus;
 
-  const renderPlant = (entry, variant) => (
+  const renderPriorityTree = (entry) => (
+    <GardenTree
+      key={entry.id}
+      title={entry.title}
+      isComplete={entry.isSnapshot || entry.stage?.isComplete}
+      stageIndex={entry.stage?.completedStages || 0}
+      totalStages={entry.stage?.totalStages || 1}
+      persisted={Boolean(entry.isSnapshot)}
+    />
+  );
+
+  const renderBonusPlant = (entry) => (
     <GardenPlant
       key={entry.id}
       title={entry.title}
       description={entry.description}
-      variant={variant}
+      variant="bonus"
       isComplete={entry.isSnapshot || entry.stage?.isComplete}
       stageIndex={entry.stage?.completedStages || 0}
       totalStages={entry.stage?.totalStages || 1}
@@ -38,7 +50,7 @@ const GardenScene = ({ priority = [], bonus = [] }) => {
               </span>
             </header>
 
-            <div className="zen-garden-cluster-plants">{priority.map((entry) => renderPlant(entry, 'priority'))}</div>
+            <div className="zen-garden-cluster-plants">{priority.map((entry) => renderPriorityTree(entry))}</div>
           </section>
         )}
 
@@ -51,7 +63,7 @@ const GardenScene = ({ priority = [], bonus = [] }) => {
               </span>
             </header>
 
-            <div className="zen-garden-cluster-plants">{bonus.map((entry) => renderPlant(entry, 'bonus'))}</div>
+            <div className="zen-garden-cluster-plants">{bonus.map((entry) => renderBonusPlant(entry))}</div>
           </section>
         )}
 
