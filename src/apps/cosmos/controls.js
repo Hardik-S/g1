@@ -1,9 +1,14 @@
 import GUI from 'https://cdn.jsdelivr.net/npm/lil-gui@0.19/+esm';
 
+export const TIME_SPEED_RANGE = { min: 100, max: 20000, step: 100 };
+export const TRAIL_LENGTH_RANGE = { min: 120, max: 720, step: 30 };
+export const DEFAULT_TRAIL_LENGTH = 720;
+
 const DEFAULTS = {
   timeSpeed: 4000,
   gravityMultiplier: 1,
   showTrails: true,
+  trailLength: DEFAULT_TRAIL_LENGTH,
 };
 
 export function setupControlPanel(bodies, handlers = {}, overrides = {}) {
@@ -16,7 +21,7 @@ export function setupControlPanel(bodies, handlers = {}, overrides = {}) {
   gui.domElement.classList.add('cosmos-gui');
 
   gui
-    .add(settings, 'timeSpeed', 100, 20000, 100)
+    .add(settings, 'timeSpeed', TIME_SPEED_RANGE.min, TIME_SPEED_RANGE.max, TIME_SPEED_RANGE.step)
     .name('Time speed (×)')
     .onChange((value) => handlers.onTimeSpeedChange?.(value));
 
@@ -29,6 +34,17 @@ export function setupControlPanel(bodies, handlers = {}, overrides = {}) {
     .add(settings, 'showTrails')
     .name('Show trails')
     .onChange((value) => handlers.onTrailsToggle?.(value));
+
+  gui
+    .add(
+      settings,
+      'trailLength',
+      TRAIL_LENGTH_RANGE.min,
+      TRAIL_LENGTH_RANGE.max,
+      TRAIL_LENGTH_RANGE.step,
+    )
+    .name('Trail length')
+    .onChange((value) => handlers.onTrailLengthChange?.(value));
 
   const cameraFolder = gui.addFolder('Camera');
   bodies.forEach((body) => {
@@ -81,6 +97,7 @@ export function setupControlPanel(bodies, handlers = {}, overrides = {}) {
   handlers.onTimeSpeedChange?.(settings.timeSpeed);
   handlers.onGravityChange?.(settings.gravityMultiplier);
   handlers.onTrailsToggle?.(settings.showTrails);
+  handlers.onTrailLengthChange?.(settings.trailLength);
 
   return { gui, settings };
 }
