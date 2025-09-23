@@ -240,7 +240,9 @@ const createInitialState = (width, height, highScore, catAppearance, kittenMode 
       perfects: 0,
     },
     drowsiness: 0,
+    drowsinessGraceUntil: 0,
     drowsinessProgress: 0,
+
     lastReason: 'Tap or press space to wake Noodle the cat.',
     highScore,
     effects: {
@@ -491,8 +493,10 @@ const CatNapLeapApp = () => {
     state.time = 0;
     state.stats.score = 0;
     state.stats.perfects = 0;
-    state.drowsiness = 8;
+    state.drowsiness = 0;
+    state.drowsinessGraceUntil = state.time + 2000;
     state.drowsinessProgress = 0;
+
     state.lastReason = '';
     state.effects.yarnUntil = 0;
     state.effects.catnipUntil = 0;
@@ -731,8 +735,15 @@ const CatNapLeapApp = () => {
       state.cat.vy += gravity * delta;
       state.cat.y += state.cat.vy * delta;
 
-      const drowsinessRate = (5.5 + state.drowsinessProgress * 0.03) * (state.kittenMode ? 0.2 : 1);
-      state.drowsiness = clamp(state.drowsiness + drowsinessRate * delta, 0, 100);
+      const graceDeadline = state.drowsinessGraceUntil ?? 0;
+      if (state.time < graceDeadline) {
+        if (state.drowsiness !== 0) {
+          state.drowsiness = 0;
+        }
+      } else {
+        const drowsinessRate = (5.5 + state.stats.score * 0.03) * (state.kittenMode ? 0.2 : 1);
+        state.drowsiness = clamp(state.drowsiness + drowsinessRate * delta, 0, 100);
+      }
 
       state.pillowTimer += deltaMs;
       const minGap = Math.max(height * 0.22, height * 0.35 - state.stats.score * 1.5);
