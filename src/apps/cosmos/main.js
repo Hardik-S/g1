@@ -13,6 +13,7 @@ let controls;
 let sunLight;
 let simulation;
 let visuals;
+let moonGroups = new Map();
 let showTrails = true;
 let timeSpeed = 4000;
 let gravityMultiplier = 1;
@@ -139,8 +140,12 @@ async function init() {
   try {
     const bodies = await loadBodyData('./data/bodies.json');
     simulation = new SolarSystemSimulation(bodies, { historyLimit: 720 });
-    const { group, visuals: createdVisuals } = createBodyMeshes(simulation.bodies, { scale: SCALE });
+    const { group, visuals: createdVisuals, moonGroups: createdMoonGroups } = createBodyMeshes(
+      simulation.bodies,
+      { scale: SCALE },
+    );
     visuals = createdVisuals;
+    moonGroups = createdMoonGroups;
 
     sunLight = createSunLight();
     scene.add(group);
@@ -150,6 +155,12 @@ async function init() {
       onTimeSpeedChange: (value) => { timeSpeed = value; },
       onGravityChange: (value) => { gravityMultiplier = value; },
       onTrailsToggle: (value) => { showTrails = value; },
+      onMoonsToggle: (planetName, visible) => {
+        const groupRef = moonGroups.get(planetName);
+        if (groupRef) {
+          groupRef.visible = visible;
+        }
+      },
       onTeleport: teleportCameraTo,
       onReset: resetCamera,
     });

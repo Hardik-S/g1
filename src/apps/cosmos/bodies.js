@@ -299,7 +299,11 @@ function createRingMesh(body, scale) {
 
 export function createBodyMeshes(bodies, { scale }) {
   const group = new THREE.Group();
-  const visuals = bodies.map((body) => {
+  const visuals = [];
+  const containers = new Map();
+  const moonGroups = new Map();
+
+  bodies.forEach((body) => {
     const renderRadius = Math.max(body.radius * scale, MIN_RENDER_RADIUS);
     const geometry = new THREE.SphereGeometry(renderRadius, 48, 32);
     const material = createMaterial(body.color, body.name === 'Sun');
@@ -313,23 +317,50 @@ export function createBodyMeshes(bodies, { scale }) {
 
     const { line: trail, positions, geometry: trailGeometry } = createTrail(body.color);
 
+    const container = new THREE.Group();
+    container.name = `${body.name}::container`;
+    container.add(mesh);
+    container.add(trail);
+
+    const moonsContainer = new THREE.Group();
+    moonsContainer.name = `${body.name}::moons`;
+    container.add(moonsContainer);
+
+    const parentGroup = body.parentName
+      ? containers.get(body.parentName)?.moonsGroup
+      : group;
+
+    if (!parentGroup) {
+      throw new Error(`Unable to locate parent group for ${body.name}`);
+    }
+
+    parentGroup.add(container);
     group.add(mesh);
     if (ring) {
       group.add(ring);
     }
     group.add(trail);
 
-    return {
+    visuals.push({
       name: body.name,
       mesh,
       ring,
       trail,
       trailPositions: positions,
       trailGeometry,
-    };
+      container,
+      parentName: body.parentName ?? null,
+      isMoon: body.isMoon ?? false,
+    });
+
+    containers.set(body.name, { container, moonsGroup: moonsContainer });
+
+    if (!body.parentName) {
+      moonGroups.set(body.name, moonsContainer);
+    }
   });
 
-  return { group, visuals };
+  return { group, visuals, moonGroups };
 }
 
 export function createSunLight(intensity = 3.5) {
