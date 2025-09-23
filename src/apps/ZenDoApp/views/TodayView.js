@@ -17,7 +17,7 @@ const getBucketList = (bucket, lists) => {
   return [];
 };
 
-const TaskCard = ({ bucketId, dragController, index, onCompleteTask, task }) => {
+const TaskCard = ({ bucketId, dragController, index, task }) => {
   const handleDragStart = useCallback((event) => {
     if (event.dataTransfer) {
       try {
@@ -44,12 +44,6 @@ const TaskCard = ({ bucketId, dragController, index, onCompleteTask, task }) => 
     >
       <div className="zen-card-title-row">
         <span>{task.title}</span>
-        <input
-          type="checkbox"
-          checked={task.completed}
-          onChange={() => onCompleteTask(task.id, !task.completed)}
-          aria-label="Toggle completion"
-        />
       </div>
       {task.dueDate && <div className="zen-card-meta">Due {task.dueDate}</div>}
     </div>
@@ -65,7 +59,6 @@ const TodayView = ({
   onClearBucket,
   onBackToLanding,
   onOpenFocus,
-  onCompleteTask,
 }) => {
   const dragController = useSharedDragController();
 
@@ -106,9 +99,8 @@ const TodayView = ({
       index={index}
       bucketId={bucketId}
       dragController={dragController}
-      onCompleteTask={onCompleteTask}
     />
-  ), [dragController, onCompleteTask]);
+  ), [dragController]);
 
   return (
     <div className="zen-today-layout">
