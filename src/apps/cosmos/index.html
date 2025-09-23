@@ -29,6 +29,61 @@
         </ul>
       </header>
       <section class="cosmos-viewport">
+        <aside class="cosmos-legend">
+          <button
+            class="cosmos-legend__toggle"
+            type="button"
+            aria-expanded="true"
+            aria-controls="cosmos-legend-panel"
+          >
+            <span id="cosmos-legend-title" class="cosmos-legend__title">Legend</span>
+            <span class="cosmos-legend__toggle-text cosmos-legend__toggle-text--expanded">Hide tips</span>
+            <span class="cosmos-legend__toggle-text cosmos-legend__toggle-text--collapsed">Show tips</span>
+            <span class="cosmos-legend__chevron" aria-hidden="true">▾</span>
+          </button>
+          <div
+            class="cosmos-legend__panel"
+            id="cosmos-legend-panel"
+            role="region"
+            aria-labelledby="cosmos-legend-title"
+          >
+            <div class="cosmos-legend__section">
+              <h2 class="cosmos-legend__heading">Mouse</h2>
+              <dl class="cosmos-legend__bindings">
+                <div class="cosmos-legend__binding">
+                  <dt>Left drag</dt>
+                  <dd>Orbit around the focused body.</dd>
+                </div>
+                <div class="cosmos-legend__binding">
+                  <dt>Right drag</dt>
+                  <dd>Pan the camera laterally through space.</dd>
+                </div>
+                <div class="cosmos-legend__binding">
+                  <dt>Scroll</dt>
+                  <dd>Zoom in or out to inspect the system.</dd>
+                </div>
+              </dl>
+            </div>
+            <div class="cosmos-legend__section">
+              <h2 class="cosmos-legend__heading">Keyboard</h2>
+              <dl class="cosmos-legend__bindings">
+                <div class="cosmos-legend__binding">
+                  <dt>R</dt>
+                  <dd>Reset the camera to the default solar view.</dd>
+                </div>
+              </dl>
+            </div>
+            <div class="cosmos-legend__section">
+              <h2 class="cosmos-legend__heading">Control panel</h2>
+              <ul class="cosmos-legend__tips">
+                <li>Use <strong>Time speed</strong> to fast-forward or slow the simulation.</li>
+                <li>Adjust <strong>Gravity</strong> to exaggerate or mellow orbital motion.</li>
+                <li>Toggle <strong>Show trails</strong> to reveal each body's orbit history.</li>
+                <li>Open <strong>Camera</strong> to teleport to any planet or reset the view.</li>
+              </ul>
+            </div>
+          </div>
+        </aside>
         <div class="cosmos-loader">Loading solar system…</div>
       </section>
       <footer class="cosmos-footer">
