@@ -18,7 +18,7 @@ Gif coming soon
 
 * **Day Switcher**: cycle through the week with animated transitions.
 * **CatPad**: cat-themed note editor with GitHub gist syncing.
-* **Zen Do**: manage tasks in a zen-styled weekly garden with focus mode, gist sync, and a rebuilt SortableJS drag system that clones tasks from the tree into weekly and focus buckets. 【F:src/apps/ZenDoApp/views/LandingView.js†L24-L91】【F:src/apps/ZenDoApp/views/TodayView.js†L34-L99】
+* **Zen Do**: manage tasks in a zen-styled weekly garden with focus mode, gist sync, and a custom pointer-driven drag system for moving cards between the task tree, weekly buckets, and focus lists. 【F:src/apps/ZenDoApp/views/LandingView.js†L1-L168】【F:src/apps/ZenDoApp/views/TodayView.js†L1-L126】
 * **N-Pomodoro**: orchestrate multi-activity pomodoro sessions.
 
 ### Games
@@ -177,7 +177,7 @@ g1/
 
 ### Utilities
 
-* SortableJS: drag-and-drop reordering in shared UIs
+* Custom pointer and HTML Drag and Drop controllers for Zen Do scheduling flows
 
 ### Cache Lab Subapp
 
