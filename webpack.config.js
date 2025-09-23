@@ -95,6 +95,7 @@ module.exports = {
           'apps/cat-typing-speed-test'
         );
         addCopyPattern(patterns, ['apps/cosmos', 'src/apps/cosmos'], 'apps/cosmos');
+        addCopyPattern(patterns, ['src/apps/lang-math'], 'apps/lang-math');
         addCopyPattern(patterns, ['apps/zen-go', 'src/apps/zen-go'], 'apps/zen-go');
 
         const cacheLabSource = path.resolve(__dirname, 'src/apps/cache-lab/dist');

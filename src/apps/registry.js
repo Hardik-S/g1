@@ -104,6 +104,19 @@ export const APP_REGISTRY = {
     created: '2025-09-22',
     featured: true,
   }),
+  'lang-math': withDefaults({
+    id: 'lang-math',
+    title: 'LangMath',
+    description: 'Turn number words and operator phrases into live calculations using client-side Python.',
+    icon: '🧮',
+    category: 'Education',
+    component: null,
+    loader: () => import('./LangMathApp'),
+    path: '/apps/lang-math',
+    tags: ['calculator', 'language', 'python', 'education'],
+    created: '2025-10-20',
+    featured: true,
+  }),
   // Placeholder for future apps
   'n-pomodoro': withDefaults({
     id: 'n-pomodoro',
