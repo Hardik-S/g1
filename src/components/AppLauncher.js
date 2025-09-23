@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { APP_CATEGORIES, getAllApps } from '../apps/registry';
+import matchesAppQuery from '../apps/filtering';
 import AppLauncherHeader from './AppLauncher/AppLauncherHeader';
 import CategoryNav from './AppLauncher/CategoryNav';
 import FavoritesSection from './AppLauncher/FavoritesSection';
@@ -62,18 +63,16 @@ const AppLauncher = () => {
     toggleFavorite,
   } = useFavorites(allApps, selectedCategory, searchQuery);
 
+  const filterOptions = useMemo(() => ({
+    category: selectedCategory,
+    searchTerm: searchQuery.toLowerCase(),
+  }), [searchQuery, selectedCategory]);
+
   const filteredApps = useMemo(() => {
     const favoriteSet = new Set(favoriteIds);
-    const searchLower = searchQuery.toLowerCase();
 
     return allApps
-      .filter((app) => {
-        const matchesCategory = selectedCategory === 'All' || app.category === selectedCategory;
-        const matchesSearch = app.title.toLowerCase().includes(searchLower) ||
-          app.description.toLowerCase().includes(searchLower) ||
-          app.tags.some((tag) => tag.toLowerCase().includes(searchLower));
-        return matchesCategory && matchesSearch && !app.disabled;
-      })
+      .filter((app) => matchesAppQuery(app, filterOptions))
       .sort((a, b) => {
         const aFavorited = favoriteSet.has(a.id);
         const bFavorited = favoriteSet.has(b.id);
@@ -85,7 +84,7 @@ const AppLauncher = () => {
         }
         return a.title.localeCompare(b.title);
       });
-  }, [allApps, favoriteIds, searchQuery, selectedCategory]);
+  }, [allApps, favoriteIds, filterOptions]);
 
   const featuredApps = useMemo(() => allApps
     .filter((app) => app.featured && !app.disabled)
