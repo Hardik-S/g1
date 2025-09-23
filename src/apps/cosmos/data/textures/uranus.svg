@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="uranus-base" cx="50%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#b6f0ff"/>
+      <stop offset="60%" stop-color="#6bd0e6"/>
+      <stop offset="100%" stop-color="#2f8bad"/>
+    </radialGradient>
+    <linearGradient id="uranus-bands" x1="0%" y1="40%" x2="100%" y2="60%">
+      <stop offset="0%" stop-color="#dffaff" stop-opacity="0.35"/>
+      <stop offset="50%" stop-color="#9be0ef" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#3a9abc" stop-opacity="0.35"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#uranus-base)"/>
+  <g fill="url(#uranus-bands)">
+    <rect y="110" width="512" height="70" opacity="0.7"/>
+    <rect y="220" width="512" height="80" opacity="0.85"/>
+    <rect y="340" width="512" height="70" opacity="0.75"/>
+  </g>
+  <g fill="#e9fbff" opacity="0.28">
+    <ellipse cx="260" cy="150" rx="220" ry="40"/>
+    <ellipse cx="240" cy="320" rx="240" ry="36"/>
+  </g>
+</svg>

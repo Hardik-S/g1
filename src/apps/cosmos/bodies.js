@@ -124,16 +124,39 @@ function createGradientTexture(gradient) {
   return texture;
 }
 
+function resolveTextureUrl(url) {
+  if (typeof url !== 'string') {
+    return url;
+  }
+
+  if (url.startsWith('data:') || url.startsWith('blob:')) {
+    return url;
+  }
+
+  try {
+    if (/^https?:/i.test(url)) {
+      return url;
+    }
+
+    return new URL(url, import.meta.url).href;
+  } catch (error) {
+    console.warn(`Failed to resolve texture URL "${url}":`, error);
+    return url;
+  }
+}
+
 function loadTexture(url) {
   if (!url) {
     return null;
   }
 
-  if (textureCache.has(url)) {
-    return textureCache.get(url);
+  const resolvedUrl = resolveTextureUrl(url);
+
+  if (textureCache.has(resolvedUrl)) {
+    return textureCache.get(resolvedUrl);
   }
 
-  const texture = textureLoader.load(url);
+  const texture = textureLoader.load(resolvedUrl);
 
   if ('colorSpace' in texture) {
     texture.colorSpace = THREE.SRGBColorSpace;
@@ -145,7 +168,7 @@ function loadTexture(url) {
   texture.wrapT = THREE.RepeatWrapping;
   texture.anisotropy = 4;
 
-  textureCache.set(url, texture);
+  textureCache.set(resolvedUrl, texture);
   return texture;
 }
 
@@ -305,7 +328,8 @@ function createRingMesh(body, scale) {
     96,
   );
 
-  const ringColor = new THREE.Color(body.color).lerp(new THREE.Color('#ffffff'), 0.45);
+  const ringBase = resolveBaseColor(body.color);
+  const ringColor = new THREE.Color(ringBase).lerp(new THREE.Color('#ffffff'), 0.45);
 
   const ringMaterial = new THREE.MeshBasicMaterial({
     color: ringColor,

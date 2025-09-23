@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="saturn-base" cx="50%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="#f3e0b7"/>
+      <stop offset="55%" stop-color="#d3b177"/>
+      <stop offset="100%" stop-color="#8f6a3d"/>
+    </radialGradient>
+    <linearGradient id="saturn-bands" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#f9e9ce" stop-opacity="0.8"/>
+      <stop offset="40%" stop-color="#d7b88a" stop-opacity="0.65"/>
+      <stop offset="100%" stop-color="#87643a" stop-opacity="0.85"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#saturn-base)"/>
+  <g>
+    <rect y="90" width="512" height="48" fill="url(#saturn-bands)" opacity="0.9"/>
+    <rect y="150" width="512" height="60" fill="#ffffff" opacity="0.18"/>
+    <rect y="220" width="512" height="70" fill="url(#saturn-bands)" opacity="0.85"/>
+    <rect y="300" width="512" height="60" fill="#ffffff" opacity="0.14"/>
+    <rect y="360" width="512" height="54" fill="url(#saturn-bands)" opacity="0.95"/>
+  </g>
+  <g fill="#fef6d6" opacity="0.3">
+    <ellipse cx="256" cy="130" rx="220" ry="32"/>
+    <ellipse cx="256" cy="240" rx="240" ry="40"/>
+    <ellipse cx="256" cy="340" rx="210" ry="34"/>
+  </g>
+</svg>

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="venus-base" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#f8d9a1"/>
+      <stop offset="45%" stop-color="#dfa96c"/>
+      <stop offset="100%" stop-color="#a96a3b"/>
+    </radialGradient>
+    <linearGradient id="venus-clouds" x1="0%" y1="20%" x2="100%" y2="80%">
+      <stop offset="0%" stop-color="#fff3d2" stop-opacity="0.4"/>
+      <stop offset="50%" stop-color="#f0c283" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#b97840" stop-opacity="0.35"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#venus-base)"/>
+  <g fill="url(#venus-clouds)">
+    <path d="M-20 180c90-40 210-58 340-34s180 94 230 120v60c-60 14-132 6-206-24s-160-32-274 20z"/>
+    <path d="M-10 330c110-60 220-70 330-40s190 40 220 36v70c-60 24-160 20-246-10s-156-28-284 8z" opacity="0.8"/>
+  </g>
+  <g fill="#f7e2b6" opacity="0.35">
+    <ellipse cx="220" cy="150" rx="210" ry="60"/>
+    <ellipse cx="340" cy="260" rx="220" ry="48"/>
+  </g>
+</svg>
