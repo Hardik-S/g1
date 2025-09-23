@@ -9,8 +9,8 @@ const GardenTree = ({ title, isComplete, stageIndex, totalStages, persisted }) =
   const displayStage = isComplete ? safeTotal : Math.min(cappedStage + 1, safeTotal);
 
   const progressLabel = isComplete
-    ? `${title} is fully grown`
-    : `${title} is at growth stage ${displayStage} of ${safeTotal}`;
+    ? `${title} canopy is complete`
+    : `${title} canopy growth stage ${displayStage} of ${safeTotal}`;
 
   const titleId = useId();
   const statusId = useId();
@@ -54,9 +54,9 @@ const GardenTree = ({ title, isComplete, stageIndex, totalStages, persisted }) =
               {title}
             </h3>
             <p id={statusId} className="zen-garden-tree-subtitle">
-              {isComplete ? 'Fully grown canopy' : `Stage ${displayStage} of ${safeTotal}`}
+              {isComplete ? 'Canopy complete' : `Canopy stage ${displayStage} of ${safeTotal}`}
             </p>
-            {persisted && <span className="zen-garden-tree-persisted">Persisted</span>}
+            {persisted && <span className="zen-garden-tree-persisted">Carried forward</span>}
           </div>
         </div>
       </div>
