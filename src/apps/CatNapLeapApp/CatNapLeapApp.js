@@ -119,8 +119,10 @@ const SHOP_ITEMS = [
 ];
 
 
-const HUD_SCALE = 0.3;
-const COMPACT_HUD_HEIGHT = 44 * HUD_SCALE;
+const HUD_SCALE = 1;
+// 194px matches the measured compact HUD height (panel + banner + internal gap).
+const COMPACT_HUD_HEIGHT = 194 * HUD_SCALE;
+// Leave a little breathing room below the HUD footprint for early obstacles.
 const HUD_SAFE_ZONE = COMPACT_HUD_HEIGHT + 16 * HUD_SCALE;
 const SHOP_ITEM_LABELS = SHOP_ITEMS.reduce((acc, item) => {
   acc[item.id] = item.name;
