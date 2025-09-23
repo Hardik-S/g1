@@ -19,6 +19,7 @@ const ArchiveView = ({
   completedTasks,
   onBackToLanding,
   onDeleteTask,
+  onUnarchiveTask,
 }) => {
   const grouped = useMemo(() => {
     const map = new Map();
@@ -60,9 +61,18 @@ const ArchiveView = ({
                       <div className="zen-archive-title">{task.title}</div>
                       {task.description && <div className="zen-archive-desc">{task.description}</div>}
                     </div>
-                    <button type="button" className="zen-mini-btn" onClick={() => onDeleteTask(task.id)}>
-                      Delete
-                    </button>
+                    <div>
+                      <button
+                        type="button"
+                        className="zen-mini-btn"
+                        onClick={() => onUnarchiveTask(task.id)}
+                      >
+                        Unarchive
+                      </button>
+                      <button type="button" className="zen-mini-btn" onClick={() => onDeleteTask(task.id)}>
+                        Delete
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>
