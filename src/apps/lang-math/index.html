@@ -469,7 +469,34 @@
           divided_by: '/',
         };
 
-        const skipTokens = new Set(['and']);
+        const functionMap = {
+          factorial: 'factorial',
+          sqrt: 'sqrt',
+          exp: 'exp',
+          log10: 'log10',
+          log2: 'log2',
+          ln: 'log',
+          sin: 'sin',
+          cos: 'cos',
+          tan: 'tan',
+        };
+
+        const constantTokens = new Set(['pi', 'tau']);
+
+        const skipTokens = new Set([
+          'and',
+          'of',
+          'the',
+          'what',
+          'is',
+          'please',
+          'calculate',
+          'compute',
+          'value',
+          'for',
+          'a',
+          'an',
+        ]);
 
         const onesMap = {
           zero: 0,
@@ -512,9 +539,6 @@
         let runtimeReady = false;
 
         const formatTokenDisplay = (token) => `"${token.replace(/_/g, ' ')}"`;
-
-        const formatConvertedDisplay = (value) =>
-          typeof value === 'number' ? value.toString() : `"${value}"`;
 
         const clearSteps = () => {
           stepsList.innerHTML = '';
@@ -601,7 +625,7 @@
         };
 
         const sanitizeExpression = (expression) => {
-          return /^[\d\s+\-*/]+$/.test(expression);
+          return /^[\d\s+\-*/().a-z]+$/.test(expression);
         };
 
         const consumeNumber = (tokens, startIndex) => {
@@ -609,7 +633,7 @@
 
           if (/^\d+$/.test(current)) {
             const numeric = Number.parseInt(current, 10);
-            if (!Number.isFinite(numeric) || numeric < 0 || numeric > 99) {
+            if (!Number.isFinite(numeric) || numeric < 0 || numeric > 1000000) {
               return null;
             }
             return { value: numeric, consumed: 1 };
@@ -647,10 +671,18 @@
 
           let prepared = raw
             .toLowerCase()
-            .replace(/[^a-z0-9\s-]/g, ' ')
             .replace(/-/g, ' ')
             .replace(/multiplied\s+by/g, 'multiplied_by')
             .replace(/divided\s+by/g, 'divided_by')
+            .replace(/open\s+brackets?/g, 'open_bracket')
+            .replace(/close\s+brackets?/g, 'close_bracket')
+            .replace(/open\s+parentheses/g, 'open_bracket')
+            .replace(/close\s+parentheses/g, 'close_bracket')
+            .replace(/open\s+paren/g, 'open_bracket')
+            .replace(/close\s+paren/g, 'close_bracket')
+            .replace(/\(/g, ' open_bracket ')
+            .replace(/\)/g, ' close_bracket ')
+            .replace(/[^a-z0-9_\s]/g, ' ')
             .replace(/\s+/g, ' ')
             .trim();
 
@@ -668,54 +700,106 @@
 
           steps.push(`Tokenize → [${tokens.map(formatTokenDisplay).join(', ')}]`);
 
-          const pieces = [];
-          const convertedPieces = [];
-          let expectingNumber = true;
           let index = 0;
 
-          while (index < tokens.length) {
-            const token = tokens[index];
-
-            if (skipTokens.has(token)) {
+          const consumeSkippable = () => {
+            while (index < tokens.length && skipTokens.has(tokens[index])) {
               index += 1;
-              continue;
             }
+          };
 
-            if (expectingNumber) {
-              const numberResult = consumeNumber(tokens, index);
-              if (!numberResult) {
-                return null;
-              }
-              pieces.push(String(numberResult.value));
-              convertedPieces.push(numberResult.value);
-              index += numberResult.consumed;
-              expectingNumber = false;
-              continue;
-            }
-
-            if (!Object.prototype.hasOwnProperty.call(operatorMap, token)) {
+          const parseValue = () => {
+            consumeSkippable();
+            if (index >= tokens.length) {
               return null;
             }
 
-            const operatorSymbol = operatorMap[token];
-            pieces.push(operatorSymbol);
-            convertedPieces.push(operatorSymbol);
-            index += 1;
-            expectingNumber = true;
-          }
+            const token = tokens[index];
 
-          if (!pieces.length || expectingNumber) {
+            if (token === 'open_bracket') {
+              index += 1;
+              const inner = parseExpression();
+              if (!inner) {
+                return null;
+              }
+              consumeSkippable();
+              if (tokens[index] !== 'close_bracket') {
+                return null;
+              }
+              index += 1;
+              return `(${inner})`;
+            }
+
+            if (Object.prototype.hasOwnProperty.call(functionMap, token)) {
+              const functionName = functionMap[token];
+              index += 1;
+              const argument = parseValue();
+              if (!argument) {
+                return null;
+              }
+              return `${functionName}(${argument})`;
+            }
+
+            if (constantTokens.has(token)) {
+              index += 1;
+              return token;
+            }
+
+            const numberResult = consumeNumber(tokens, index);
+            if (numberResult) {
+              index += numberResult.consumed;
+              return String(numberResult.value);
+            }
+
+            if (/^\d+(?:\.\d+)?$/.test(token)) {
+              index += 1;
+              return token;
+            }
+
+            return null;
+          };
+
+          const parseExpression = () => {
+            let value = parseValue();
+            if (!value) {
+              return null;
+            }
+
+            while (true) {
+              consumeSkippable();
+              if (index >= tokens.length) {
+                break;
+              }
+
+              const token = tokens[index];
+              if (!Object.prototype.hasOwnProperty.call(operatorMap, token)) {
+                break;
+              }
+
+              const operatorSymbol = operatorMap[token];
+              index += 1;
+              const next = parseValue();
+              if (!next) {
+                return null;
+              }
+              value = `${value} ${operatorSymbol} ${next}`;
+            }
+
+            return value;
+          };
+
+          const expression = parseExpression();
+          consumeSkippable();
+
+          if (!expression || index < tokens.length) {
             return null;
           }
 
-          steps.push(`Convert words → [${convertedPieces.map(formatConvertedDisplay).join(', ')}]`);
-
-          const expression = pieces.join(' ');
           if (!sanitizeExpression(expression)) {
             return null;
           }
 
-          steps.push(`Build expression → ${expression}`);
+          steps.push(`Interpret tokens → ${expression}`);
 
           return { expression, steps };
         };
@@ -801,6 +885,35 @@
               { input: 'thirteen minus eight', expected: '5' },
               { input: 'six times seven', expected: '42' },
               { input: 'forty divided by five', expected: '8' },
+              { input: 'factorial of five', expected: '120' },
+              { input: 'Factorial seven', expected: '5040' },
+              { input: 'factorial of three plus log10 100', expected: '8' },
+              { input: 'what is tau', expected: '6.283185' },
+              { input: 'Tau divided by two', expected: '3.141593' },
+              { input: 'pi plus one', expected: '4.141593' },
+              { input: 'PI times two', expected: '6.283185' },
+              { input: 'sqrt 100', expected: '10' },
+              { input: 'SQRT open bracket 16 close bracket', expected: '4' },
+              { input: 'exp 1', expected: '2.718282' },
+              { input: 'Exp of open bracket 2 close bracket', expected: '7.389056' },
+              { input: 'log10 1000', expected: '3' },
+              { input: 'LOG10 of 100', expected: '2' },
+              { input: 'log2 8', expected: '3' },
+              { input: 'log2 of 32', expected: '5' },
+              { input: 'ln 1', expected: '0' },
+              { input: 'LN of open bracket 2 close bracket', expected: '0.693147' },
+              { input: 'sin 0', expected: '0' },
+              { input: 'Sin of open bracket tau divided by four close bracket', expected: '1' },
+              { input: 'cos 0', expected: '1' },
+              { input: 'Cos of pi', expected: '-1' },
+              { input: 'tan 0', expected: '0' },
+              { input: 'Tan of open bracket tau divided by eight close bracket', expected: '1' },
+              { input: 'open bracket three plus five close bracket times two', expected: '16' },
+              {
+                input:
+                  'open bracket open bracket two plus three close bracket times four close bracket minus six',
+                expected: '14',
+              },
             ];
 
             smokeTests.forEach((test) => {
