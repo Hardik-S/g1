@@ -1,11 +1,16 @@
 import GUI from 'https://cdn.jsdelivr.net/npm/lil-gui@0.19/+esm';
 
-export const TIME_SPEED_RANGE = { min: 100, max: 20000, step: 100 };
+export const TIME_SPEED_RANGE = { min: 100, max: 1_000_000, step: 100 };
 export const TRAIL_LENGTH_RANGE = { min: 120, max: 720, step: 30 };
 export const DEFAULT_TRAIL_LENGTH = 720;
 
+export const DEFAULT_TIME_SPEED = Math.min(
+  Math.max(4000, TIME_SPEED_RANGE.min),
+  TIME_SPEED_RANGE.max,
+);
+
 const DEFAULTS = {
-  timeSpeed: 4000,
+  timeSpeed: DEFAULT_TIME_SPEED,
   gravityMultiplier: 1,
   showTrails: true,
   trailLength: DEFAULT_TRAIL_LENGTH,
@@ -16,6 +21,11 @@ export function setupControlPanel(bodies, handlers = {}, overrides = {}) {
     ...DEFAULTS,
     ...overrides,
   };
+
+  settings.timeSpeed = Math.min(
+    Math.max(settings.timeSpeed, TIME_SPEED_RANGE.min),
+    TIME_SPEED_RANGE.max,
+  );
 
   const gui = new GUI({ title: 'Cosmos Controls' });
   gui.domElement.classList.add('cosmos-gui');
