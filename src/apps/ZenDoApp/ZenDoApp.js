@@ -164,6 +164,10 @@ const ZenDoApp = ({ onBack }) => {
     });
   };
 
+  const handleUnarchiveTask = useCallback((taskId) => {
+    completeTask(taskId, false);
+  }, [completeTask]);
+
   const handleAssignDay = useCallback((taskId, dayKey, position) => {
     placeTaskInDay(taskId, dayKey, position);
   }, [placeTaskInDay]);
@@ -333,6 +337,7 @@ const ZenDoApp = ({ onBack }) => {
             completedTasks={completedTasks}
             onBackToLanding={() => setCurrentView('landing')}
             onDeleteTask={handleDeleteTask}
+            onUnarchiveTask={handleUnarchiveTask}
           />
         )}
       </main>
