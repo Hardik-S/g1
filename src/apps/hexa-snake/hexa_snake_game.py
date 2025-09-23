@@ -1,7 +1,7 @@
 """Hexa-Snake (Bee Edition) implemented with pygame-style APIs."""
 import math
 import random
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Set, Tuple
 
 import pygame
 
@@ -34,8 +34,7 @@ class HexaSnakeGame:
         canvas_id: str,
         pixel_width: int = 720,
         pixel_height: int = 640,
-        cols: int = 13,
-        rows: int = 11,
+        radius: int = 6,
         cell_size: float = 28.0,
     ) -> None:
         pygame.init()
@@ -45,8 +44,7 @@ class HexaSnakeGame:
         self.canvas_id = canvas_id
         self.pixel_width = pixel_width
         self.pixel_height = pixel_height
-        self.cols = cols
-        self.rows = rows
+        self.radius = radius
         self.cell_size = cell_size
 
         self.colors = {
@@ -62,9 +60,16 @@ class HexaSnakeGame:
         }
 
         self.angles = [math.pi / 6 + index * (math.pi / 3) for index in range(6)]
-        self.grid_cells: List[Tuple[int, int]] = [
-            (q, r) for r in range(self.rows) for q in range(self.cols)
-        ]
+        self.grid_cells: List[Tuple[int, int]] = sorted(
+            [
+                (q, r)
+                for q in range(-self.radius, self.radius + 1)
+                for r in range(-self.radius, self.radius + 1)
+                if max(abs(q), abs(r), abs(-q - r)) <= self.radius
+            ],
+            key=lambda cell: (cell[1], cell[0]),
+        )
+        self.grid_cell_set: Set[Tuple[int, int]] = set(self.grid_cells)
 
         self._compute_layout()
         self._initialise_state()
@@ -87,13 +92,7 @@ class HexaSnakeGame:
         self.just_collected = False
         self.needs_redraw = True
 
-        center_q = self.cols // 2
-        center_r = self.rows // 2
-        self.snake: List[Tuple[int, int]] = [
-            (center_q, center_r),
-            (center_q, center_r + 1),
-            (center_q, center_r + 2),
-        ]
+        self.snake: List[Tuple[int, int]] = [(0, 0), (0, 1), (0, 2)]
         self.honey: Optional[Tuple[int, int]] = self._spawn_honey()
 
     def reset(self) -> None:
@@ -181,8 +180,7 @@ class HexaSnakeGame:
         return random.choice(available)
 
     def _out_of_bounds(self, cell: Tuple[int, int]) -> bool:
-        q, r = cell
-        return q < 0 or r < 0 or q >= self.cols or r >= self.rows
+        return cell not in self.grid_cell_set
 
     def _is_opposite(self, first: str, second: str) -> bool:
         dq1, dr1 = AXIAL_DIRECTIONS[first]
