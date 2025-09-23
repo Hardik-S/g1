@@ -10,16 +10,19 @@ const buildHeaders = (token) => {
   return headers;
 };
 
-export const verifyGistConnection = async ({ gistId, gistToken }) => {
+export const verifyGistConnection = async (
+  { gistId, gistToken },
+  fetchFn = globalThis.fetch,
+) => {
   if (!gistId) {
     throw new Error('A gist ID is required to verify the connection.');
   }
 
-  if (typeof fetch !== 'function') {
+  if (typeof fetchFn !== 'function') {
     throw new Error('Fetch API is not available in this environment.');
   }
 
-  const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+  const response = await fetchFn(`https://api.github.com/gists/${gistId}`, {
     method: 'GET',
     headers: buildHeaders(gistToken),
   });
