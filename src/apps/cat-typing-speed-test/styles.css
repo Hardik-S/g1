@@ -46,129 +46,6 @@ body {
   font-size: 1.05rem;
 }
 
-.alias-display {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.95rem;
-}
-
-.alias-display span {
-  font-weight: 600;
-  color: var(--accent-dark);
-}
-
-.login-card {
-  display: grid;
-  gap: 1.25rem;
-}
-
-.login-intro {
-  margin: 0;
-  color: var(--muted);
-}
-
-#login-form {
-  display: grid;
-  gap: 1rem;
-}
-
-.field {
-  display: grid;
-  gap: 0.45rem;
-}
-
-.field span {
-  font-weight: 600;
-}
-
-#login-form input {
-  border-radius: 0.85rem;
-  border: 2px solid rgba(236, 72, 153, 0.18);
-  background: rgba(255, 255, 255, 0.85);
-  padding: 0.8rem 1rem;
-  font-size: 1rem;
-  transition: border 0.2s ease, box-shadow 0.2s ease;
-}
-
-#login-form input:focus-visible {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.25);
-  outline: none;
-}
-
-.login-actions {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-}
-
-.login-actions button {
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: 0.9rem;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.login-actions button:focus-visible {
-  outline: 3px solid rgba(236, 72, 153, 0.45);
-  outline-offset: 3px;
-}
-
-.login-submit {
-  background: var(--accent);
-  color: #fff;
-}
-
-.login-submit:hover,
-.login-submit:focus-visible {
-  background: var(--accent-dark);
-  transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(236, 72, 153, 0.25);
-}
-
-.login-logout {
-  background: transparent;
-  border: 2px solid rgba(107, 114, 128, 0.35);
-  color: var(--muted);
-}
-
-.login-logout:hover,
-.login-logout:focus-visible {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
-}
-
-.login-actions button:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-  box-shadow: none;
-  transform: none;
-}
-
-.login-note {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.9rem;
-}
-
-.status-message {
-  margin: 0;
-  font-weight: 600;
-  color: var(--muted);
-}
-
-.status-message[data-tone='success'] {
-  color: var(--success);
-}
-
-.status-message[data-tone='error'] {
-  color: var(--error);
-}
-
 .card {
   background: rgba(255, 255, 255, 0.92);
   border-radius: 1.5rem;
@@ -181,61 +58,6 @@ body {
 
 .hidden {
   display: none;
-}
-
-.duration-options {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.duration-btn {
-  border: none;
-  border-radius: 999px;
-  background: var(--accent);
-  color: #fff;
-  font-size: 1.05rem;
-  font-weight: 600;
-  padding: 0.85rem 1.75rem;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-}
-
-.duration-btn:hover,
-.duration-btn:focus-visible {
-  background: var(--accent-dark);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(236, 72, 153, 0.35);
-}
-
-.duration-btn[data-active] {
-  background: var(--accent-dark);
-  transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(236, 72, 153, 0.4);
-}
-
-.duration-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.duration-btn:focus-visible {
-  outline: 3px solid rgba(236, 72, 153, 0.4);
-  outline-offset: 3px;
-}
-
-.duration-btn[data-active]:focus-visible {
-  outline: 3px solid rgba(236, 72, 153, 0.55);
-  box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.35), 0 12px 28px rgba(236, 72, 153, 0.4);
-}
-
-.start-hint {
-  margin: 0;
-  text-align: center;
-  color: var(--muted);
 }
 
 .test-meta {
@@ -353,12 +175,11 @@ textarea:disabled {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-  justify-content: flex-end;
+  justify-content: flex-start;
 }
 
 .actions .primary,
-.actions .secondary,
-.actions .ghost {
+.actions .secondary {
   font-size: 1rem;
   font-weight: 600;
   border-radius: 0.9rem;
@@ -390,11 +211,6 @@ textarea:disabled {
 .actions .secondary:focus-visible {
   transform: translateY(-1px);
   box-shadow: 0 12px 22px rgba(219, 39, 119, 0.25);
-}
-
-.actions .ghost {
-  background: transparent;
-  color: var(--muted);
 }
 
 .actions button:focus-visible {
@@ -484,11 +300,4 @@ textarea:disabled {
     flex: 1;
   }
 
-  .login-actions {
-    justify-content: stretch;
-  }
-
-  .login-actions button {
-    flex: 1;
-  }
 }
