@@ -283,6 +283,8 @@
   overflow: hidden;
   box-shadow: 0 24px 40px rgba(47, 42, 69, 0.15);
   background: transparent;
+  width: fit-content;
+  margin: 0 auto;
 }
 
 .catnap-canvas {
