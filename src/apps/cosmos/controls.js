@@ -3,6 +3,7 @@ import GUI from 'https://cdn.jsdelivr.net/npm/lil-gui@0.19/+esm';
 export const TIME_SPEED_RANGE = { min: 100, max: 1_000_000, step: 100 };
 export const TRAIL_LENGTH_RANGE = { min: 120, max: 720, step: 30 };
 export const DEFAULT_TRAIL_LENGTH = 720;
+export const GRAVITY_MULTIPLIER_RANGE = { min: 0, max: 150, step: 1 };
 
 export const DEFAULT_TIME_SPEED = Math.min(
   Math.max(4000, TIME_SPEED_RANGE.min),
@@ -27,6 +28,11 @@ export function setupControlPanel(bodies, handlers = {}, overrides = {}) {
     TIME_SPEED_RANGE.max,
   );
 
+  settings.gravityMultiplier = Math.min(
+    Math.max(settings.gravityMultiplier, GRAVITY_MULTIPLIER_RANGE.min),
+    GRAVITY_MULTIPLIER_RANGE.max,
+  );
+
   const gui = new GUI({ title: 'Cosmos Controls' });
   gui.domElement.classList.add('cosmos-gui');
 
@@ -42,7 +48,13 @@ export function setupControlPanel(bodies, handlers = {}, overrides = {}) {
     .onChange((value) => handlers.onTimeSpeedChange?.(value));
 
   gui
-    .add(settings, 'gravityMultiplier', 0, 3, 0.05)
+    .add(
+      settings,
+      'gravityMultiplier',
+      GRAVITY_MULTIPLIER_RANGE.min,
+      GRAVITY_MULTIPLIER_RANGE.max,
+      GRAVITY_MULTIPLIER_RANGE.step,
+    )
     .name('Gravity (×)')
     .onChange((value) => handlers.onGravityChange?.(value));
 
