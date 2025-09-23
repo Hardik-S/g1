@@ -390,8 +390,10 @@ export function updateBodyMeshes(visuals, simulationBodies, { scale, showTrails 
     } else if (showTrails) {
       const history = body.history;
       const { trailPositions, trailGeometry, trail } = visual;
+      const availablePoints = trailPositions.length / 3;
+      const drawCount = Math.min(history.length, availablePoints);
 
-      for (let i = 0; i < history.length; i += 1) {
+      for (let i = 0; i < drawCount; i += 1) {
         const entry = history[i];
         const offset = i * 3;
         trailPositions[offset] = entry.x * scale;
@@ -400,9 +402,11 @@ export function updateBodyMeshes(visuals, simulationBodies, { scale, showTrails 
       }
 
       trailGeometry.attributes.position.needsUpdate = true;
-      trailGeometry.setDrawRange(0, history.length);
-      trailGeometry.computeBoundingSphere();
-      trail.visible = history.length > 1;
+      trailGeometry.setDrawRange(0, drawCount);
+      if (drawCount > 0) {
+        trailGeometry.computeBoundingSphere();
+      }
+      trail.visible = drawCount > 1;
     } else {
       visual.trailGeometry.setDrawRange(0, 0);
       visual.trail.visible = false;
