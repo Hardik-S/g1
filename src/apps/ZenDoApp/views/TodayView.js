@@ -17,7 +17,7 @@ const getBucketList = (bucket, lists) => {
   return [];
 };
 
-const TaskCard = ({ bucketId, dragController, index, task }) => {
+const TaskCard = ({ bucketId, dragController, index, onQuickAssign, task }) => {
   const handleDragStart = useCallback((event) => {
     if (event.dataTransfer) {
       try {
@@ -34,6 +34,13 @@ const TaskCard = ({ bucketId, dragController, index, task }) => {
     dragController.cancelDrag();
   }, [dragController]);
 
+  const handleQuickAssignClick = useCallback((targetBucket) => (event) => {
+    event.stopPropagation();
+    if (onQuickAssign) {
+      onQuickAssign(task.id, targetBucket);
+    }
+  }, [onQuickAssign, task.id]);
+
   return (
     <div
       className="zen-focus-card"
@@ -44,6 +51,26 @@ const TaskCard = ({ bucketId, dragController, index, task }) => {
     >
       <div className="zen-card-title-row">
         <span>{task.title}</span>
+        {bucketId === 'today' && onQuickAssign && (
+          <div className="zen-task-quick-actions">
+            <button
+              type="button"
+              className="zen-task-action-btn zen-task-action-btn--priority"
+              aria-label="Quick assign to Priority"
+              onClick={handleQuickAssignClick('priority')}
+            >
+              P
+            </button>
+            <button
+              type="button"
+              className="zen-task-action-btn zen-task-action-btn--bonus"
+              aria-label="Quick assign to Bonus"
+              onClick={handleQuickAssignClick('bonus')}
+            >
+              B
+            </button>
+          </div>
+        )}
       </div>
       {task.dueDate && <div className="zen-card-meta">Due {task.dueDate}</div>}
     </div>
@@ -92,6 +119,25 @@ const TodayView = ({
     }
   }, [bonusList, onAssignToBucket, onClearBucket, onReorderBucket, priorityList, todayList]);
 
+  const handleQuickAssign = useCallback((taskId, targetBucket) => {
+    if (targetBucket !== 'priority' && targetBucket !== 'bonus') {
+      return;
+    }
+
+    const targetList = targetBucket === 'priority' ? priorityList : bonusList;
+    const insertIndex = targetList.length;
+
+    onAssignToBucket(taskId, targetBucket, insertIndex);
+
+    const nextTargetOrder = buildOrder(targetList, taskId, insertIndex);
+    onReorderBucket(targetBucket, nextTargetOrder);
+
+    const nextTodayOrder = todayList
+      .filter((task) => task.id !== taskId)
+      .map((task) => task.id);
+    onReorderBucket('today', nextTodayOrder);
+  }, [bonusList, onAssignToBucket, onReorderBucket, priorityList, todayList]);
+
   const renderTask = useCallback((task, index, bucketId) => (
     <TaskCard
       key={task.id}
@@ -99,8 +145,9 @@ const TodayView = ({
       index={index}
       bucketId={bucketId}
       dragController={dragController}
+      onQuickAssign={bucketId === 'today' ? handleQuickAssign : undefined}
     />
-  ), [dragController]);
+  ), [dragController, handleQuickAssign]);
 
   return (
     <div className="zen-today-layout">

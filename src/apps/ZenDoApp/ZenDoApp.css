@@ -394,6 +394,57 @@
   color: #2f3b35;
 }
 
+.zen-card-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.zen-task-quick-actions {
+  display: flex;
+  gap: 0.35rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.zen-focus-card:hover .zen-task-quick-actions,
+.zen-focus-card:focus-within .zen-task-quick-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.zen-task-action-btn {
+  border: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.zen-task-action-btn:hover {
+  transform: translateY(-1px);
+}
+
+.zen-task-action-btn--priority {
+  background: linear-gradient(135deg, #2f6f5b, #3f846c);
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(47, 111, 91, 0.35);
+}
+
+.zen-task-action-btn--bonus {
+  background: linear-gradient(135deg, #f6e8b1, #fde7a2);
+  color: #755d17;
+  box-shadow: 0 4px 10px rgba(221, 190, 90, 0.35);
+}
+
 .zen-card-meta {
   font-size: 0.75rem;
   color: #4a5f55;
