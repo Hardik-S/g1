@@ -119,8 +119,9 @@ const SHOP_ITEMS = [
 ];
 
 
-const COMPACT_HUD_HEIGHT = 44;
-const HUD_SAFE_ZONE = COMPACT_HUD_HEIGHT + 16;
+const HUD_SCALE = 0.3;
+const COMPACT_HUD_HEIGHT = 44 * HUD_SCALE;
+const HUD_SAFE_ZONE = COMPACT_HUD_HEIGHT + 16 * HUD_SCALE;
 const SHOP_ITEM_LABELS = SHOP_ITEMS.reduce((acc, item) => {
   acc[item.id] = item.name;
   return acc;
