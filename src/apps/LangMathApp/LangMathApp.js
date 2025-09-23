@@ -11,13 +11,13 @@ const LangMathApp = ({ onBack }) => {
         <div>
           <h1>LangMath</h1>
           <p>
-            Translate natural language arithmetic into precise calculations. Enter number words up to fifty,
+            Translate natural language arithmetic into precise calculations. Enter number words up to ninety-nine,
             combine operators like “plus”, “minus”, “times”, or “divided by”, and let the embedded Pyodide
             runtime evaluate the expression entirely in your browser.
           </p>
         </div>
         <ul className="lang-math-points">
-          <li>Understands zero through fifty, including hyphenated tens like “twenty three”.</li>
+          <li>Understands zero through ninety-nine, including hyphenated values like “seventy-four”.</li>
           <li>Guards against unsafe tokens by sanitising expressions before evaluation.</li>
           <li>Runs Python’s evaluator client-side via WebAssembly for consistent precedence.</li>
         </ul>
