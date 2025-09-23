@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import './ZenDoApp.css';
 import LandingView from './views/LandingView';
 import TodayView from './views/TodayView';
@@ -24,6 +30,8 @@ const ZenDoApp = ({ onBack }) => {
   const [now, setNow] = useState(new Date());
   const [expandedIds, setExpandedIds] = useState(new Set());
   const [editorState, setEditorState] = useState({ open: false, mode: 'create', task: null, parentId: null, parentTitle: '' });
+  const zenAppShellRef = useRef(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const {
     tasks,
@@ -206,9 +214,73 @@ const ZenDoApp = ({ onBack }) => {
 
   const gistFilename = gistConfig.filename || 'zen-do-data.json';
 
+  useEffect(() => {
+    const shellElement = zenAppShellRef.current;
+    if (!shellElement) {
+      return () => {};
+    }
+
+    const editableSelector = 'input, textarea, select, [contenteditable]';
+
+    const resolveElement = (node) => {
+      if (!node) return null;
+      if (typeof node.closest === 'function') {
+        return node;
+      }
+      if (node.parentElement) {
+        return node.parentElement;
+      }
+      return null;
+    };
+
+    const isEventFromEditable = (node) => {
+      const element = resolveElement(node);
+      if (!element) return false;
+      if (typeof element.closest === 'function' && element.closest(editableSelector)) {
+        return true;
+      }
+      return Boolean(element.isContentEditable);
+    };
+
+    const handleKeyDown = (event) => {
+      if (event.defaultPrevented || event.repeat) return;
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
+      if (!event.key || event.key.toLowerCase() !== 'z') return;
+
+      const target = resolveElement(event.target);
+      if (isEventFromEditable(target) || isEventFromEditable(document.activeElement)) {
+        return;
+      }
+
+      if (document.fullscreenElement === shellElement) {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      } else if (shellElement.requestFullscreen) {
+        shellElement.requestFullscreen();
+      }
+    };
+
+    const handleFullscreenChange = () => {
+      setIsFullscreen(document.fullscreenElement === shellElement);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    handleFullscreenChange();
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
   return (
     <DragProvider>
-      <div className="zen-app-shell">
+      <div
+        className={`zen-app-shell${isFullscreen ? ' is-fullscreen' : ''}`}
+        ref={zenAppShellRef}
+      >
         <header className="zen-app-header">
         <div className="zen-header-left">
           {onBack && (
