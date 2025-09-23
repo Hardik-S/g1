@@ -45,6 +45,15 @@ const DroppableBucket = ({
 
   const placeholderIndex = isActiveBucket ? dragState.placeholder?.index ?? null : null;
 
+  const updateDragPosition = (event, containerOverride = null) => {
+    const container = containerOverride || event.currentTarget;
+    if (!container) {
+      return;
+    }
+    const nextIndex = computeInsertionIndex(event, container);
+    updatePlaceholder(bucketId, nextIndex, visibleItems.length);
+  };
+
   const renderedItems = useMemo(() => {
     if (placeholderIndex == null) {
       return visibleItems;
@@ -60,9 +69,7 @@ const DroppableBucket = ({
       return;
     }
     event.preventDefault();
-    const container = event.currentTarget;
-    const nextIndex = computeInsertionIndex(event, container);
-    updatePlaceholder(bucketId, nextIndex, visibleItems.length);
+    updateDragPosition(event);
   };
 
   const handleDragEnter = (event) => {
@@ -70,7 +77,20 @@ const DroppableBucket = ({
       return;
     }
     event.preventDefault();
-    handleDragOver(event);
+    updateDragPosition(event);
+  };
+
+  const handlePlaceholderDrag = (event) => {
+    if (!isDragging) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    const container = event.currentTarget.parentElement;
+    if (!container) {
+      return;
+    }
+    updateDragPosition(event, container);
   };
 
   const handleDragLeave = (event) => {
@@ -82,14 +102,24 @@ const DroppableBucket = ({
     }
   };
 
-  const handleDrop = (event) => {
-    event.preventDefault();
+  const finalizeDrop = () => {
     const result = completeDrop(bucketId);
     if (!result?.taskId) {
       return;
     }
     const index = result.index != null ? result.index : visibleItems.length;
     onDrop({ ...result, index });
+  };
+
+  const handleDrop = (event) => {
+    event.preventDefault();
+    finalizeDrop();
+  };
+
+  const handlePlaceholderDrop = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    finalizeDrop();
   };
 
   const containerClassName = [className, isHovered ? 'is-hovered' : null, isActiveBucket ? 'has-placeholder' : null]
@@ -118,6 +148,9 @@ const DroppableBucket = ({
                 className="zen-task-placeholder"
                 data-placeholder="true"
                 data-testid="drag-placeholder"
+                onDragEnter={handlePlaceholderDrag}
+                onDragOver={handlePlaceholderDrag}
+                onDrop={handlePlaceholderDrop}
               />
             );
           }
