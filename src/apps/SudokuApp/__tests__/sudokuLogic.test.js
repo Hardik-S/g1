@@ -5,6 +5,10 @@ import {
   solveSudoku,
 } from '../sudokuLogic';
 
+// Tests opt into the cached catalog so we exercise the same code paths without
+// waiting for the full puzzle generator and solver to backtrack.
+const FAST_PATH_OPTIONS = { useTestCatalog: true };
+
 describe('sudoku logic utilities', () => {
   it('solveSudoku solves a known puzzle correctly', () => {
     const puzzle = [
@@ -40,7 +44,7 @@ describe('sudoku logic utilities', () => {
   it('generateSudoku returns valid puzzle and solution across difficulties', () => {
     Object.values(DIFFICULTY_LEVELS).forEach((config) => {
       const { puzzle, solution, difficulty, gridSize, subgridSize } =
-        generateSudoku(config.id);
+        generateSudoku(config.id, FAST_PATH_OPTIONS);
       expect(difficulty).toBe(config.id);
       expect(solution).toHaveLength(gridSize);
       expect(puzzle).toHaveLength(gridSize);
@@ -66,7 +70,7 @@ describe('sudoku logic utilities', () => {
 
   it('difficulty levels control the number of given clues', () => {
     Object.values(DIFFICULTY_LEVELS).forEach((config) => {
-      const { puzzle } = generateSudoku(config.id);
+      const { puzzle } = generateSudoku(config.id, FAST_PATH_OPTIONS);
       const filled = puzzle.reduce(
         (total, row) => total + row.filter((value) => value !== 0).length,
         0
