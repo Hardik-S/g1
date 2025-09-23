@@ -113,20 +113,28 @@
             duration.
           </p>
         </div>
-        <div class="score-history" id="score-history" aria-live="polite">
-          <h3>Score history</h3>
-          <p class="history-empty" id="history-empty">Connect GitHub access from the global settings to sync your scores.</p>
-          <table class="history-table hidden" id="history-table">
-            <thead>
-              <tr>
-                <th scope="col">Date</th>
-                <th scope="col">Duration</th>
-                <th scope="col">WPM</th>
-                <th scope="col">Accuracy</th>
-              </tr>
-            </thead>
-            <tbody id="history-rows"></tbody>
-          </table>
+        <div class="leaderboard-card" id="leaderboard" aria-live="polite">
+          <div class="leaderboard-card__header">
+            <label class="alias-field" for="leaderboard-alias">
+              <span class="alias-field__label">Leaderboard alias</span>
+              <input
+                id="leaderboard-alias"
+                type="text"
+                name="leaderboard-alias"
+                maxlength="32"
+                autocomplete="off"
+                autocorrect="off"
+                autocapitalize="none"
+                spellcheck="false"
+                placeholder="Enter a short nickname"
+              />
+            </label>
+            <p class="sync-status" id="sync-status" role="status" aria-live="polite"></p>
+          </div>
+          <p class="leaderboard-empty" id="leaderboard-empty">
+            Connect GitHub access from the global settings to sync your scores.
+          </p>
+          <ol class="leaderboard-list hidden" id="leaderboard-list" aria-label="Top runs"></ol>
         </div>
         <div class="actions">
           <button type="button" class="primary" id="results-retry">Try again</button>

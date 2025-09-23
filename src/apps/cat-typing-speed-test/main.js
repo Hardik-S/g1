@@ -1,6 +1,10 @@
 (() => {
   const DEFAULT_DURATION = 15;
   const HOLD_DURATION_MS = 1000;
+  const LEADERBOARD_FILENAME = 'cat-typing-speed-test.json';
+  const LEADERBOARD_MAX_ENTRIES = 50;
+  const ALIAS_STORAGE_KEY = 'cat-typing-speed-test:alias';
+  const GIST_SETTINGS_EVENT = 'g1:gist-settings-changed';
 
   const testScreen = document.getElementById('test-screen');
   const resultsScreen = document.getElementById('results-screen');
@@ -24,6 +28,10 @@
       fill: container.querySelector('[data-hold-fill]'),
     }),
   );
+  const aliasInput = document.getElementById('leaderboard-alias');
+  const syncStatusEl = document.getElementById('sync-status');
+  const leaderboardList = document.getElementById('leaderboard-list');
+  const leaderboardEmpty = document.getElementById('leaderboard-empty');
 
   if (!testScreen || !resultsScreen || !typingInput) {
     return;
@@ -65,6 +73,15 @@
   let holdFrameId = null;
   let holdResetTimeout = null;
   let holdState = 'idle';
+  let gistSettings = { gistId: '', gistToken: '' };
+  let aliasValue = '';
+  let leaderboardRuns = [];
+  let leaderboardLoaded = false;
+  let leaderboardFetchPromise = null;
+  let isPersistingLeaderboard = false;
+  let persistQueued = false;
+  let currentEmptyMessage = 'Connect GitHub access from the global settings to sync your scores.';
+  let lastSyncedAt = null;
 
   const scheduleNextFrame = (callback) => {
     if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
@@ -125,7 +142,7 @@
       if (target && typeof target.focus === 'function') {
         try {
           target.focus({ preventScroll: true });
-        } catch (error) {
+        } catch {
           target.focus();
         }
       }
@@ -247,6 +264,519 @@
     holdFrameId = null;
     clearHoldResetTimeout();
     setHoldState('idle', 0);
+  };
+
+  const readSharedGistSettings = () => {
+    try {
+      if (typeof window !== 'undefined' && typeof window.readGlobalGistSettings === 'function') {
+        const settings = window.readGlobalGistSettings();
+        const gistId = typeof settings?.gistId === 'string' ? settings.gistId.trim() : '';
+        const gistToken = typeof settings?.gistToken === 'string'
+          ? settings.gistToken.trim()
+          : typeof settings?.token === 'string'
+            ? settings.token.trim()
+            : '';
+        return { gistId, gistToken };
+      }
+    } catch {
+      // Ignore global settings read failures.
+    }
+
+    try {
+      if (typeof document !== 'undefined' && typeof document.cookie === 'string') {
+        const cookieEntries = document.cookie.split(';');
+        for (let index = 0; index < cookieEntries.length; index += 1) {
+          const entry = cookieEntries[index];
+          if (!entry) continue;
+          const [rawName, ...rest] = entry.split('=');
+          if (!rawName || rawName.trim() !== 'g1:gist-settings') continue;
+          try {
+            const parsed = JSON.parse(decodeURIComponent(rest.join('=')) || '{}');
+            const gistId = typeof parsed?.gistId === 'string' ? parsed.gistId.trim() : '';
+            const gistToken = typeof parsed?.gistToken === 'string'
+              ? parsed.gistToken.trim()
+              : typeof parsed?.token === 'string'
+                ? parsed.token.trim()
+                : '';
+            return { gistId, gistToken };
+          } catch {
+            return { gistId: '', gistToken: '' };
+          }
+        }
+      }
+    } catch {
+      // Ignore cookie parsing errors and fall back to defaults.
+    }
+
+    return { gistId: '', gistToken: '' };
+  };
+
+  const sanitizeAlias = (value) => {
+    if (typeof value !== 'string') return '';
+    return value.replace(/\s+/g, ' ').trim().slice(0, 32);
+  };
+
+  const readStoredAlias = () => {
+    try {
+      if (typeof window === 'undefined' || !window.localStorage) {
+        return '';
+      }
+      const raw = window.localStorage.getItem(ALIAS_STORAGE_KEY);
+      return sanitizeAlias(raw || '');
+    } catch {
+      return '';
+    }
+  };
+
+  const writeStoredAlias = (value) => {
+    try {
+      if (typeof window === 'undefined' || !window.localStorage) {
+        return;
+      }
+      const sanitized = sanitizeAlias(value);
+      if (!sanitized) {
+        window.localStorage.removeItem(ALIAS_STORAGE_KEY);
+      } else {
+        window.localStorage.setItem(ALIAS_STORAGE_KEY, sanitized);
+      }
+    } catch {
+      // Ignore storage failures (e.g., quota exceeded).
+    }
+  };
+
+  const setEmptyMessage = (message) => {
+    if (typeof message !== 'string' || !message) {
+      return;
+    }
+    currentEmptyMessage = message;
+    if (leaderboardEmpty) {
+      leaderboardEmpty.textContent = message;
+    }
+  };
+
+  const setSyncStatus = (type, message, emptyMessage) => {
+    if (syncStatusEl) {
+      syncStatusEl.textContent = message || '';
+      if (type) {
+        syncStatusEl.setAttribute('data-status', type);
+      }
+    }
+    if (emptyMessage) {
+      setEmptyMessage(emptyMessage);
+    }
+  };
+
+  const sortLeaderboardRuns = (runs) => {
+    return runs
+      .slice()
+      .sort((a, b) => {
+        const aWpm = Number.isFinite(a?.wpm) ? a.wpm : 0;
+        const bWpm = Number.isFinite(b?.wpm) ? b.wpm : 0;
+        if (bWpm !== aWpm) {
+          return bWpm - aWpm;
+        }
+
+        const aDuration = Number.isFinite(a?.duration) ? a.duration : DEFAULT_DURATION;
+        const bDuration = Number.isFinite(b?.duration) ? b.duration : DEFAULT_DURATION;
+        if (aDuration !== bDuration) {
+          return aDuration - bDuration;
+        }
+
+        const aAccuracy = Number.isFinite(a?.accuracy) ? a.accuracy : 0;
+        const bAccuracy = Number.isFinite(b?.accuracy) ? b.accuracy : 0;
+        if (bAccuracy !== aAccuracy) {
+          return bAccuracy - aAccuracy;
+        }
+
+        const aTime = Date.parse(a?.timestamp || '') || 0;
+        const bTime = Date.parse(b?.timestamp || '') || 0;
+        return bTime - aTime;
+      });
+  };
+
+  const trimLeaderboardRuns = (runs) => {
+    return sortLeaderboardRuns(runs).slice(0, LEADERBOARD_MAX_ENTRIES);
+  };
+
+  const renderLeaderboard = () => {
+    if (!leaderboardList || !leaderboardEmpty) {
+      return;
+    }
+
+    const rankedRuns = sortLeaderboardRuns(leaderboardRuns).slice(0, 5);
+    leaderboardList.innerHTML = '';
+
+    if (!rankedRuns.length) {
+      leaderboardList.classList.add('hidden');
+      leaderboardEmpty.classList.remove('hidden');
+      leaderboardEmpty.textContent = currentEmptyMessage;
+      return;
+    }
+
+    leaderboardList.classList.remove('hidden');
+    leaderboardEmpty.classList.add('hidden');
+
+    rankedRuns.forEach((run, index) => {
+      const item = document.createElement('li');
+      item.className = 'leaderboard-row';
+      if (aliasValue && run.alias && run.alias.toLowerCase() === aliasValue.toLowerCase()) {
+        item.classList.add('is-self');
+      }
+
+      const rank = document.createElement('span');
+      rank.className = 'leaderboard-rank';
+      rank.textContent = `${index + 1}.`;
+
+      const aliasSpan = document.createElement('span');
+      aliasSpan.className = 'leaderboard-alias';
+      aliasSpan.textContent = run.alias || 'Anonymous';
+
+      const wpmSpan = document.createElement('span');
+      wpmSpan.className = 'leaderboard-wpm';
+      const wpmValue = Number.isFinite(run.wpm) ? run.wpm : 0;
+      const formattedWpm = wpmValue >= 100 ? Math.round(wpmValue).toString() : wpmValue.toFixed(1);
+      wpmSpan.textContent = `${formattedWpm} WPM`;
+
+      const durationSpan = document.createElement('span');
+      durationSpan.className = 'leaderboard-duration';
+      const durationValue = Number.isFinite(run.duration) ? run.duration : DEFAULT_DURATION;
+      durationSpan.textContent = `${durationValue}s`;
+
+      item.append(rank, aliasSpan, wpmSpan, durationSpan);
+      leaderboardList.appendChild(item);
+    });
+  };
+
+  const sanitizeRun = (run) => {
+    if (!run) return null;
+    const alias = sanitizeAlias(run.alias);
+    if (!alias) return null;
+
+    const numericWpm = Number(run.wpm);
+    if (!Number.isFinite(numericWpm)) {
+      return null;
+    }
+
+    const duration = Math.max(1, Math.round(Number(run.duration) || DEFAULT_DURATION));
+    const accuracyValue = Number(run.accuracy);
+    const accuracy = Number.isFinite(accuracyValue)
+      ? Math.max(0, Math.min(100, Math.round(accuracyValue * 10) / 10))
+      : null;
+    const cpmValue = Number(run.cpm);
+    const cpm = Number.isFinite(cpmValue) ? Math.max(0, Math.round(cpmValue)) : null;
+    const timestampValue = run.timestamp || run.completedAt;
+    const timestamp = (() => {
+      if (!timestampValue) {
+        return new Date().toISOString();
+      }
+      const parsed = Date.parse(timestampValue);
+      if (Number.isNaN(parsed)) {
+        return new Date().toISOString();
+      }
+      return new Date(parsed).toISOString();
+    })();
+
+    return {
+      alias,
+      wpm: Math.max(0, Math.round(numericWpm * 100) / 100),
+      duration,
+      accuracy,
+      cpm,
+      timestamp,
+    };
+  };
+
+  const createGistHeaders = (token, { json = false } = {}) => {
+    const headers = {
+      Accept: 'application/vnd.github+json',
+    };
+    if (json) {
+      headers['Content-Type'] = 'application/json';
+    }
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+    return headers;
+  };
+
+  const fetchLeaderboardData = async ({ gistId, gistToken }) => {
+    if (!gistId) {
+      throw new Error('Gist ID is not configured.');
+    }
+
+    if (typeof fetch !== 'function') {
+      throw new Error('Fetch API is not available.');
+    }
+
+    const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+      method: 'GET',
+      headers: createGistHeaders(gistToken),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || `Unable to load gist (${response.status}).`);
+    }
+
+    const payload = await response.json();
+    const file = payload?.files?.[LEADERBOARD_FILENAME];
+    if (!file || typeof file.content !== 'string' || !file.content.trim()) {
+      return [];
+    }
+
+    try {
+      const parsed = JSON.parse(file.content);
+      if (Array.isArray(parsed)) {
+        return parsed;
+      }
+      if (parsed && Array.isArray(parsed.runs)) {
+        return parsed.runs;
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  };
+
+  const pushLeaderboardData = async ({ gistId, gistToken }, runs) => {
+    if (!gistId) {
+      throw new Error('Gist ID is not configured.');
+    }
+    if (!gistToken) {
+      throw new Error('A GitHub token is required to update the leaderboard.');
+    }
+    if (typeof fetch !== 'function') {
+      throw new Error('Fetch API is not available.');
+    }
+
+    const payload = {
+      runs,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+      method: 'PATCH',
+      headers: createGistHeaders(gistToken, { json: true }),
+      body: JSON.stringify({
+        files: {
+          [LEADERBOARD_FILENAME]: {
+            content: JSON.stringify(payload, null, 2),
+          },
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || `Unable to update gist (${response.status}).`);
+    }
+
+    return response.json();
+  };
+
+  const formatRelativeTime = (date) => {
+    if (!(date instanceof Date)) {
+      return 'just now';
+    }
+    const nowTs = Date.now();
+    const diffMs = Math.max(0, nowTs - date.getTime());
+    if (diffMs < 5000) {
+      return 'just now';
+    }
+    if (diffMs < 60000) {
+      return `${Math.round(diffMs / 1000)}s ago`;
+    }
+    if (diffMs < 3600000) {
+      return `${Math.round(diffMs / 60000)}m ago`;
+    }
+    if (diffMs < 86400000) {
+      return `${Math.round(diffMs / 3600000)}h ago`;
+    }
+    return date.toLocaleDateString();
+  };
+
+  const shouldSyncLeaderboard = () => {
+    return Boolean(aliasValue && gistSettings.gistId && gistSettings.gistToken);
+  };
+
+  const ensureLeaderboardLoaded = async () => {
+    if (!shouldSyncLeaderboard()) {
+      return leaderboardRuns;
+    }
+
+    if (leaderboardLoaded) {
+      return leaderboardRuns;
+    }
+
+    if (leaderboardFetchPromise) {
+      return leaderboardFetchPromise;
+    }
+
+    setSyncStatus('syncing', 'Loading leaderboard…', 'Loading leaderboard…');
+
+    leaderboardFetchPromise = (async () => {
+      try {
+        const remoteRuns = await fetchLeaderboardData(gistSettings);
+        const sanitized = remoteRuns
+          .map((run) => sanitizeRun(run))
+          .filter((run) => run != null);
+        leaderboardRuns = trimLeaderboardRuns(sanitized);
+        leaderboardLoaded = true;
+        renderLeaderboard();
+        lastSyncedAt = new Date();
+        if (leaderboardRuns.length === 0) {
+          setSyncStatus('success', 'Leaderboard ready. Finish a run to claim a spot.', 'No runs yet—finish a run to claim a spot.');
+        } else {
+          setSyncStatus('success', `Leaderboard updated ${formatRelativeTime(lastSyncedAt)}.`);
+        }
+      } catch (error) {
+        leaderboardLoaded = false;
+        setSyncStatus('error', `Unable to load leaderboard: ${error.message}`, 'Unable to load leaderboard.');
+        throw error;
+      } finally {
+        leaderboardFetchPromise = null;
+      }
+      return leaderboardRuns;
+    })();
+
+    return leaderboardFetchPromise;
+  };
+
+  const persistLeaderboard = async () => {
+    if (!shouldSyncLeaderboard()) {
+      return;
+    }
+
+    if (isPersistingLeaderboard) {
+      persistQueued = true;
+      return;
+    }
+
+    isPersistingLeaderboard = true;
+    persistQueued = false;
+    setSyncStatus('syncing', 'Syncing your result…');
+
+    try {
+      await pushLeaderboardData(gistSettings, leaderboardRuns);
+      lastSyncedAt = new Date();
+      setSyncStatus('success', `Score synced ${formatRelativeTime(lastSyncedAt)}.`);
+    } catch (error) {
+      setSyncStatus('error', `Sync failed: ${error.message}`, 'Unable to sync leaderboard.');
+    } finally {
+      isPersistingLeaderboard = false;
+      if (persistQueued) {
+        persistQueued = false;
+        persistLeaderboard();
+      }
+    }
+  };
+
+  const recordLeaderboardRun = (run) => {
+    if (!shouldSyncLeaderboard()) {
+      return;
+    }
+
+    (async () => {
+      try {
+        await ensureLeaderboardLoaded();
+      } catch {
+        // Continue attempting to sync even if the initial fetch fails.
+      }
+
+      const sanitized = sanitizeRun(run);
+      if (!sanitized) {
+        return;
+      }
+
+      leaderboardRuns = trimLeaderboardRuns([...leaderboardRuns, sanitized]);
+      renderLeaderboard();
+      await persistLeaderboard();
+    })();
+  };
+
+  const resetLeaderboardState = (message, type = 'idle') => {
+    leaderboardRuns = [];
+    leaderboardLoaded = false;
+    renderLeaderboard();
+    if (message) {
+      setSyncStatus(type, message, message);
+    }
+  };
+
+  const updateSyncReadiness = () => {
+    if (!gistSettings.gistId) {
+      resetLeaderboardState('Connect GitHub access from the global settings to sync your scores.', 'disabled');
+      return;
+    }
+
+    if (!gistSettings.gistToken) {
+      resetLeaderboardState('Add a GitHub token with gist scope in settings to enable syncing.', 'disabled');
+      return;
+    }
+
+    if (!aliasValue) {
+      resetLeaderboardState('Enter an alias to join the leaderboard.');
+      return;
+    }
+
+    ensureLeaderboardLoaded();
+  };
+
+  const applyGistSettings = (settings) => {
+    const gistId = typeof settings?.gistId === 'string' ? settings.gistId.trim() : '';
+    const gistToken = typeof settings?.gistToken === 'string'
+      ? settings.gistToken.trim()
+      : typeof settings?.token === 'string'
+        ? settings.token.trim()
+        : '';
+
+    const changed = gistSettings.gistId !== gistId || gistSettings.gistToken !== gistToken;
+    if (!changed) {
+      return;
+    }
+
+    gistSettings = { gistId, gistToken };
+    leaderboardRuns = [];
+    leaderboardLoaded = false;
+    renderLeaderboard();
+    updateSyncReadiness();
+  };
+
+  const handleAliasInput = (event) => {
+    const inputValue = typeof event?.target?.value === 'string' ? event.target.value : '';
+    const sanitized = sanitizeAlias(inputValue);
+    aliasValue = sanitized;
+    if (aliasInput && aliasInput.value !== sanitized) {
+      aliasInput.value = sanitized;
+    }
+    writeStoredAlias(sanitized);
+    renderLeaderboard();
+    updateSyncReadiness();
+  };
+
+  const initializeLeaderboard = () => {
+    aliasValue = readStoredAlias();
+    if (aliasInput) {
+      aliasInput.value = aliasValue;
+      aliasInput.addEventListener('input', handleAliasInput);
+      aliasInput.addEventListener('blur', () => {
+        if (!aliasInput) return;
+        aliasInput.value = sanitizeAlias(aliasInput.value);
+      });
+    }
+
+    renderLeaderboard();
+    setSyncStatus('idle', 'Enter an alias to join the leaderboard.', 'Connect GitHub access from the global settings to sync your scores.');
+
+    applyGistSettings(readSharedGistSettings());
+
+    if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+      window.addEventListener(GIST_SETTINGS_EVENT, (event) => {
+        applyGistSettings(event?.detail);
+      });
+    }
+
+    updateSyncReadiness();
   };
 
   const syncDurationOptions = () => {
@@ -463,7 +993,7 @@
 
       try {
         typingInput.focus({ preventScroll: true });
-      } catch (error) {
+      } catch {
         typingInput.focus();
       }
 
@@ -471,7 +1001,7 @@
         const end = typingInput.value.length;
         try {
           typingInput.setSelectionRange(end, end);
-        } catch (error) {
+        } catch {
           // Ignore selection errors in unsupported environments.
         }
       }
@@ -547,6 +1077,14 @@
     syncDurationOptions();
     refreshHoldDisplays();
     setScreen('results', { focusTarget: resultsRetry });
+    recordLeaderboardRun({
+      alias: aliasValue,
+      wpm: wpmValue,
+      cpm: cpmValue,
+      accuracy: accuracyValue,
+      duration: testDuration,
+      timestamp: new Date().toISOString(),
+    });
     startTimestamp = null;
   };
 
@@ -639,6 +1177,7 @@
   }
 
   observeTextPanel();
+  initializeLeaderboard();
   beginTest(DEFAULT_DURATION);
 
   window.addEventListener('beforeunload', () => {
