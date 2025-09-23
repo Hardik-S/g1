@@ -27,8 +27,19 @@
         color: #1f2146;
       }
 
+      .langmath-app {
+        width: min(920px, 100%);
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        gap: 1.5rem;
+        position: relative;
+      }
+
       main {
-        width: min(520px, 100%);
+        flex: 1 1 520px;
+        width: 100%;
+        max-width: 520px;
         display: flex;
         flex-direction: column;
         gap: 1.25rem;
@@ -158,6 +169,153 @@
         animation: resultPulse 650ms ease;
       }
 
+      .steps-container {
+        border-radius: 14px;
+        background: rgba(237, 239, 255, 0.88);
+        border: 1px solid rgba(131, 137, 211, 0.35);
+        padding: 1.25rem 1.15rem 1.35rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+        color: #1f2146;
+      }
+
+      .steps-title {
+        margin: 0;
+        font-size: 0.95rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: #575d99;
+      }
+
+      .steps-list {
+        margin: 0;
+        padding-left: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+        color: #31345f;
+        font-size: 0.98rem;
+      }
+
+      .steps-list li {
+        line-height: 1.5;
+      }
+
+      .history-panel {
+        flex: 0 0 260px;
+        width: 260px;
+        background: rgba(249, 249, 255, 0.85);
+        border-radius: 20px;
+        padding: 1.75rem 1.5rem;
+        box-shadow: 0 32px 46px -44px rgba(42, 40, 120, 0.66);
+        border: 1px solid rgba(149, 152, 218, 0.28);
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        transition: opacity 200ms ease, transform 200ms ease, flex-basis 200ms ease, width 200ms ease;
+      }
+
+      .history-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+      }
+
+      .history-title {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #373a6a;
+      }
+
+      .history-toggle {
+        border: none;
+        background: rgba(124, 132, 215, 0.18);
+        color: #565c8f;
+        font-size: 0.85rem;
+        font-weight: 600;
+        padding: 0.4rem 0.75rem;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: background 150ms ease, color 150ms ease;
+      }
+
+      .history-toggle:hover,
+      .history-toggle:focus-visible {
+        background: rgba(108, 92, 231, 0.2);
+        color: #3d3f6b;
+        outline: none;
+      }
+
+      .history-toggle-tab {
+        position: absolute;
+        top: 1rem;
+        right: 0;
+        transform: translateX(calc(100% + 0.75rem));
+        display: none;
+        box-shadow: 0 18px 32px -24px rgba(96, 84, 225, 0.9);
+        z-index: 2;
+      }
+
+      .langmath-app[data-history='collapsed'] .history-toggle-tab {
+        display: inline-flex;
+      }
+
+      .history-empty {
+        margin: 0;
+        font-size: 0.9rem;
+        color: #6a6fa0;
+      }
+
+      .history-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        overflow-y: auto;
+        max-height: 360px;
+      }
+
+      .history-entry {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        padding-bottom: 0.55rem;
+        border-bottom: 1px solid rgba(156, 160, 220, 0.25);
+      }
+
+      .history-entry:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+
+      .history-query {
+        font-size: 0.95rem;
+        color: #2f3162;
+      }
+
+      .history-result {
+        font-size: 0.88rem;
+        color: #565c8f;
+      }
+
+      .langmath-app[data-history='collapsed'] {
+        justify-content: center;
+      }
+
+      .langmath-app[data-history='collapsed'] .history-panel {
+        flex-basis: 0;
+        width: 0;
+        opacity: 0;
+        transform: translateX(16px);
+        pointer-events: none;
+      }
+
       @keyframes resultPulse {
         0% {
           box-shadow: 0 0 0 0 rgba(108, 92, 231, 0.18);
@@ -172,10 +330,6 @@
           padding: 2rem 1rem;
         }
 
-        main {
-          padding: 2rem 1.5rem;
-        }
-
         .input-row {
           flex-direction: column;
           align-items: stretch;
@@ -183,6 +337,41 @@
 
         button {
           width: 100%;
+        }
+
+        .langmath-app {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 1.25rem;
+        }
+
+        .history-panel {
+          width: 100%;
+          flex-basis: auto;
+          opacity: 1;
+          transform: none;
+          pointer-events: auto;
+        }
+
+        .langmath-app[data-history='collapsed'] .history-panel {
+          display: none;
+        }
+
+        .history-toggle-tab {
+          position: static;
+          transform: none;
+          align-self: flex-end;
+          display: none;
+          margin-top: -0.5rem;
+        }
+
+        .langmath-app[data-history='collapsed'] .history-toggle-tab {
+          display: inline-flex;
+        }
+
+        main {
+          padding: 2rem 1.5rem;
+          max-width: none;
         }
       }
 
@@ -200,30 +389,63 @@
     <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
   </head>
   <body>
-    <main>
-      <header>
-        <h1>LangMath</h1>
-        <p>Speak your arithmetic. Try phrases like “twenty one times four” or “nine plus six”.</p>
-      </header>
+    <div class="langmath-app" id="langmath-shell" data-history="open">
+      <main>
+        <header>
+          <h1>LangMath</h1>
+          <p>Speak your arithmetic. Try phrases like “twenty one times four” or “ninety nine minus eight”.</p>
+        </header>
 
-      <label class="input-label" for="langmath-query">Math prompt</label>
-      <div class="input-row">
-        <input
-          id="langmath-query"
-          type="text"
-          inputmode="text"
-          autocomplete="off"
-          spellcheck="false"
-          placeholder="e.g. forty two divided by six"
-          aria-describedby="langmath-result"
-        />
-        <button id="langmath-button" type="button">Calculate</button>
-      </div>
+        <label class="input-label" for="langmath-query">Math prompt</label>
+        <div class="input-row">
+          <input
+            id="langmath-query"
+            type="text"
+            inputmode="text"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="e.g. sixty three divided by nine"
+            aria-describedby="langmath-result"
+          />
+          <button id="langmath-button" type="button">Calculate</button>
+        </div>
 
-      <div class="result-box" id="langmath-result" role="status" aria-live="polite" data-state="loading">
-        <span id="langmath-result-text">Loading Python runtime…</span>
-      </div>
-    </main>
+        <div class="result-box" id="langmath-result" role="status" aria-live="polite" data-state="loading">
+          <span id="langmath-result-text">Loading Python runtime…</span>
+        </div>
+
+        <section class="steps-container" id="langmath-steps" hidden>
+          <h2 class="steps-title">How we solved it</h2>
+          <ol class="steps-list" id="langmath-steps-list"></ol>
+        </section>
+      </main>
+
+      <aside class="history-panel" id="langmath-history" aria-hidden="false">
+        <header class="history-header">
+          <h2 class="history-title">History</h2>
+          <button
+            type="button"
+            class="history-toggle"
+            data-history-toggle
+            aria-expanded="true"
+            aria-controls="langmath-history-list"
+          >
+            Hide history
+          </button>
+        </header>
+        <p class="history-empty" id="langmath-history-empty">No calculations yet.</p>
+        <ol class="history-list" id="langmath-history-list"></ol>
+      </aside>
+      <button
+        type="button"
+        class="history-toggle history-toggle-tab"
+        data-history-toggle
+        aria-expanded="true"
+        aria-controls="langmath-history-list"
+      >
+        Show history
+      </button>
+    </div>
 
     <script>
       (function () {
@@ -231,6 +453,13 @@
         const button = document.getElementById('langmath-button');
         const resultBox = document.getElementById('langmath-result');
         const resultText = document.getElementById('langmath-result-text');
+        const shell = document.getElementById('langmath-shell');
+        const stepsSection = document.getElementById('langmath-steps');
+        const stepsList = document.getElementById('langmath-steps-list');
+        const historyPanel = document.getElementById('langmath-history');
+        const historyList = document.getElementById('langmath-history-list');
+        const historyEmpty = document.getElementById('langmath-history-empty');
+        const historyToggleButtons = document.querySelectorAll('[data-history-toggle]');
 
         const operatorMap = {
           plus: '+',
@@ -270,11 +499,98 @@
           thirty: 30,
           forty: 40,
           fifty: 50,
+          sixty: 60,
+          seventy: 70,
+          eighty: 80,
+          ninety: 90,
         };
+
+        const historyEntries = [];
 
         const pyodideReady = loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/' });
 
         let runtimeReady = false;
+
+        const formatTokenDisplay = (token) => `"${token.replace(/_/g, ' ')}"`;
+
+        const formatConvertedDisplay = (value) =>
+          typeof value === 'number' ? value.toString() : `"${value}"`;
+
+        const clearSteps = () => {
+          stepsList.innerHTML = '';
+          stepsSection.hidden = true;
+        };
+
+        const renderSteps = (steps) => {
+          if (!steps || !steps.length) {
+            clearSteps();
+            return;
+          }
+
+          stepsList.innerHTML = '';
+          steps.forEach((step) => {
+            const item = document.createElement('li');
+            item.textContent = step;
+            stepsList.appendChild(item);
+          });
+          stepsSection.hidden = false;
+        };
+
+        const updateHistoryToggleState = (expanded) => {
+          historyToggleButtons.forEach((button) => {
+            button.setAttribute('aria-expanded', expanded.toString());
+            button.textContent = expanded ? 'Hide history' : 'Show history';
+          });
+        };
+
+        const renderHistory = () => {
+          if (!historyEntries.length) {
+            historyEmpty.hidden = false;
+            historyList.innerHTML = '';
+            historyList.hidden = true;
+            return;
+          }
+
+          historyEmpty.hidden = true;
+          historyList.hidden = false;
+          historyList.innerHTML = '';
+
+          for (let index = historyEntries.length - 1; index >= 0; index -= 1) {
+            const entry = historyEntries[index];
+            const listItem = document.createElement('li');
+            listItem.className = 'history-entry';
+
+            const queryElement = document.createElement('div');
+            queryElement.className = 'history-query';
+            queryElement.textContent = entry.query;
+
+            const resultElement = document.createElement('div');
+            resultElement.className = 'history-result';
+            resultElement.textContent = `= ${entry.result}`;
+
+            listItem.appendChild(queryElement);
+            listItem.appendChild(resultElement);
+            historyList.appendChild(listItem);
+          }
+        };
+
+        const toggleHistory = () => {
+          const collapsed = shell.dataset.history === 'collapsed';
+          const nextState = collapsed ? 'open' : 'collapsed';
+          shell.dataset.history = nextState;
+          const expanded = nextState === 'open';
+          if (historyPanel) {
+            historyPanel.setAttribute('aria-hidden', expanded ? 'false' : 'true');
+          }
+          updateHistoryToggleState(expanded);
+        };
+
+        historyToggleButtons.forEach((button) => {
+          button.addEventListener('click', toggleHistory);
+        });
+
+        updateHistoryToggleState(true);
+        renderHistory();
 
         const setResult = (message, state) => {
           resultBox.dataset.state = state;
@@ -293,7 +609,7 @@
 
           if (/^\d+$/.test(current)) {
             const numeric = Number.parseInt(current, 10);
-            if (!Number.isFinite(numeric) || numeric < 0 || numeric > 50) {
+            if (!Number.isFinite(numeric) || numeric < 0 || numeric > 99) {
               return null;
             }
             return { value: numeric, consumed: 1 };
@@ -312,13 +628,10 @@
               if (onesValue >= 10) {
                 return null;
               }
-              if (value === 50 && onesValue > 0) {
-                return null;
-              }
               value += onesValue;
               consumed = 2;
             }
-            if (value > 50) {
+            if (value > 99) {
               return null;
             }
             return { value, consumed };
@@ -345,8 +658,18 @@
             return null;
           }
 
+          const steps = [];
+          steps.push(`Normalize input → "${prepared.replace(/_/g, ' ')}"`);
+
           const tokens = prepared.split(' ').filter(Boolean);
+          if (!tokens.length) {
+            return null;
+          }
+
+          steps.push(`Tokenize → [${tokens.map(formatTokenDisplay).join(', ')}]`);
+
           const pieces = [];
+          const convertedPieces = [];
           let expectingNumber = true;
           let index = 0;
 
@@ -364,6 +687,7 @@
                 return null;
               }
               pieces.push(String(numberResult.value));
+              convertedPieces.push(numberResult.value);
               index += numberResult.consumed;
               expectingNumber = false;
               continue;
@@ -373,7 +697,9 @@
               return null;
             }
 
-            pieces.push(operatorMap[token]);
+            const operatorSymbol = operatorMap[token];
+            pieces.push(operatorSymbol);
+            convertedPieces.push(operatorSymbol);
             index += 1;
             expectingNumber = true;
           }
@@ -382,12 +708,16 @@
             return null;
           }
 
+          steps.push(`Convert words → [${convertedPieces.map(formatConvertedDisplay).join(', ')}]`);
+
           const expression = pieces.join(' ');
           if (!sanitizeExpression(expression)) {
             return null;
           }
 
-          return expression;
+          steps.push(`Build expression → ${expression}`);
+
+          return { expression, steps };
         };
 
         const formatResult = (value) => {
@@ -405,22 +735,28 @@
         const handleCalculation = async () => {
           const query = input.value.trim();
           if (!query) {
+            clearSteps();
             setResult('Enter a math question using words to evaluate it.', 'info');
             input.focus();
             return;
           }
 
-          const expression = parseQuery(query);
-          if (!expression) {
+          const parsed = parseQuery(query);
+          if (!parsed) {
+            clearSteps();
             setResult('Could not parse query', 'error');
             return;
           }
 
           if (!runtimeReady) {
+            clearSteps();
             setResult('Runtime still loading. Please wait a moment…', 'loading');
             return;
           }
 
+          const { expression, steps: parseSteps } = parsed;
+
+          clearSteps();
           setResult('Calculating…', 'loading');
           button.disabled = true;
 
@@ -431,6 +767,7 @@
             try {
               outcome = pyodide.runPython(python);
             } catch (error) {
+              clearSteps();
               setResult('Invalid math expression', 'error');
               console.error('[LangMath] Evaluation error', error);
               return;
@@ -438,6 +775,10 @@
 
             const message = formatResult(outcome);
             setResult(message, 'result');
+            const finalSteps = [...parseSteps, `Evaluate expression → ${expression} = ${message}`];
+            renderSteps(finalSteps);
+            historyEntries.push({ query, result: message });
+            renderHistory();
           } finally {
             button.disabled = false;
           }
@@ -463,11 +804,12 @@
             ];
 
             smokeTests.forEach((test) => {
-              const expression = parseQuery(test.input);
-              if (!expression) {
+              const parsedTest = parseQuery(test.input);
+              if (!parsedTest) {
                 console.warn('[LangMath] Failed to parse sample input:', test.input);
                 return;
               }
+              const { expression } = parsedTest;
 
               try {
                 const python = `from math import *\nresult = eval(${JSON.stringify(expression)})\nstr(result)`;
