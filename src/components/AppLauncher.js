@@ -1,192 +1,37 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { APP_CATEGORIES, getAllApps } from '../apps/registry';
-import {
-  readGlobalGistSettings,
-  subscribeToGlobalGistSettings,
-  writeGlobalGistSettings,
-} from '../state/globalGistSettings';
-import { verifyGistConnection } from '../global/verifyGistConnection';
+import AppLauncherHeader from './AppLauncher/AppLauncherHeader';
+import CategoryNav from './AppLauncher/CategoryNav';
+import FavoritesSection from './AppLauncher/FavoritesSection';
+import GistSettingsModal from './AppLauncher/GistSettingsModal';
+import useClock from './AppLauncher/hooks/useClock';
+import useFavorites from './AppLauncher/hooks/useFavorites';
+import useGistSettingsModal from './AppLauncher/hooks/useGistSettingsModal';
 import './AppLauncher.css';
 
 const AppLauncher = () => {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [viewMode, setViewMode] = useState('grid');
   const [isFeaturedCollapsed, setIsFeaturedCollapsed] = useState(false);
-  const [torontoTime, setTorontoTime] = useState('--:--:--');
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [gistSettingsForm, setGistSettingsForm] = useState({
-    gistId: '',
-    gistToken: '',
-  });
-  const [gistSettingsStatus, setGistSettingsStatus] = useState({
-    type: null,
-    message: '',
-  });
-  const [favoriteIds, setFavoriteIds] = useState(() => {
-    try {
-      const stored = localStorage.getItem('favoriteAppIds');
-      return stored ? JSON.parse(stored) : [];
-    } catch (e) {
-      return [];
-    }
-  });
 
-  const settingsButtonRef = useRef(null);
-  const gistIdInputRef = useRef(null);
-  const gistTokenInputRef = useRef(null);
-  const cancelButtonRef = useRef(null);
-  const saveButtonRef = useRef(null);
-  const gistStatusTimerRef = useRef(null);
-
-  const clearGistStatus = useCallback(() => {
-    if (gistStatusTimerRef.current) {
-      clearTimeout(gistStatusTimerRef.current);
-      gistStatusTimerRef.current = null;
-    }
-    setGistSettingsStatus({ type: null, message: '' });
-  }, []);
-
-  const scheduleGistStatusDismissal = useCallback(() => {
-    if (gistStatusTimerRef.current) {
-      clearTimeout(gistStatusTimerRef.current);
-    }
-
-    gistStatusTimerRef.current = setTimeout(() => {
-      setGistSettingsStatus({ type: null, message: '' });
-      gistStatusTimerRef.current = null;
-    }, 6000);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (gistStatusTimerRef.current) {
-        clearTimeout(gistStatusTimerRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    const formatter = new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'America/Toronto',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false,
-    });
-
-    const updateTime = () => {
-      setTorontoTime(formatter.format(new Date()));
-    };
-
-    updateTime();
-    const intervalId = setInterval(updateTime, 1000);
-    return () => clearInterval(intervalId);
-  }, []);
-
-  useEffect(() => {
-    const initialSettings = readGlobalGistSettings();
-    setGistSettingsForm(initialSettings);
-
-    const unsubscribe = subscribeToGlobalGistSettings((nextSettings) => {
-      setGistSettingsForm(nextSettings);
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (isSettingsOpen) {
-      clearGistStatus();
-    }
-  }, [clearGistStatus, isSettingsOpen]);
-
-  const closeSettingsModal = useCallback(() => {
-    setIsSettingsOpen(false);
-
-    if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
-      window.requestAnimationFrame(() => {
-        settingsButtonRef.current?.focus();
-      });
-    } else {
-      settingsButtonRef.current?.focus();
-    }
-  }, []);
-
-  const handleCloseWithoutSaving = useCallback(() => {
-    setGistSettingsForm(readGlobalGistSettings());
-    closeSettingsModal();
-  }, [closeSettingsModal]);
-
-  useEffect(() => {
-    if (!isSettingsOpen || typeof document === 'undefined') {
-      return undefined;
-    }
-
-    const focusableElements = () => [
-      gistIdInputRef.current,
-      gistTokenInputRef.current,
-      cancelButtonRef.current,
-      saveButtonRef.current,
-    ].filter(Boolean);
-
-    const firstElement = focusableElements()[0];
-    if (firstElement) {
-      setTimeout(() => {
-        firstElement.focus();
-      }, 0);
-    }
-
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        handleCloseWithoutSaving();
-        return;
-      }
-
-      if (event.key !== 'Tab') {
-        return;
-      }
-
-      const elements = focusableElements();
-      if (elements.length === 0) {
-        return;
-      }
-
-      const first = elements[0];
-      const last = elements[elements.length - 1];
-      const active = document.activeElement;
-
-      if (event.shiftKey) {
-        if (active === first || !elements.includes(active)) {
-          event.preventDefault();
-          last.focus();
-        }
-        return;
-      }
-
-      if (active === last || !elements.includes(active)) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [handleCloseWithoutSaving, isSettingsOpen]);
+  const torontoTime = useClock();
+  const {
+    cancelButtonRef,
+    gistIdInputRef,
+    gistSettingsForm,
+    gistSettingsStatus,
+    gistTokenInputRef,
+    handleCloseWithoutSaving,
+    handleGistInputChange,
+    handleSaveSettings,
+    isSettingsOpen,
+    openSettingsModal,
+    saveButtonRef,
+    settingsButtonRef,
+  } = useGistSettingsModal();
 
   const allApps = useMemo(() => getAllApps(), []);
 
@@ -208,6 +53,14 @@ const AppLauncher = () => {
 
     return ['All', ...knownCategories, ...customCategories];
   }, [allApps]);
+
+  const {
+    favoriteApps,
+    favoriteIds,
+    hasHiddenFavoritesInCategory,
+    isFavorited,
+    toggleFavorite,
+  } = useFavorites(allApps, selectedCategory, searchQuery);
 
   const filteredApps = useMemo(() => {
     const favoriteSet = new Set(favoriteIds);
@@ -238,58 +91,6 @@ const AppLauncher = () => {
     .filter((app) => app.featured && !app.disabled)
     .sort((a, b) => a.title.localeCompare(b.title)), [allApps]);
 
-  const favoriteApps = useMemo(() => allApps
-    .filter((app) => favoriteIds.includes(app.id) && !app.disabled)
-    .filter((app) => {
-      const matchesCategory = selectedCategory === 'All' || app.category === selectedCategory;
-      const matchesSearch = app.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        app.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        app.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-
-      return matchesCategory && matchesSearch;
-    })
-    .sort((a, b) => a.title.localeCompare(b.title)), [allApps, favoriteIds, searchQuery, selectedCategory]);
-
-  const hasHiddenFavoritesInCategory = useMemo(() => {
-    if (selectedCategory === 'All' || favoriteIds.length === 0) {
-      return false;
-    }
-
-    const searchLower = searchQuery.toLowerCase();
-
-    return favoriteIds.some((favoriteId) => {
-      const app = allApps.find((candidate) => candidate.id === favoriteId);
-
-      if (!app || app.disabled) {
-        return false;
-      }
-
-      const matchesSearch = app.title.toLowerCase().includes(searchLower) ||
-        app.description.toLowerCase().includes(searchLower) ||
-        app.tags.some((tag) => tag.toLowerCase().includes(searchLower));
-
-      if (!matchesSearch) {
-        return false;
-      }
-
-      return app.category !== selectedCategory;
-    });
-  }, [allApps, favoriteIds, searchQuery, selectedCategory]);
-
-  const isFavorited = (appId) => favoriteIds.includes(appId);
-
-  const toggleFavorite = (appId) => {
-    setFavoriteIds((prev) => {
-      const next = prev.includes(appId)
-        ? prev.filter((id) => id !== appId)
-        : [...prev, appId];
-      try {
-        localStorage.setItem('favoriteAppIds', JSON.stringify(next));
-      } catch (e) {}
-      return next;
-    });
-  };
-
   const handleAppClick = useCallback((app) => {
     if (!app || app.disabled) {
       return;
@@ -319,59 +120,11 @@ const AppLauncher = () => {
     }
   }, [allApps, filteredApps, handleAppClick, navigate]);
 
-  const handleGistInputChange = (field) => (event) => {
-    const { value } = event.target;
-    setGistSettingsForm((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const handleSaveSettings = useCallback(async (event) => {
-    event.preventDefault();
-    clearGistStatus();
-
-    try {
-      const savedSettings = writeGlobalGistSettings({
-        gistId: gistSettingsForm.gistId,
-        gistToken: gistSettingsForm.gistToken,
-      });
-
-      if (savedSettings.gistId) {
-        await verifyGistConnection({
-          gistId: savedSettings.gistId,
-          gistToken: savedSettings.gistToken,
-        });
-      }
-
-      setGistSettingsStatus({
-        type: 'success',
-        message: savedSettings.gistId
-          ? 'Gist connection verified successfully.'
-          : 'Gist settings saved.',
-      });
-      closeSettingsModal();
-      scheduleGistStatusDismissal();
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      setGistSettingsStatus({
-        type: 'error',
-        message: `Failed to verify gist settings: ${errorMessage}`,
-      });
-      scheduleGistStatusDismissal();
-    }
-  }, [
-    clearGistStatus,
-    closeSettingsModal,
-    gistSettingsForm,
-    scheduleGistStatusDismissal,
-  ]);
-
   const toggleFeaturedSection = useCallback(() => {
     setIsFeaturedCollapsed((prev) => !prev);
   }, []);
 
-  const renderAppCard = (app) => {
+  const renderAppCard = useCallback((app) => {
     const favorited = isFavorited(app.id);
     return (
       <div
@@ -383,8 +136,8 @@ const AppLauncher = () => {
           type="button"
           className={`favorite-toggle ${favorited ? 'favorited' : ''}`}
           aria-label={favorited ? 'Unfavorite app' : 'Favorite app'}
-          onClick={(e) => {
-            e.stopPropagation();
+          onClick={(event) => {
+            event.stopPropagation();
             toggleFavorite(app.id);
           }}
         >
@@ -402,72 +155,21 @@ const AppLauncher = () => {
         </div>
       </div>
     );
-  };
+  }, [handleAppClick, isFavorited, toggleFavorite, viewMode]);
 
   return (
     <div className="app-launcher">
-      <header className="launcher-header">
-        <div className="launcher-header-top">
-          <h1 className="launcher-title">
-            <span className="title-icon">📱</span>
-            64 Apps
-            <span className="app-count">({allApps.length} apps)</span>
-          </h1>
-
-          <div className="toronto-clock" aria-label="Current time">
-            <span className="clock-time">{torontoTime}</span>
-          </div>
-        </div>
-
-        <div className="launcher-controls">
-          <div className="search-container">
-            <input
-              type="text"
-              placeholder="Search apps..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="search-input"
-            />
-            <span className="search-icon">🔍</span>
-          </div>
-
-          <div className="view-controls">
-            <button
-              type="button"
-              className="random-launch-btn"
-              onClick={handleRandomLaunch}
-              aria-label="Launch a random app"
-            >
-              🎲
-            </button>
-            <div className="view-toggle-group">
-              <button
-                type="button"
-                className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
-                onClick={() => setViewMode('grid')}
-              >
-                ⊞
-              </button>
-              <button
-                type="button"
-                className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
-                onClick={() => setViewMode('list')}
-              >
-                ☰
-              </button>
-            </div>
-            <button
-              type="button"
-              className="settings-btn"
-              onClick={() => setIsSettingsOpen(true)}
-              ref={settingsButtonRef}
-            >
-              <span aria-hidden="true">⚙️</span>
-              <span className="settings-btn-label">Settings</span>
-            </button>
-          </div>
-        </div>
-      </header>
+      <AppLauncherHeader
+        appCount={allApps.length}
+        onOpenSettings={openSettingsModal}
+        onRandomLaunch={handleRandomLaunch}
+        onSearchChange={(event) => setSearchQuery(event.target.value)}
+        onViewModeChange={setViewMode}
+        searchQuery={searchQuery}
+        settingsButtonRef={settingsButtonRef}
+        torontoTime={torontoTime}
+        viewMode={viewMode}
+      />
 
       {gistSettingsStatus.type && (
         <div
@@ -483,35 +185,19 @@ const AppLauncher = () => {
       )}
 
       <div className="launcher-content">
-        <nav className="category-nav">
-          {categories.map((category) => (
-            <button
-              key={category}
-              className={`category-btn ${selectedCategory === category ? 'active' : ''}`}
-              onClick={() => setSelectedCategory(category)}
-            >
-              {category !== 'All' && (
-                <span className="category-icon">
-                  {APP_CATEGORIES[category]?.icon}
-                </span>
-              )}
-              {category}
-            </button>
-          ))}
-        </nav>
+        <CategoryNav
+          categories={categories}
+          onSelectCategory={setSelectedCategory}
+          selectedCategory={selectedCategory}
+        />
 
-        {favoriteApps.length > 0 && (
-          <section className="favorites-section">
-            <h2 className="section-title">★ Favorite Apps</h2>
-            <div className={`apps-container ${viewMode}`}>
-              {favoriteApps.map(renderAppCard)}
-            </div>
-          </section>
-        )}
-
-        {favoriteApps.length === 0 && favoriteIds.length > 0 && hasHiddenFavoritesInCategory && (
-          <div className="favorites-empty-message">Mark apps as ★ to see them here</div>
-        )}
+        <FavoritesSection
+          favoriteApps={favoriteApps}
+          hasFavoriteIds={favoriteIds.length > 0}
+          hasHiddenFavoritesInCategory={hasHiddenFavoritesInCategory}
+          renderAppCard={renderAppCard}
+          viewMode={viewMode}
+        />
 
         {selectedCategory === 'All' && featuredApps.length > 0 && (
           <section
@@ -554,74 +240,17 @@ const AppLauncher = () => {
         </section>
       </div>
 
-      {isSettingsOpen && (
-        <div
-          className="settings-modal-backdrop"
-          role="presentation"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
-              handleCloseWithoutSaving();
-            }
-          }}
-        >
-          <div
-            className="settings-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="gist-settings-title"
-          >
-            <form onSubmit={handleSaveSettings}>
-              <h2 id="gist-settings-title" className="settings-modal-title">
-                GitHub Gist Sync
-              </h2>
-
-              <div className="settings-field">
-                <label htmlFor="gist-id-input">Gist ID</label>
-                <input
-                  id="gist-id-input"
-                  ref={gistIdInputRef}
-                  type="text"
-                  value={gistSettingsForm.gistId}
-                  onChange={handleGistInputChange('gistId')}
-                  placeholder="e.g. a1b2c3d4e5"
-                  autoComplete="off"
-                />
-              </div>
-
-              <div className="settings-field">
-                <label htmlFor="gist-token-input">Personal Access Token</label>
-                <input
-                  id="gist-token-input"
-                  ref={gistTokenInputRef}
-                  type="password"
-                  value={gistSettingsForm.gistToken}
-                  onChange={handleGistInputChange('gistToken')}
-                  placeholder="ghp_..."
-                  autoComplete="off"
-                />
-              </div>
-
-              <div className="settings-modal-actions">
-                <button
-                  type="button"
-                  className="settings-secondary-btn"
-                  onClick={handleCloseWithoutSaving}
-                  ref={cancelButtonRef}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="settings-primary-btn"
-                  ref={saveButtonRef}
-                >
-                  Save
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <GistSettingsModal
+        cancelButtonRef={cancelButtonRef}
+        gistIdInputRef={gistIdInputRef}
+        gistSettingsForm={gistSettingsForm}
+        gistTokenInputRef={gistTokenInputRef}
+        isOpen={isSettingsOpen}
+        onCancel={handleCloseWithoutSaving}
+        onChange={handleGistInputChange}
+        onSubmit={handleSaveSettings}
+        saveButtonRef={saveButtonRef}
+      />
     </div>
   );
 };
