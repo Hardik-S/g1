@@ -27,6 +27,33 @@ export const normalizeSchedule = (schedule) => {
   };
 };
 
+const normalizeGardenSnapshot = (snapshot) => {
+  if (!snapshot || typeof snapshot !== 'object') {
+    return null;
+  }
+  const bucket = snapshot.bucket ?? null;
+  const dayKey = snapshot.dayKey ?? null;
+  const completedAt = typeof snapshot.completedAt === 'string' ? snapshot.completedAt : null;
+  if (bucket == null && dayKey == null && completedAt === null) {
+    return null;
+  }
+  return { bucket, dayKey, completedAt };
+};
+
+const createEmptySchedule = () => ({ ...DEFAULT_SCHEDULE });
+
+const createGardenSnapshot = (schedule, completedAt) => {
+  if (!completedAt) {
+    return null;
+  }
+  const normalized = normalizeSchedule(schedule);
+  return {
+    bucket: normalized.focusBucket ?? null,
+    dayKey: normalized.day ?? null,
+    completedAt,
+  };
+};
+
 export const normalizeTask = (task, depth = 0) => {
   if (!task || depth > MAX_DEPTH) return null;
   const now = new Date().toISOString();
@@ -44,6 +71,7 @@ export const normalizeTask = (task, depth = 0) => {
     completed: Boolean(task.completed),
     completedAt: task.completed ? (task.completedAt || now) : null,
     subtasks,
+    gardenSnapshot: normalizeGardenSnapshot(task.gardenSnapshot),
     schedule: normalizeSchedule(task.schedule),
   };
 
@@ -221,6 +249,27 @@ export const flattenTasks = (tasks, includeCompleted = true) => {
   return result;
 };
 
+export const getSubtaskProgress = (task) => {
+  if (!task) {
+    return { total: 0, completed: 0 };
+  }
+  let total = 0;
+  let completed = 0;
+  const traverse = (subtasks) => {
+    coerceArray(subtasks).forEach((subtask) => {
+      total += 1;
+      if (subtask.completed) {
+        completed += 1;
+      }
+      if (subtask.subtasks?.length) {
+        traverse(subtask.subtasks);
+      }
+    });
+  };
+  traverse(task.subtasks);
+  return { total, completed };
+};
+
 export const sortTasksByDueDate = (tasks) => {
   const copy = [...coerceArray(tasks)];
   copy.sort((a, b) => {
@@ -243,28 +292,29 @@ export const toggleTaskCompletion = (tasks, taskId, completed = null) => {
   return updateTask(tasks, taskId, (task) => {
     const desired = completed === null ? !task.completed : completed;
     const now = new Date().toISOString();
+    const schedule = normalizeSchedule(task.schedule);
+    const clearedSchedule = createEmptySchedule();
+    const subtasks = coerceArray(task.subtasks).map((child) => {
+      if (!desired) {
+        return { ...child };
+      }
+      const childSchedule = normalizeSchedule(child.schedule);
+      return {
+        ...child,
+        completed: true,
+        completedAt: now,
+        gardenSnapshot: createGardenSnapshot(childSchedule, now),
+        schedule: createEmptySchedule(),
+        subtasks: child.subtasks,
+      };
+    });
     const toggled = {
       ...task,
       completed: desired,
       completedAt: desired ? now : null,
-      schedule: desired ? {
-        day: null,
-        order: 0,
-        focusBucket: null,
-        focusOrder: 0,
-      } : task.schedule,
-      subtasks: coerceArray(task.subtasks).map((child) => ({
-        ...child,
-        completed: desired ? true : child.completed,
-        completedAt: desired ? now : child.completedAt,
-        schedule: desired ? {
-          day: null,
-          order: 0,
-          focusBucket: null,
-          focusOrder: 0,
-        } : child.schedule,
-        subtasks: child.subtasks,
-      })),
+      gardenSnapshot: desired ? createGardenSnapshot(schedule, now) : null,
+      schedule: desired ? clearedSchedule : task.schedule,
+      subtasks,
     };
     return toggled;
   });
