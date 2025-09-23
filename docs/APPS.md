@@ -85,7 +85,7 @@ Zen Go invites quick 9×9 sparring against a lightweight GNU Go engine compiled 
 - Surface AI insight overlays such as win-rate charts or candidate variation summaries.
 
 ## Cosmos Simulator
-Cosmos Simulator shrinks the solar system by 1×10⁻⁹ and renders it with Three.js, a velocity Verlet integrator, and lil-gui control panel. Planets load from JSON metadata, trails showcase orbital history, and buttons teleport the camera to any world for close-up inspections.
+Cosmos Simulator shrinks the solar system by 1×10⁻⁹ and renders it with Three.js, a velocity Verlet integrator, and lil-gui control panel. Planets load from JSON metadata, trails showcase orbital history, and buttons teleport the camera to any world for close-up inspections. Arrow keys orbit the scene, WASD pans, and Q/E or +/- dolly the camera while OrbitControls damping keeps motions smooth alongside mouse input.
 - Add moon and asteroid presets to extend the data-driven catalogue beyond the eight planets.
 - Experiment with post-processing bloom for the sun and motion blur for orbital trails.
 - Persist custom gravity and time-speed presets to revisit favourite slow-motion or accelerated scenarios.

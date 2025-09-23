@@ -17,6 +17,117 @@ let showTrails = true;
 let timeSpeed = 4000;
 let gravityMultiplier = 1;
 
+const keyboardState = {
+  orbitLeft: false,
+  orbitRight: false,
+  orbitUp: false,
+  orbitDown: false,
+  panLeft: false,
+  panRight: false,
+  panUp: false,
+  panDown: false,
+  dollyIn: false,
+  dollyOut: false,
+};
+
+const keyActionMap = {
+  ArrowLeft: 'orbitLeft',
+  ArrowRight: 'orbitRight',
+  ArrowUp: 'orbitUp',
+  ArrowDown: 'orbitDown',
+  KeyA: 'panLeft',
+  KeyD: 'panRight',
+  KeyW: 'panUp',
+  KeyS: 'panDown',
+  KeyQ: 'dollyIn',
+  KeyE: 'dollyOut',
+  Equal: 'dollyIn',
+  NumpadAdd: 'dollyIn',
+  Minus: 'dollyOut',
+  NumpadSubtract: 'dollyOut',
+};
+
+function clearKeyboardState() {
+  Object.keys(keyboardState).forEach((key) => {
+    keyboardState[key] = false;
+  });
+}
+
+function setKeyState(event, isPressed) {
+  const action = keyActionMap[event.code];
+  if (!action) {
+    return;
+  }
+  if (keyboardState[action] === isPressed) {
+    event.preventDefault();
+    return;
+  }
+  keyboardState[action] = isPressed;
+  event.preventDefault();
+}
+
+function setupKeyboardShortcuts() {
+  window.addEventListener('keydown', (event) => {
+    if (!event.repeat) {
+      setKeyState(event, true);
+    } else if (keyActionMap[event.code]) {
+      event.preventDefault();
+    }
+  });
+  window.addEventListener('keyup', (event) => {
+    setKeyState(event, false);
+  });
+  window.addEventListener('blur', clearKeyboardState);
+}
+
+function applyKeyboardNavigation(deltaSeconds) {
+  if (!controls) {
+    return;
+  }
+
+  const orbitSpeed = 1.6 * deltaSeconds;
+  const orbitVerticalSpeed = 1.2 * deltaSeconds;
+  if (keyboardState.orbitLeft) {
+    controls.rotateLeft(orbitSpeed);
+  }
+  if (keyboardState.orbitRight) {
+    controls.rotateLeft(-orbitSpeed);
+  }
+  if (keyboardState.orbitUp) {
+    controls.rotateUp(orbitVerticalSpeed);
+  }
+  if (keyboardState.orbitDown) {
+    controls.rotateUp(-orbitVerticalSpeed);
+  }
+
+  const panDistance = 420 * deltaSeconds;
+  let panX = 0;
+  let panY = 0;
+  if (keyboardState.panLeft) {
+    panX -= panDistance;
+  }
+  if (keyboardState.panRight) {
+    panX += panDistance;
+  }
+  if (keyboardState.panUp) {
+    panY -= panDistance;
+  }
+  if (keyboardState.panDown) {
+    panY += panDistance;
+  }
+  if (panX !== 0 || panY !== 0) {
+    controls.pan(panX, panY);
+  }
+
+  const dollyFactor = Math.pow(0.95, deltaSeconds * 10);
+  if (keyboardState.dollyIn) {
+    controls.dollyIn(dollyFactor);
+  }
+  if (keyboardState.dollyOut) {
+    controls.dollyOut(dollyFactor);
+  }
+}
+
 const initialCameraPosition = new THREE.Vector3(0, 1200, 3200);
 const initialTarget = new THREE.Vector3();
 
@@ -135,6 +246,7 @@ async function init() {
   resizeRenderer();
 
   window.addEventListener('resize', resizeRenderer);
+  setupKeyboardShortcuts();
 
   try {
     const bodies = await loadBodyData('./data/bodies.json');
@@ -167,6 +279,7 @@ async function init() {
       if (sunVisual && sunLight) {
         sunLight.position.copy(sunVisual.mesh.position);
       }
+      applyKeyboardNavigation(deltaSeconds);
       controls.update();
       renderer.render(scene, camera);
     }
