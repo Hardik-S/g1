@@ -160,7 +160,7 @@ g1/
 
 ### Utilities
 
-* SortableJS: drag-and-drop reordering in shared UIs
+* Custom pointer-driven drag-and-drop utilities for shared planner UIs
 
 ### Cache Lab Subapp
 

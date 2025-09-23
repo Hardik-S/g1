@@ -1,7 +1,19 @@
-import React, { useEffect, useMemo, useRef } from 'react';
-import Sortable from 'sortablejs';
+import React, { useMemo, useRef } from 'react';
 import TaskTree from '../components/TaskTree';
 import { DAY_LABELS, DAY_ORDER } from '../constants';
+
+const getDropIndex = (container, clientY) => {
+  if (!container) return 0;
+  const items = Array.from(container.querySelectorAll('[data-task-id]:not(.is-dragging)'));
+  if (!items.length) return 0;
+  for (let index = 0; index < items.length; index += 1) {
+    const rect = items[index].getBoundingClientRect();
+    if (clientY < rect.top + rect.height / 2) {
+      return index;
+    }
+  }
+  return items.length;
+};
 
 const LandingView = ({
   tasks,
@@ -19,87 +31,110 @@ const LandingView = ({
 }) => {
   const allTasksRef = useRef(null);
   const bucketRefs = useRef({});
-  const sortablesRef = useRef({});
+  const dragStateRef = useRef(null);
 
-  useEffect(() => {
-    const listElement = allTasksRef.current?.querySelector('.zen-task-tree');
-    if (!listElement) return undefined;
-    const sortable = Sortable.create(listElement, {
-      group: { name: 'zen-weekly', pull: 'clone', put: false },
-      animation: 150,
-      sort: false,
-      draggable: '.zen-root-task',
-      fallbackOnBody: true,
-      onEnd: (evt) => {
-        if (evt.clone) {
-          evt.clone.remove();
-        }
-        if (evt.item && evt.from !== evt.to) {
-          evt.item.remove();
-        }
-      },
-    });
-    sortablesRef.current.allTasks = sortable;
-    return () => {
-      sortable.destroy();
-      if (sortablesRef.current.allTasks === sortable) {
-        delete sortablesRef.current.allTasks;
+  const clearBucketHighlights = () => {
+    DAY_ORDER.forEach((dayKey) => {
+      const container = bucketRefs.current[dayKey];
+      if (container) {
+        container.classList.remove('is-drag-over');
       }
-    };
-  }, [tasks]);
+    });
+  };
 
-  useEffect(() => {
-    DAY_ORDER.forEach((day) => {
-      const container = bucketRefs.current[day];
-      if (!container) return;
-      if (sortablesRef.current[day]) {
-        sortablesRef.current[day].destroy();
-      }
-      sortablesRef.current[day] = Sortable.create(container, {
-        group: { name: 'zen-weekly', pull: true, put: true },
-        animation: 150,
-        dataIdAttr: 'data-task-id',
-        fallbackOnBody: true,
-        onAdd: (evt) => {
-          const taskId = evt.item?.dataset?.taskId;
-          if (taskId) {
-            onAssignTaskToDay(taskId, day, evt.newIndex);
-            const order = Array.from(evt.to.querySelectorAll('[data-task-id]')).map((el) => el.dataset.taskId);
-            onReorderDay(day, order);
-          }
-          const cameFromClone =
-            evt.pullMode === 'clone' ||
-            evt.clone ||
-            evt.from?.classList?.contains('zen-task-tree');
-          if (cameFromClone) {
-            requestAnimationFrame(() => {
-              if (evt.item?.parentNode) {
-                evt.item.parentNode.removeChild(evt.item);
-              } else {
-                evt.item?.remove();
-              }
-            });
-          }
-        },
-        onUpdate: (evt) => {
-          const order = Array.from(evt.to.querySelectorAll('[data-task-id]')).map((el) => el.dataset.taskId);
-          onReorderDay(day, order);
-        },
-        onRemove: (evt) => {
-          const order = Array.from(evt.from.querySelectorAll('[data-task-id]')).map((el) => el.dataset.taskId);
-          onReorderDay(day, order);
-        },
-      });
-    });
-    return () => {
-      DAY_ORDER.forEach((day) => {
-        if (sortablesRef.current[day]) {
-          sortablesRef.current[day].destroy();
-          delete sortablesRef.current[day];
+  const clearDragState = () => {
+    dragStateRef.current = null;
+    clearBucketHighlights();
+  };
+
+  const handleRootDragStart = (task, event) => {
+    dragStateRef.current = { source: 'all', taskId: task.id };
+    if (event?.currentTarget) {
+      event.currentTarget.classList.add('is-dragging');
+    }
+    if (event?.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'copy';
+      event.dataTransfer.setData('text/plain', task.id);
+    }
+  };
+
+  const handleRootDragEnd = (_, event) => {
+    if (event?.currentTarget) {
+      event.currentTarget.classList.remove('is-dragging');
+    }
+    clearDragState();
+  };
+
+  const handleBucketCardDragStart = (dayKey, task, index, event) => {
+    dragStateRef.current = { source: 'day', day: dayKey, index, taskId: task.id };
+    if (event?.currentTarget) {
+      event.currentTarget.classList.add('is-dragging');
+    }
+    if (event?.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', task.id);
+    }
+  };
+
+  const handleBucketCardDragEnd = (event) => {
+    if (event?.currentTarget) {
+      event.currentTarget.classList.remove('is-dragging');
+    }
+    clearDragState();
+  };
+
+  const handleBucketDragOver = (dayKey, event) => {
+    if (!dragStateRef.current) return;
+    event.preventDefault();
+    const container = bucketRefs.current[dayKey];
+    if (container) {
+      container.classList.add('is-drag-over');
+    }
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = dragStateRef.current.source === 'all' ? 'copy' : 'move';
+    }
+  };
+
+  const handleBucketDragLeave = (dayKey, event) => {
+    const container = bucketRefs.current[dayKey];
+    if (!container) return;
+    if (event?.relatedTarget && container.contains(event.relatedTarget)) {
+      return;
+    }
+    container.classList.remove('is-drag-over');
+  };
+
+  const handleBucketDrop = (dayKey, event) => {
+    if (!dragStateRef.current) return;
+    event.preventDefault();
+    const container = bucketRefs.current[dayKey];
+    if (container) {
+      container.classList.remove('is-drag-over');
+    }
+    const dropIndex = getDropIndex(container, event.clientY);
+    const { taskId, source, day: sourceDay } = dragStateRef.current;
+    clearDragState();
+
+    const baseOrder = (dayAssignments[dayKey] || []).map((task) => task.id).filter((id) => id !== taskId);
+    const insertionIndex = Math.min(dropIndex, baseOrder.length);
+    baseOrder.splice(insertionIndex, 0, taskId);
+
+    if (source === 'all') {
+      onAssignTaskToDay(taskId, dayKey, insertionIndex);
+      onReorderDay(dayKey, baseOrder);
+    } else if (source === 'day') {
+      if (sourceDay === dayKey) {
+        onReorderDay(dayKey, baseOrder);
+      } else {
+        onAssignTaskToDay(taskId, dayKey, insertionIndex);
+        onReorderDay(dayKey, baseOrder);
+        if (sourceDay) {
+          const sourceOrder = (dayAssignments[sourceDay] || []).map((task) => task.id).filter((id) => id !== taskId);
+          onReorderDay(sourceDay, sourceOrder);
         }
-      });
-    };
-  }, [onAssignTaskToDay, onReorderDay]);
+      }
+    }
+  };
 
   const todayKey = useMemo(() => DAY_ORDER[new Date().getDay()], []);
 
@@ -121,6 +156,8 @@ const LandingView = ({
             onDeleteTask={onDeleteTask}
             onCompleteTask={onCompleteTask}
             onAddSubtask={onAddSubtask}
+            onDragStartTask={handleRootDragStart}
+            onDragEndTask={handleRootDragEnd}
           />
         </div>
       </section>
@@ -141,9 +178,23 @@ const LandingView = ({
                     </button>
                   )}
                 </div>
-                <div className="zen-week-bucket" ref={(el) => { bucketRefs.current[dayKey] = el; }}>
-                  {assignments.map((task) => (
-                    <div key={task.id} className="zen-week-card" data-task-id={task.id}>
+                <div
+                  className="zen-week-bucket"
+                  ref={(el) => { bucketRefs.current[dayKey] = el; }}
+                  onDragEnter={(event) => handleBucketDragOver(dayKey, event)}
+                  onDragOver={(event) => handleBucketDragOver(dayKey, event)}
+                  onDragLeave={(event) => handleBucketDragLeave(dayKey, event)}
+                  onDrop={(event) => handleBucketDrop(dayKey, event)}
+                >
+                  {assignments.map((task, index) => (
+                    <div
+                      key={task.id}
+                      className="zen-week-card"
+                      data-task-id={task.id}
+                      draggable
+                      onDragStart={(event) => handleBucketCardDragStart(dayKey, task, index, event)}
+                      onDragEnd={handleBucketCardDragEnd}
+                    >
                       <div className="zen-card-title">{task.title}</div>
                       {task.dueDate && <div className="zen-card-meta">Due {task.dueDate}</div>}
                     </div>

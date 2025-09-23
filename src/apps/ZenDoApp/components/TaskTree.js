@@ -27,14 +27,32 @@ const TaskNode = ({
   onAddSubtask,
   expandedIds,
   isRoot,
+  onDragStartTask,
+  onDragEndTask,
 }) => {
   const hasChildren = task.subtasks && task.subtasks.length > 0;
   const dueLabel = formatDueDate(task.dueDate);
+
+  const dragHandlers = {};
+  if (isRoot && onDragStartTask) {
+    dragHandlers.draggable = true;
+    dragHandlers.onDragStart = (event) => {
+      if (onDragStartTask) {
+        onDragStartTask(task, event);
+      }
+    };
+    dragHandlers.onDragEnd = (event) => {
+      if (onDragEndTask) {
+        onDragEndTask(task, event);
+      }
+    };
+  }
 
   return (
     <li
       className={`zen-task-node depth-${depth} ${task.completed ? 'is-complete' : ''} ${isRoot ? 'zen-root-task' : ''}`}
       data-task-id={task.id}
+      {...dragHandlers}
     >
       <div className="zen-task-row">
         <div className="zen-task-controls">
@@ -106,6 +124,8 @@ const TaskNode = ({
               onAddSubtask={onAddSubtask}
               expandedIds={expandedIds}
               isRoot={false}
+              onDragStartTask={onDragStartTask}
+              onDragEndTask={onDragEndTask}
             />
           ))}
         </ul>
@@ -122,6 +142,8 @@ const TaskTree = ({
   onDeleteTask,
   onCompleteTask,
   onAddSubtask,
+  onDragStartTask,
+  onDragEndTask,
 }) => {
   if (!tasks.length) {
     return (
@@ -146,6 +168,8 @@ const TaskTree = ({
           onAddSubtask={onAddSubtask}
           expandedIds={expandedIds}
           isRoot
+          onDragStartTask={onDragStartTask}
+          onDragEndTask={onDragEndTask}
         />
       ))}
     </ul>
