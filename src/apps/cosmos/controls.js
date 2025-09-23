@@ -30,10 +30,28 @@ export function setupControlPanel(bodies, handlers = {}, overrides = {}) {
     .name('Gravity (×)')
     .onChange((value) => handlers.onGravityChange?.(value));
 
+  let trailLengthController;
+
   gui
     .add(settings, 'showTrails')
     .name('Show trails')
-    .onChange((value) => handlers.onTrailsToggle?.(value));
+    .onChange((value) => {
+      if (value) {
+        trailLengthController.enable();
+      } else {
+        trailLengthController.disable();
+      }
+      handlers.onTrailsToggle?.(value);
+    });
+
+  trailLengthController = gui
+    .add(settings, 'trailLength', 0, 720, 10)
+    .name('Trail length')
+    .onChange((value) => handlers.onTrailLengthChange?.(value));
+
+  if (!settings.showTrails) {
+    trailLengthController.disable();
+  }
 
   gui
     .add(
