@@ -114,12 +114,13 @@ const LandingView = ({
       </section>
       <section className="zen-column zen-week">
         <h2 className="zen-section-header">Weekly Buckets</h2>
-        <div className="zen-week-grid">
+        <ul className="zen-week-list">
           {DAY_ORDER.map((dayKey) => {
             const isToday = dayKey === todayKey;
             const assignments = dayAssignments[dayKey] || [];
+            const rowClassName = `zen-week-row${isToday ? ' is-today' : ''}`;
             return (
-              <div key={dayKey} className={`zen-week-column ${isToday ? 'is-today' : ''}`}>
+              <li key={dayKey} className={rowClassName}>
                 <div className="zen-week-header">
                   <span className="zen-weekday">{DAY_LABELS[dayKey]}</span>
                   {isToday && (
@@ -136,10 +137,10 @@ const LandingView = ({
                     </div>
                   ))}
                 </div>
-              </div>
+              </li>
             );
           })}
-        </div>
+        </ul>
       </section>
     </div>
   );
