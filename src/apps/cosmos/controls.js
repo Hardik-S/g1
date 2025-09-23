@@ -39,6 +39,45 @@ export function setupControlPanel(bodies, handlers = {}, overrides = {}) {
     .add({ reset: () => handlers.onReset?.() }, 'reset')
     .name('Reset view');
 
+  const moonParentOrder = [];
+  const seenParents = new Set();
+  bodies.forEach((body) => {
+    if (!body.parentName) {
+      return;
+    }
+
+    if (!seenParents.has(body.parentName)) {
+      seenParents.add(body.parentName);
+      moonParentOrder.push(body.parentName);
+    }
+  });
+
+  if (moonParentOrder.length > 0) {
+    const moonsFolder = gui.addFolder('Moons');
+    const moonVisibilityOverrides = overrides.moons ?? {};
+    const moonVisibility = {};
+    const toggleLookup = new Map();
+
+    moonParentOrder.forEach((parentName) => {
+      const toggleKey = `${parentName}Moons`;
+      const defaultValue = moonVisibilityOverrides[parentName] ?? true;
+      moonVisibility[toggleKey] = defaultValue;
+      toggleLookup.set(parentName, toggleKey);
+
+      moonsFolder
+        .add(moonVisibility, toggleKey)
+        .name(`${parentName} moons`)
+        .onChange((value) => handlers.onMoonsToggle?.(parentName, value));
+    });
+
+    settings.moons = moonVisibility;
+
+    moonParentOrder.forEach((parentName) => {
+      const key = toggleLookup.get(parentName);
+      handlers.onMoonsToggle?.(parentName, moonVisibility[key]);
+    });
+  }
+
   handlers.onTimeSpeedChange?.(settings.timeSpeed);
   handlers.onGravityChange?.(settings.gravityMultiplier);
   handlers.onTrailsToggle?.(settings.showTrails);

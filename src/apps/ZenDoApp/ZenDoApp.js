@@ -9,6 +9,8 @@ import useZenDoState from './useZenDoState';
 import { DAY_ORDER } from './constants';
 import { flattenTasks, sortTasksByDueDate } from './taskUtils';
 import { writeGlobalGistSettings } from '../../state/globalGistSettings';
+import { DragProvider } from './drag/DragContext';
+import DragPreview from './components/DragPreview';
 
 const VIEW_TABS = [
   { id: 'landing', label: 'Landing' },
@@ -201,8 +203,9 @@ const ZenDoApp = ({ onBack }) => {
   const gistFilename = gistConfig.filename || 'zen-do-data.json';
 
   return (
-    <div className="zen-app-shell">
-      <header className="zen-app-header">
+    <DragProvider>
+      <div className="zen-app-shell">
+        <header className="zen-app-header">
         <div className="zen-header-left">
           {onBack && (
             <button type="button" className="zen-inline-btn zen-back-btn" onClick={onBack}>
@@ -334,14 +337,16 @@ const ZenDoApp = ({ onBack }) => {
         )}
       </main>
 
-      <TaskEditorModal
-        open={editorState.open}
-        onClose={closeEditor}
-        onSave={handleSaveTask}
-        initialTask={editorState.task}
-        parentTitle={editorState.parentTitle}
-      />
-    </div>
+        <TaskEditorModal
+          open={editorState.open}
+          onClose={closeEditor}
+          onSave={handleSaveTask}
+          initialTask={editorState.task}
+          parentTitle={editorState.parentTitle}
+        />
+      </div>
+      <DragPreview />
+    </DragProvider>
   );
 };
 

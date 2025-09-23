@@ -6,6 +6,11 @@ import { setupControlPanel } from './controls.js';
 
 const viewport = document.querySelector('.cosmos-viewport');
 const statusEl = document.querySelector('.cosmos-loader');
+const legendEl = document.querySelector('.cosmos-legend');
+const legendToggle = legendEl?.querySelector('.cosmos-legend__toggle');
+const legendPanel = legendEl?.querySelector('.cosmos-legend__panel');
+
+const LEGEND_STORAGE_KEY = 'cosmos.legend.collapsed';
 
 let renderer;
 let camera;
@@ -13,6 +18,7 @@ let controls;
 let sunLight;
 let simulation;
 let visuals;
+let moonGroups = new Map();
 let showTrails = true;
 let timeSpeed = 4000;
 let gravityMultiplier = 1;
@@ -228,6 +234,43 @@ function teleportCameraTo(name) {
   controls.update();
 }
 
+function setupLegend() {
+  if (!legendEl || !legendToggle || !legendPanel) {
+    return;
+  }
+
+  const readStoredPreference = () => {
+    try {
+      return localStorage.getItem(LEGEND_STORAGE_KEY) === '1';
+    } catch {
+      return false;
+    }
+  };
+
+  const setLegendCollapsed = (collapsed, { persist = true } = {}) => {
+    legendEl.classList.toggle('cosmos-legend--collapsed', collapsed);
+    legendToggle.setAttribute('aria-expanded', String(!collapsed));
+    legendPanel.setAttribute('aria-hidden', String(collapsed));
+
+    if (persist) {
+      try {
+        localStorage.setItem(LEGEND_STORAGE_KEY, collapsed ? '1' : '0');
+      } catch {
+        // Ignore persistence errors (e.g., storage disabled).
+      }
+    }
+  };
+
+  const initialCollapsed = readStoredPreference();
+  setLegendCollapsed(initialCollapsed, { persist: false });
+  legendEl.classList.add('cosmos-legend--ready');
+
+  legendToggle.addEventListener('click', () => {
+    const nextState = !legendEl.classList.contains('cosmos-legend--collapsed');
+    setLegendCollapsed(nextState);
+  });
+}
+
 async function init() {
   if (!viewport) {
     return;
@@ -247,12 +290,37 @@ async function init() {
 
   window.addEventListener('resize', resizeRenderer);
   setupKeyboardShortcuts();
+  window.addEventListener('keydown', (event) => {
+    if (event.defaultPrevented) {
+      return;
+    }
+
+    const target = event.target;
+    if (target instanceof HTMLElement) {
+      if (target.isContentEditable) {
+        return;
+      }
+
+      const focusable = target.closest('input, textarea, select, button');
+      if (focusable) {
+        return;
+      }
+    }
+
+    if (event.key === 'r' || event.key === 'R') {
+      resetCamera();
+    }
+  });
 
   try {
     const bodies = await loadBodyData('./data/bodies.json');
     simulation = new SolarSystemSimulation(bodies, { historyLimit: 720 });
-    const { group, visuals: createdVisuals } = createBodyMeshes(simulation.bodies, { scale: SCALE });
+    const { group, visuals: createdVisuals, moonGroups: createdMoonGroups } = createBodyMeshes(
+      simulation.bodies,
+      { scale: SCALE },
+    );
     visuals = createdVisuals;
+    moonGroups = createdMoonGroups;
 
     sunLight = createSunLight();
     scene.add(group);
@@ -262,6 +330,12 @@ async function init() {
       onTimeSpeedChange: (value) => { timeSpeed = value; },
       onGravityChange: (value) => { gravityMultiplier = value; },
       onTrailsToggle: (value) => { showTrails = value; },
+      onMoonsToggle: (planetName, visible) => {
+        const groupRef = moonGroups.get(planetName);
+        if (groupRef) {
+          groupRef.visible = visible;
+        }
+      },
       onTeleport: teleportCameraTo,
       onReset: resetCamera,
     });
@@ -291,4 +365,5 @@ async function init() {
   }
 }
 
+setupLegend();
 init();

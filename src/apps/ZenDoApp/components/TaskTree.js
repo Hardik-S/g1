@@ -27,16 +27,31 @@ const TaskNode = ({
   onAddSubtask,
   expandedIds,
   isRoot,
+  onStartRootDrag,
 }) => {
   const hasChildren = task.subtasks && task.subtasks.length > 0;
   const dueLabel = formatDueDate(task.dueDate);
+
+  const handlePointerDown = (event) => {
+    if (!isRoot || typeof onStartRootDrag !== 'function') {
+      return;
+    }
+    if (typeof event.button === 'number' && event.button !== 0) {
+      return;
+    }
+    const interactive = event.target.closest('button, input, a, textarea, select, label');
+    if (interactive) {
+      return;
+    }
+    onStartRootDrag(event, task);
+  };
 
   return (
     <li
       className={`zen-task-node depth-${depth} ${task.completed ? 'is-complete' : ''} ${isRoot ? 'zen-root-task' : ''}`}
       data-task-id={task.id}
     >
-      <div className="zen-task-row">
+      <div className="zen-task-row" onPointerDown={handlePointerDown}>
         <div className="zen-task-controls">
           {hasChildren ? (
             <button
@@ -106,6 +121,7 @@ const TaskNode = ({
               onAddSubtask={onAddSubtask}
               expandedIds={expandedIds}
               isRoot={false}
+              onStartRootDrag={onStartRootDrag}
             />
           ))}
         </ul>
@@ -122,6 +138,7 @@ const TaskTree = ({
   onDeleteTask,
   onCompleteTask,
   onAddSubtask,
+  onStartRootDrag,
 }) => {
   if (!tasks.length) {
     return (
@@ -146,6 +163,7 @@ const TaskTree = ({
           onAddSubtask={onAddSubtask}
           expandedIds={expandedIds}
           isRoot
+          onStartRootDrag={onStartRootDrag}
         />
       ))}
     </ul>
