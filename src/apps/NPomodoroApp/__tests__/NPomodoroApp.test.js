@@ -17,8 +17,11 @@ describe('NPomodoroApp interactions', () => {
     render(<NPomodoroApp />);
     const user = userEvent.setup();
 
-    const sessionCards = screen.getAllByTestId('session-card');
-    const focusButton = within(sessionCards[0]).getByRole('button', {
+    const sessionPreviews = screen.getAllByTestId('session-preview');
+    await user.click(sessionPreviews[0]);
+
+    const editor = screen.getByTestId('session-editor-modal');
+    const focusButton = within(editor).getByRole('button', {
       name: /focus session/i
     });
 
@@ -33,21 +36,29 @@ describe('NPomodoroApp interactions', () => {
       expect(screen.queryByTestId('focus-mode-overlay')).not.toBeInTheDocument();
     });
     expect(focusButton).toHaveTextContent(/focus session/i);
+
+    const closeButton = within(editor).getByRole('button', {
+      name: /close session editor/i
+    });
+    await user.click(closeButton);
   });
 
   it('removes a session when the remove button is pressed', async () => {
     render(<NPomodoroApp />);
     const user = userEvent.setup();
 
-    const sessionCards = screen.getAllByTestId('session-card');
-    const secondSession = sessionCards[1];
-    expect(within(secondSession).getByDisplayValue(/midday flow/i)).toBeInTheDocument();
+    const sessionPreviews = screen.getAllByTestId('session-preview');
+    const secondSession = sessionPreviews[1];
+    expect(within(secondSession).getByText(/midday flow/i)).toBeInTheDocument();
 
-    const removeButton = within(secondSession).getByRole('button', { name: /remove/i });
+    await user.click(secondSession);
+
+    const editor = screen.getByTestId('session-editor-modal');
+    const removeButton = within(editor).getByRole('button', { name: /remove session/i });
     await user.click(removeButton);
 
     await waitFor(() => {
-      expect(screen.queryByDisplayValue(/midday flow/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/midday flow/i)).not.toBeInTheDocument();
     });
   });
 
@@ -55,17 +66,20 @@ describe('NPomodoroApp interactions', () => {
     render(<NPomodoroApp />);
     const user = userEvent.setup();
 
-    const initialSessionCard = screen.getAllByTestId('session-card')[0];
-    const initialBlocks = within(initialSessionCard).getAllByTestId('block-row');
-    const addBlockButton = within(initialSessionCard).getByRole('button', {
+    const sessionPreviews = screen.getAllByTestId('session-preview');
+    await user.click(sessionPreviews[0]);
+
+    const editor = screen.getByTestId('session-editor-modal');
+    const initialBlocks = within(editor).getAllByTestId('block-row');
+    const addBlockButton = within(editor).getByRole('button', {
       name: /\+ add block/i
     });
 
     await user.click(addBlockButton);
 
     await waitFor(() => {
-      const updatedSessionCard = screen.getAllByTestId('session-card')[0];
-      const updatedBlocks = within(updatedSessionCard).getAllByTestId('block-row');
+      const updatedEditor = screen.getByTestId('session-editor-modal');
+      const updatedBlocks = within(updatedEditor).getAllByTestId('block-row');
       expect(updatedBlocks).toHaveLength(initialBlocks.length + 1);
     });
   });

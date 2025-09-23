@@ -95,6 +95,7 @@ const NPomodoroApp = () => {
     return window.innerWidth >= 960;
   });
   const [isFocusMode, setIsFocusMode] = useState(false);
+  const [editingSessionId, setEditingSessionId] = useState(null);
 
   const intervalRef = useRef(null);
 
@@ -107,11 +108,32 @@ const NPomodoroApp = () => {
     }
     return `${accentColor}33`;
   }, [accentColor]);
+  const editingSessionIndex = useMemo(
+    () => sessions.findIndex((session) => session.id === editingSessionId),
+    [sessions, editingSessionId]
+  );
+  const editingSession =
+    editingSessionIndex >= 0 ? sessions[editingSessionIndex] : null;
+  const editingSessionMinutes = useMemo(() => {
+    if (!editingSession) return 0;
+    return editingSession.blocks.reduce((acc, block) => acc + block.minutes, 0);
+  }, [editingSession]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
   }, [sessions]);
+
+  useEffect(() => {
+    if (!editingSessionId) return undefined;
+    const stillExists = sessions.some(
+      (session) => session.id === editingSessionId
+    );
+    if (!stillExists) {
+      setEditingSessionId(null);
+    }
+    return undefined;
+  }, [sessions, editingSessionId]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
@@ -147,6 +169,17 @@ const NPomodoroApp = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isFocusMode]);
+
+  useEffect(() => {
+    if (!editingSessionId || typeof window === 'undefined') return undefined;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape' && !isFocusMode) {
+        setEditingSessionId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [editingSessionId, isFocusMode]);
 
   const totalSeconds = useMemo(
     () =>
@@ -246,6 +279,10 @@ const NPomodoroApp = () => {
 
   const exitFocusMode = useCallback(() => {
     setIsFocusMode(false);
+  }, []);
+
+  const closeSessionEditor = useCallback(() => {
+    setEditingSessionId(null);
   }, []);
 
   const handleFocusSession = useCallback(
@@ -410,6 +447,7 @@ const NPomodoroApp = () => {
   };
 
   const addSession = () => {
+    let createdSession = null;
     setSessions((prev) => {
       const sessionNumber = prev.length + 1;
       const focusColor = colorPalette[sessionNumber % colorPalette.length];
@@ -431,8 +469,12 @@ const NPomodoroApp = () => {
           }
         ]
       };
+      createdSession = newSession;
       return [...prev, newSession];
     });
+    if (createdSession) {
+      setEditingSessionId(createdSession.id);
+    }
     setIsComplete(false);
   };
 
@@ -475,6 +517,9 @@ const NPomodoroApp = () => {
       setIsPaused(false);
       setIsComplete(false);
       setIsFocusMode(false);
+    }
+    if (sessionId === editingSessionId) {
+      setEditingSessionId(null);
     }
   };
 
@@ -549,6 +594,7 @@ const NPomodoroApp = () => {
     setIsPaused(false);
     setIsComplete(false);
     setIsFocusMode(false);
+    setEditingSessionId(null);
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem(STORAGE_KEY);
     }
@@ -793,123 +839,32 @@ const NPomodoroApp = () => {
                 );
                 const isActiveSession = index === currentSessionIndex;
                 const isSessionFocused = isActiveSession && isFocusMode;
+                const isEditing = session.id === editingSessionId;
+                const accent = session.blocks[0]?.color || '#7F5AF0';
                 return (
-                  <div
+                  <button
                     key={session.id}
-                    className={`session-card ${
+                    type="button"
+                    className={`session-preview ${
                       isActiveSession ? 'active' : ''
+                    } ${isEditing ? 'editing' : ''} ${
+                      isSessionFocused ? 'focused' : ''
                     }`}
-                    data-testid="session-card"
-                    style={{ '--session-accent': session.blocks[0]?.color || '#7F5AF0' }}
+                    data-testid="session-preview"
+                    style={{ '--session-accent': accent }}
+                    onClick={() => setEditingSessionId(session.id)}
+                    aria-haspopup="dialog"
                   >
-                    <div className="session-card-header">
-                      <input
-                        className="session-name-input"
-                        value={session.name}
-                        onChange={(event) =>
-                          updateSessionName(session.id, event.target.value)
-                        }
-                      />
-                      <span className="session-duration">{totalMinutes} min</span>
-                    </div>
-                    <div className="session-card-actions">
-                      <button
-                        type="button"
-                        className={`session-focus-btn ${
-                          isSessionFocused ? 'active' : ''
-                        }`}
-                        onClick={() => handleFocusSession(index)}
-                        aria-pressed={isSessionFocused}
-                      >
-                        {isSessionFocused ? 'Exit focus' : 'Focus session'}
-                      </button>
-                      <button
-                        type="button"
-                        className="session-remove-btn"
-                        onClick={() => removeSession(session.id)}
-                        disabled={sessions.length <= 1}
-                      >
-                        Remove
-                      </button>
-                    </div>
-                    <div className="block-editor">
-                      {session.blocks.map((block, blockIndex) => (
-                        <div
-                          key={block.id}
-                          className={`block-row ${
-                            index === currentSessionIndex &&
-                            blockIndex === currentBlockIndex
-                              ? 'current'
-                              : ''
-                          }`}
-                          data-testid="block-row"
-                        >
-                          <button
-                            type="button"
-                            className="block-handle"
-                            onClick={() => focusBlock(index, blockIndex)}
-                          >
-                            {blockIndex + 1}
-                          </button>
-                          <input
-                            className="block-name-input"
-                            value={block.name}
-                            onChange={(event) =>
-                              updateBlock(session.id, block.id, {
-                                name: event.target.value
-                              })
-                            }
-                          />
-                          <div className="block-duration-input">
-                            <input
-                              type="number"
-                              min="1"
-                              max="999"
-                              value={block.minutes}
-                              onChange={(event) => {
-                                const value = Math.max(
-                                  1,
-                                  Math.min(
-                                    999,
-                                    parseInt(event.target.value, 10) || 0
-                                  )
-                                );
-                                updateBlock(session.id, block.id, {
-                                  minutes: value
-                                });
-                              }}
-                            />
-                            <span>min</span>
-                          </div>
-                          <input
-                            type="color"
-                            className="block-color-input"
-                            value={block.color}
-                            onChange={(event) =>
-                              updateBlock(session.id, block.id, {
-                                color: event.target.value
-                              })
-                            }
-                          />
-                          <button
-                            type="button"
-                            className="block-remove-btn"
-                            onClick={() => removeBlock(session.id, block.id)}
-                            disabled={session.blocks.length <= 1}
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                    <button
-                      type="button"
-                      className="add-block-btn"
-                      onClick={() => addBlock(session.id)}
-                    >
-                      + Add block
-                    </button>
-                  </div>
+                    <span className="session-preview-accent" aria-hidden="true" />
+                    <span className="session-preview-content">
+                      <span className="session-preview-name">{session.name}</span>
+                      <span className="session-preview-meta">
+                        {totalMinutes} min · {session.blocks.length}{' '}
+                        {session.blocks.length === 1 ? 'block' : 'blocks'}
+                      </span>
+                    </span>
+                    <span className="session-preview-indicator">Edit</span>
+                  </button>
                 );
               })}
             </div>
@@ -968,6 +923,154 @@ const NPomodoroApp = () => {
             />
           )}
         </div>
+
+        {editingSession && (
+          <div
+            className="session-editor-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Edit ${editingSession.name}`}
+            data-testid="session-editor-modal"
+            onClick={closeSessionEditor}
+          >
+            <div
+              className="session-editor-shell"
+              style={{
+                '--session-accent':
+                  editingSession.blocks[0]?.color || '#7F5AF0'
+              }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="session-editor-header">
+                <div className="session-editor-title">
+                  <input
+                    className="session-name-input"
+                    value={editingSession.name}
+                    onChange={(event) =>
+                      updateSessionName(editingSession.id, event.target.value)
+                    }
+                    autoFocus
+                  />
+                  <span className="session-duration">
+                    {editingSessionMinutes} min planned
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="session-editor-close"
+                  onClick={closeSessionEditor}
+                  aria-label="Close session editor"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="session-editor-actions">
+                <button
+                  type="button"
+                  className={`session-focus-btn ${
+                    editingSessionIndex === currentSessionIndex && isFocusMode
+                      ? 'active'
+                      : ''
+                  }`}
+                  onClick={() => handleFocusSession(editingSessionIndex)}
+                  aria-pressed={
+                    editingSessionIndex === currentSessionIndex && isFocusMode
+                  }
+                  disabled={editingSessionIndex === -1}
+                >
+                  {editingSessionIndex === currentSessionIndex && isFocusMode
+                    ? 'Exit focus'
+                    : 'Focus session'}
+                </button>
+                <button
+                  type="button"
+                  className="session-remove-btn"
+                  onClick={() => removeSession(editingSession.id)}
+                  disabled={sessions.length <= 1}
+                >
+                  Remove session
+                </button>
+              </div>
+              <div className="block-editor">
+                {editingSession.blocks.map((block, blockIndex) => (
+                  <div
+                    key={block.id}
+                    className={`block-row ${
+                      editingSessionIndex === currentSessionIndex &&
+                      blockIndex === currentBlockIndex
+                        ? 'current'
+                        : ''
+                    }`}
+                    data-testid="block-row"
+                  >
+                    <button
+                      type="button"
+                      className="block-handle"
+                      onClick={() => focusBlock(editingSessionIndex, blockIndex)}
+                    >
+                      {blockIndex + 1}
+                    </button>
+                    <input
+                      className="block-name-input"
+                      value={block.name}
+                      onChange={(event) =>
+                        updateBlock(editingSession.id, block.id, {
+                          name: event.target.value
+                        })
+                      }
+                    />
+                    <div className="block-duration-input">
+                      <input
+                        type="number"
+                        min="1"
+                        max="999"
+                        value={block.minutes}
+                        onChange={(event) => {
+                          const value = Math.max(
+                            1,
+                            Math.min(
+                              999,
+                              parseInt(event.target.value, 10) || 0
+                            )
+                          );
+                          updateBlock(editingSession.id, block.id, {
+                            minutes: value
+                          });
+                        }}
+                      />
+                      <span>min</span>
+                    </div>
+                    <input
+                      type="color"
+                      className="block-color-input"
+                      value={block.color}
+                      onChange={(event) =>
+                        updateBlock(editingSession.id, block.id, {
+                          color: event.target.value
+                        })
+                      }
+                    />
+                    <button
+                      type="button"
+                      className="block-remove-btn"
+                      onClick={() => removeBlock(editingSession.id, block.id)}
+                      disabled={editingSession.blocks.length <= 1}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="add-block-btn"
+                onClick={() => addBlock(editingSession.id)}
+              >
+                + Add block
+              </button>
+            </div>
+          </div>
+        )}
 
         {isFocusMode && (
           <div
