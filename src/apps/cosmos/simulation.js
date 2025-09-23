@@ -14,6 +14,7 @@ export class SolarSystemSimulation {
       mass: definition.mass,
       radius: definition.radius,
       color: definition.color,
+      ring: definition.ring ? { ...definition.ring } : undefined,
       position: new THREE.Vector3().fromArray(definition.position),
       velocity: new THREE.Vector3().fromArray(definition.velocity),
       acceleration: new THREE.Vector3(),

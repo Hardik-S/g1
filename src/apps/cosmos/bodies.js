@@ -263,6 +263,40 @@ function createTrail(colorDefinition) {
   return { line, positions, geometry };
 }
 
+function createRingMesh(body, scale) {
+  if (!body.ring) {
+    return null;
+  }
+
+  const { innerRadius, outerRadius, opacity = 0.45, tilt = 0 } = body.ring;
+
+  if (!innerRadius || !outerRadius || outerRadius <= innerRadius) {
+    return null;
+  }
+
+  const ringGeometry = new THREE.RingGeometry(
+    innerRadius * scale,
+    outerRadius * scale,
+    96,
+  );
+
+  const ringColor = new THREE.Color(body.color).lerp(new THREE.Color('#ffffff'), 0.45);
+
+  const ringMaterial = new THREE.MeshBasicMaterial({
+    color: ringColor,
+    transparent: true,
+    opacity,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  });
+
+  const ringMesh = new THREE.Mesh(ringGeometry, ringMaterial);
+  ringMesh.name = `${body.name} Ring`;
+  ringMesh.rotation.x = THREE.MathUtils.degToRad(tilt);
+
+  return ringMesh;
+}
+
 export function createBodyMeshes(bodies, { scale }) {
   const group = new THREE.Group();
   const visuals = bodies.map((body) => {
@@ -275,14 +309,20 @@ export function createBodyMeshes(bodies, { scale }) {
     mesh.receiveShadow = false;
     mesh.name = body.name;
 
+    const ring = createRingMesh(body, scale);
+
     const { line: trail, positions, geometry: trailGeometry } = createTrail(body.color);
 
     group.add(mesh);
+    if (ring) {
+      group.add(ring);
+    }
     group.add(trail);
 
     return {
       name: body.name,
       mesh,
+      ring,
       trail,
       trailPositions: positions,
       trailGeometry,
@@ -306,6 +346,11 @@ export function updateBodyMeshes(visuals, simulationBodies, { scale, showTrails 
     const body = simulationBodies[index];
     temp.copy(body.position).multiplyScalar(scale);
     visual.mesh.position.copy(temp);
+
+    if (visual.ring) {
+      visual.ring.position.copy(temp);
+      visual.ring.visible = visual.mesh.visible;
+    }
 
     if (visual.mesh.name === 'Sun') {
       // keep the sun trail hidden for clarity
