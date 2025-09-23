@@ -52,9 +52,11 @@ const AppContainer = () => {
 
   useEffect(() => {
     if (!activeApp && normalizedPath !== '/') {
-      navigate('/', { replace: true });
+      if (typeof window !== 'undefined') {
+        window.location.replace('https://hardik-s.github.io/g1');
+      }
     }
-  }, [activeApp, navigate, normalizedPath]);
+  }, [activeApp, normalizedPath]);
 
   const handleBackToLauncher = useCallback(() => {
     navigate('/');
