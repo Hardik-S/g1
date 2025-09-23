@@ -1,7 +1,9 @@
-import React, { useEffect, useMemo, useRef } from 'react';
-import Sortable from 'sortablejs';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import TaskTree from '../components/TaskTree';
 import { DAY_LABELS, DAY_ORDER } from '../constants';
+import { useDragContext } from '../drag/DragContext';
+
+const BACKLOG_BUCKET = 'backlog';
 
 const LandingView = ({
   tasks,
@@ -17,89 +19,93 @@ const LandingView = ({
   onReorderDay,
   onLaunchToday,
 }) => {
-  const allTasksRef = useRef(null);
   const bucketRefs = useRef({});
-  const sortablesRef = useRef({});
+  const { dragState, beginDrag, setHoverTarget, clearHoverTarget } = useDragContext();
+
+  const handleDrop = useCallback((snapshot) => {
+    const { activeTaskId, hoverTarget, sourceBucket } = snapshot;
+    if (!activeTaskId || !hoverTarget?.bucketId) {
+      return;
+    }
+
+    const targetDay = hoverTarget.bucketId;
+    const existingTarget = (dayAssignments[targetDay] || []).map((task) => task.id);
+    const filteredTarget = existingTarget.filter((id) => id !== activeTaskId);
+    const insertIndex = Math.max(0, Math.min(hoverTarget.index, filteredTarget.length));
+    filteredTarget.splice(insertIndex, 0, activeTaskId);
+
+    if (sourceBucket !== targetDay) {
+      if (sourceBucket && sourceBucket !== BACKLOG_BUCKET && dayAssignments[sourceBucket]) {
+        const remaining = dayAssignments[sourceBucket].filter((task) => task.id !== activeTaskId);
+        onReorderDay(sourceBucket, remaining.map((task) => task.id));
+      }
+      onAssignTaskToDay(activeTaskId, targetDay, insertIndex);
+    }
+
+    onReorderDay(targetDay, filteredTarget);
+  }, [dayAssignments, onAssignTaskToDay, onReorderDay]);
+
+  const handleRootTaskDragStart = useCallback((event, task) => {
+    beginDrag(event, {
+      taskId: task.id,
+      sourceBucket: BACKLOG_BUCKET,
+      previewData: { task },
+      onDrop: handleDrop,
+    });
+  }, [beginDrag, handleDrop]);
+
+  const handleBucketDragStart = useCallback((event, task, dayKey) => {
+    if (typeof event.button === 'number' && event.button !== 0) {
+      return;
+    }
+    beginDrag(event, {
+      taskId: task.id,
+      sourceBucket: dayKey,
+      previewData: { task },
+      onDrop: handleDrop,
+    });
+  }, [beginDrag, handleDrop]);
 
   useEffect(() => {
-    const listElement = allTasksRef.current?.querySelector('.zen-task-tree');
-    if (!listElement) return undefined;
-    const sortable = Sortable.create(listElement, {
-      group: { name: 'zen-weekly', pull: 'clone', put: false },
-      animation: 150,
-      sort: false,
-      draggable: '.zen-root-task',
-      fallbackOnBody: true,
-      onEnd: (evt) => {
-        if (evt.clone) {
-          evt.clone.remove();
-        }
-        if (evt.item && evt.from !== evt.to) {
-          evt.item.remove();
-        }
-      },
-    });
-    sortablesRef.current.allTasks = sortable;
-    return () => {
-      sortable.destroy();
-      if (sortablesRef.current.allTasks === sortable) {
-        delete sortablesRef.current.allTasks;
-      }
-    };
-  }, [tasks]);
+    if (!dragState.isDragging || !dragState.pointerPosition) {
+      return;
+    }
+    const pointer = dragState.pointerPosition;
+    let matchedBucket = null;
 
-  useEffect(() => {
-    DAY_ORDER.forEach((day) => {
-      const container = bucketRefs.current[day];
-      if (!container) return;
-      if (sortablesRef.current[day]) {
-        sortablesRef.current[day].destroy();
+    DAY_ORDER.forEach((dayKey) => {
+      const container = bucketRefs.current[dayKey];
+      if (!container) {
+        return;
       }
-      sortablesRef.current[day] = Sortable.create(container, {
-        group: { name: 'zen-weekly', pull: true, put: true },
-        animation: 150,
-        dataIdAttr: 'data-task-id',
-        fallbackOnBody: true,
-        onAdd: (evt) => {
-          const taskId = evt.item?.dataset?.taskId;
-          if (taskId) {
-            onAssignTaskToDay(taskId, day, evt.newIndex);
-            const order = Array.from(evt.to.querySelectorAll('[data-task-id]')).map((el) => el.dataset.taskId);
-            onReorderDay(day, order);
-          }
-          const cameFromClone =
-            evt.pullMode === 'clone' ||
-            evt.clone ||
-            evt.from?.classList?.contains('zen-task-tree');
-          if (cameFromClone) {
-            requestAnimationFrame(() => {
-              if (evt.item?.parentNode) {
-                evt.item.parentNode.removeChild(evt.item);
-              } else {
-                evt.item?.remove();
-              }
-            });
-          }
-        },
-        onUpdate: (evt) => {
-          const order = Array.from(evt.to.querySelectorAll('[data-task-id]')).map((el) => el.dataset.taskId);
-          onReorderDay(day, order);
-        },
-        onRemove: (evt) => {
-          const order = Array.from(evt.from.querySelectorAll('[data-task-id]')).map((el) => el.dataset.taskId);
-          onReorderDay(day, order);
-        },
-      });
-    });
-    return () => {
-      DAY_ORDER.forEach((day) => {
-        if (sortablesRef.current[day]) {
-          sortablesRef.current[day].destroy();
-          delete sortablesRef.current[day];
+      const rect = container.getBoundingClientRect();
+      const inside = pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom;
+      if (!inside) {
+        if (dragState.hoverTarget?.bucketId === dayKey) {
+          clearHoverTarget(dayKey);
         }
-      });
-    };
-  }, [onAssignTaskToDay, onReorderDay]);
+        return;
+      }
+      if (matchedBucket) {
+        return;
+      }
+      matchedBucket = dayKey;
+      const cards = Array.from(container.querySelectorAll('[data-task-id]'));
+      let index = cards.length;
+      for (let i = 0; i < cards.length; i += 1) {
+        const cardRect = cards[i].getBoundingClientRect();
+        if (pointer.y < cardRect.top + (cardRect.height / 2)) {
+          index = i;
+          break;
+        }
+      }
+      setHoverTarget({ bucketId: dayKey, index, lengthHint: cards.length });
+    });
+
+    if (!matchedBucket && dragState.hoverTarget) {
+      clearHoverTarget();
+    }
+  }, [clearHoverTarget, dragState.hoverTarget, dragState.isDragging, dragState.pointerPosition, setHoverTarget]);
 
   const todayKey = useMemo(() => DAY_ORDER[new Date().getDay()], []);
 
@@ -112,7 +118,7 @@ const LandingView = ({
             + New Task
           </button>
         </header>
-        <div className="zen-task-list" ref={allTasksRef}>
+        <div className="zen-task-list">
           <TaskTree
             tasks={tasks}
             expandedIds={expandedIds}
@@ -121,6 +127,7 @@ const LandingView = ({
             onDeleteTask={onDeleteTask}
             onCompleteTask={onCompleteTask}
             onAddSubtask={onAddSubtask}
+            onStartRootDrag={handleRootTaskDragStart}
           />
         </div>
       </section>
@@ -130,7 +137,10 @@ const LandingView = ({
           {DAY_ORDER.map((dayKey) => {
             const isToday = dayKey === todayKey;
             const assignments = dayAssignments[dayKey] || [];
+            const isHovered = dragState.isDragging && dragState.hoverTarget?.bucketId === dayKey;
             const rowClassName = `zen-week-row${isToday ? ' is-today' : ''}`;
+            const bucketClassName = `zen-week-bucket${isHovered ? ' is-hovered' : ''}`;
+            const placeholderIndex = isHovered ? dragState.hoverTarget.index : null;
             return (
               <li key={dayKey} className={rowClassName}>
                 <div className="zen-week-header">
@@ -141,13 +151,36 @@ const LandingView = ({
                     </button>
                   )}
                 </div>
-                <div className="zen-week-bucket" ref={(el) => { bucketRefs.current[dayKey] = el; }}>
-                  {assignments.map((task) => (
-                    <div key={task.id} className="zen-week-card" data-task-id={task.id}>
-                      <div className="zen-card-title">{task.title}</div>
-                      {task.dueDate && <div className="zen-card-meta">Due {task.dueDate}</div>}
-                    </div>
-                  ))}
+                <div
+                  className={bucketClassName}
+                  data-testid={`bucket-${dayKey}`}
+                  ref={(el) => { bucketRefs.current[dayKey] = el; }}
+                >
+                  {assignments.reduce((elements, task, index) => {
+                    if (placeholderIndex !== null && placeholderIndex === index) {
+                      elements.push(
+                        <div key={`placeholder-${dayKey}`} className="zen-week-card placeholder" aria-hidden="true" />,
+                      );
+                    }
+                    const isSourceCard = dragState.isDragging
+                      && dragState.activeTaskId === task.id
+                      && dragState.sourceBucket === dayKey;
+                    elements.push(
+                      <div
+                        key={task.id}
+                        className={`zen-week-card${isSourceCard ? ' is-drag-source' : ''}`}
+                        data-task-id={task.id}
+                        onPointerDown={(event) => handleBucketDragStart(event, task, dayKey)}
+                      >
+                        <div className="zen-card-title">{task.title}</div>
+                        {task.dueDate && <div className="zen-card-meta">Due {task.dueDate}</div>}
+                      </div>,
+                    );
+                    return elements;
+                  }, [])}
+                  {placeholderIndex !== null && placeholderIndex >= assignments.length && (
+                    <div key={`placeholder-${dayKey}-end`} className="zen-week-card placeholder" aria-hidden="true" />
+                  )}
                 </div>
               </li>
             );
