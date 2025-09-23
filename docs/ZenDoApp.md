@@ -13,9 +13,18 @@
 - `ZenDoApp` wires those callbacks to state helpers from `useZenDoState`, which in turn delegate to the scheduling utilities. `placeTaskInDay`, `reorderDay`, `placeInFocusBucket`, `reorderFocus`, and `clearFocus` wrap the drag payload in reducer-friendly mutations before persisting.
 - The utilities coerce schedules to a normalized shape so moving a task between days clears old focus assignments, and moving between focus buckets preserves order indexes per container. This logic lives in `assignTaskToDay`, `reorderDayAssignments`, `assignFocusBucket`, `reorderFocusBucket`, `removeFocusBucket`, and `removeDayAssignment` in `taskUtils.js`.
 
+## Garden view snapshots & accessibility
+- The Garden view mirrors the focus buckets into “Priority Trees” and “Bonus Bushes” columns. Each card includes a `Stage X / Y` text summary sourced from subtask progress so screen readers describe growth without relying on colour alone.
+- Completed focus work stores a same-day snapshot with a “Persisted” pill. Cards leave the active focus lanes once completed but remain in the garden through midnight, keeping celebratory context available to assistive tech users via plain text labels.
+
+## Keyboard shortcuts
+- Press `Z` outside of editable fields to toggle the Zen Do shell between standard and full-screen layouts. Inputs continue to receive native keypresses so typing in gist credential boxes does not unexpectedly change the viewport.
+
 ## Manual QA checklist
 1. **Weekly planning drag loop** – With a mouse or touchpad, drag a root task from *All Tasks* into a weekly bucket and back again. Confirm the source list still contains the item and the bucket cards reorder to match the drop position supplied by the hover index.
 2. **Today view promotions** – Drag a card from a weekly bucket into the Today column, then into Priority/Bonus. Verify the placeholder tracks the pointer, the target column reorders correctly, and leaving the Today list clears any prior focus bucket metadata.
 3. **Keyboard fallback** – Use Tab/Shift+Tab to reach the “+ New Task” button, press Enter to launch the editor, and save a task. Expand/collapse it with the toggle buttons and mark it complete via the checkbox to confirm core flows remain accessible without drag gestures.
 4. **Touch responsiveness** – On a touch device or emulator, flick a task between buckets and ensure the preview disappears after release without leaving orphaned DOM nodes or duplicate cards. The shared controllers reset hover state and drag snapshots on pointer cancel events.
-5. **State regression guardrails** – After moving tasks across days and focus buckets, reload the app to confirm schedules persist via the normalized task utilities. The Jest suite covers null schedule migrations for both day assignments and focus buckets; run `npm test -- src/apps/ZenDoApp/__tests__/taskUtils.test.js` to verify.
+5. **Garden persistence** – Schedule a task into today, complete one of its subtasks, and finish the parent task. Open the Garden tab to confirm the card displays the updated `Stage` fraction and a “Persisted” label that remains visible until the next day.
+6. **Full-screen shortcut** – While focus is on the shell, press “Z” to toggle full-screen mode, then press it again to exit. Start with a gist credential field focused to verify the shortcut is ignored for active text inputs.
+7. **State regression guardrails** – After moving tasks across days and focus buckets, reload the app to confirm schedules persist via the normalized task utilities. The Jest suite covers null schedule migrations for both day assignments and focus buckets; run `npm test -- src/apps/ZenDoApp/__tests__/taskUtils.test.js` to verify.

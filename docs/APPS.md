@@ -13,7 +13,7 @@ CatPad is a feline-inspired notepad that autosaves to IndexedDB and offers optio
 - Provide rich-text flourishes like headings or checklists while keeping the editor lightweight.
 
 ## Zen Do
-Zen Do cultivates a minimalist to-do garden with pastel calm. Unfinished tasks live beside a seven-day planner where cards drag into day buckets while staying in the main list. Today view promotes the current day’s tasks into Priority and Bonus focus lanes, and Focus Mode reveals a Pomodoro timer with fully expanded subtasks. Every change syncs through an optional public GitHub gist so collections follow you across sessions.
+Zen Do cultivates a minimalist to-do garden with pastel calm. Unfinished tasks live beside a seven-day planner where cards drag into day buckets while staying in the main list. Today view promotes the current day’s tasks into Priority and Bonus focus lanes, and Focus Mode reveals a Pomodoro timer with fully expanded subtasks. The new Garden tab celebrates focus work as seedlings that grow with subtask completion while persisting completed blooms for the rest of the day so wins stay visible. Press “Z” outside of text inputs to toggle a distraction-free full-screen shell. Every change syncs through an optional public GitHub gist so collections follow you across sessions.
 - Allow per-task color tags or emojis to cluster projects within the zen garden.
 - Surface sync diagnostics so contributors can inspect gist history, last push status, and conflict resolution options.
 - Offer keyboard-first flows for adding tasks, toggling completion, and hopping between landing, today, and focus screens.
