@@ -319,7 +319,6 @@ const ZenDoApp = ({ onBack }) => {
             onClearBucket={handleClearFocus}
             onBackToLanding={() => setCurrentView('landing')}
             onOpenFocus={() => setCurrentView('focus')}
-            onCompleteTask={completeTask}
           />
         )}
 

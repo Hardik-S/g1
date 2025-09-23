@@ -39,6 +39,24 @@ const mockBoundingRects = (container) => {
 };
 
 describe('TodayView drag-and-drop', () => {
+  it('renders task cards without completion controls', () => {
+    render(
+      <TodayView
+        todayList={[createTask('t-1', 'Today Task')]}
+        priorityList={[createTask('p-1', 'Priority Task')]}
+        bonusList={[createTask('b-1', 'Bonus Task')]}
+        onAssignToBucket={jest.fn()}
+        onReorderBucket={jest.fn()}
+        onClearBucket={jest.fn()}
+        onBackToLanding={jest.fn()}
+        onOpenFocus={jest.fn()}
+      />,
+    );
+
+    expect(screen.queryByRole('checkbox')).toBeNull();
+    expect(screen.queryByLabelText(/toggle completion/i)).toBeNull();
+  });
+
   it('moves a task from priority to today and triggers callbacks once', () => {
     const onAssignToBucket = jest.fn();
     const onReorderBucket = jest.fn();
@@ -54,7 +72,6 @@ describe('TodayView drag-and-drop', () => {
         onClearBucket={onClearBucket}
         onBackToLanding={noop}
         onOpenFocus={noop}
-        onCompleteTask={noop}
       />,
     );
 
@@ -106,7 +123,6 @@ describe('TodayView drag-and-drop', () => {
         onClearBucket={onClearBucket}
         onBackToLanding={noop}
         onOpenFocus={noop}
-        onCompleteTask={noop}
       />,
     );
 

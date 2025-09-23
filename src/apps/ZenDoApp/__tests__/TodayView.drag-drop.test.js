@@ -7,7 +7,6 @@ describe('TodayView drag and drop behaviour', () => {
     onClearBucket: jest.fn(),
     onBackToLanding: jest.fn(),
     onOpenFocus: jest.fn(),
-    onCompleteTask: jest.fn(),
   };
 
   const createDataTransfer = () => {
