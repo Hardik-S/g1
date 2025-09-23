@@ -469,7 +469,42 @@
           divided_by: '/',
         };
 
-        const skipTokens = new Set(['and', 'of', 'the', 'a', 'an']);
+        const skipTokens = new Set([
+          'and',
+          'of',
+          'the',
+          'what',
+          'is',
+          'please',
+          'calculate',
+          'compute',
+          'value',
+          'for',
+          'a',
+          'an',
+        ]);
+
+        const constantsMap = {
+          pi: 'pi',
+          tau: 'tau',
+        };
+
+        const functionNameMap = {
+          sqrt: 'sqrt',
+          exp: 'exp',
+          log10: 'log10',
+          log2: 'log2',
+          ln: 'log',
+          sin: 'sin',
+          cos: 'cos',
+          tan: 'tan',
+          factorial: 'factorial',
+        };
+
+        const allowedIdentifiers = new Set([
+          ...Object.values(functionNameMap),
+          ...Object.values(constantsMap),
+        ]);
 
         const onesMap = {
           zero: 0,
@@ -505,28 +540,6 @@
           ninety: 90,
         };
 
-        const constantsMap = {
-          pi: 'pi',
-          tau: 'tau',
-        };
-
-        const functionNameMap = {
-          sqrt: 'sqrt',
-          exp: 'exp',
-          log10: 'log10',
-          log2: 'log2',
-          ln: 'log',
-          sin: 'sin',
-          cos: 'cos',
-          tan: 'tan',
-          factorial: 'factorial',
-        };
-
-        const allowedIdentifiers = new Set([
-          ...Object.values(functionNameMap),
-          ...Object.values(constantsMap),
-        ]);
-
         const historyEntries = [];
 
         const pyodideReady = loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/' });
@@ -534,9 +547,7 @@
         let runtimeReady = false;
 
         const formatTokenDisplay = (token) => `"${token.replace(/_/g, ' ')}"`;
-
-        const formatConvertedDisplay = (value) =>
-          typeof value === 'number' ? value.toString() : `"${value}"`;
+        const formatConvertedDisplay = (token) => `"${token}"`;
 
         const clearSteps = () => {
           stepsList.innerHTML = '';
@@ -643,7 +654,7 @@
 
           if (/^\d+$/.test(current)) {
             const numeric = Number.parseInt(current, 10);
-            if (!Number.isFinite(numeric) || numeric < 0 || numeric > 99) {
+            if (!Number.isFinite(numeric) || numeric < 0 || numeric > 1000000) {
               return null;
             }
             return { value: numeric, consumed: 1 };
@@ -681,12 +692,20 @@
 
           let prepared = raw
             .toLowerCase()
-            .replace(/[^a-z0-9\s-]/g, ' ')
             .replace(/-/g, ' ')
             .replace(/\b(open|left|opening)\s+(?:parenthesis|parentheses|paren|bracket|brackets)\b/g, 'open_paren')
             .replace(/\b(close|right|closing)\s+(?:parenthesis|parentheses|paren|bracket|brackets)\b/g, 'close_paren')
             .replace(/multiplied\s+by/g, 'multiplied_by')
             .replace(/divided\s+by/g, 'divided_by')
+            .replace(/open\s+brackets?/g, 'open_paren')
+            .replace(/close\s+brackets?/g, 'close_paren')
+            .replace(/open\s+parentheses/g, 'open_paren')
+            .replace(/close\s+parentheses/g, 'close_paren')
+            .replace(/open\s+paren/g, 'open_paren')
+            .replace(/close\s+paren/g, 'close_paren')
+            .replace(/\(/g, ' open_paren ')
+            .replace(/\)/g, ' close_paren ')
+            .replace(/[^a-z0-9_\s]/g, ' ')
             .replace(/\s+/g, ' ')
             .trim();
 
@@ -716,12 +735,8 @@
           }
 
           const normalizedTokens = filteredTokens.map((token) => {
-            if (token === 'open_paren') {
-              return '(';
-            }
-            if (token === 'close_paren') {
-              return ')';
-            }
+            if (token === 'open_paren') return '(';
+            if (token === 'close_paren') return ')';
             return token;
           });
 
@@ -729,9 +744,7 @@
             normalizedTokens.length !== filteredTokens.length ||
             normalizedTokens.some((token, index) => token !== filteredTokens[index])
           ) {
-            steps.push(
-              `Replace bracket phrases → [${normalizedTokens.map(formatTokenDisplay).join(', ')}]`
-            );
+            steps.push(`Replace bracket phrases → [${normalizedTokens.map(formatTokenDisplay).join(', ')}]`);
           }
 
           let position = 0;
@@ -781,6 +794,11 @@
               return String(numberResult.value);
             }
 
+            if (/^\d+(?:\.\d+)?$/.test(current)) {
+              position += 1;
+              return current;
+            }
+
             throw new Error(`Unrecognized token "${current}"`);
           };
 
@@ -826,26 +844,11 @@
             return { error: `Unexpected token "${remaining}"`, steps };
           }
 
-          const expressionTokenPattern = /(log10|log2|factorial|sqrt|exp|sin|cos|tan|log|pi|tau|\d+|[()+\-*/])/g;
-
-          const convertedPieces = [];
-          let match;
-          while ((match = expressionTokenPattern.exec(expression)) !== null) {
-            const piece = match[1];
-            if (/^\d+$/.test(piece)) {
-              convertedPieces.push(Number.parseInt(piece, 10));
-            } else {
-              convertedPieces.push(piece);
-            }
-          }
-
-          steps.push(`Convert words → [${convertedPieces.map(formatConvertedDisplay).join(', ')}]`);
-
           if (!sanitizeExpression(expression)) {
             return { error: 'Expression contains unsupported content', steps };
           }
 
-          steps.push(`Build expression → ${expression}`);
+          steps.push(`Interpret tokens → ${expression}`);
 
           return { expression, steps };
         };
@@ -935,10 +938,18 @@
               { input: 'thirteen minus eight', expected: '5' },
               { input: 'six times seven', expected: '42' },
               { input: 'forty divided by five', expected: '8' },
-              { input: 'sqrt four', expected: '2' },
-              { input: 'log2 eight', expected: '3' },
-              { input: 'factorial three', expected: '6' },
-              { input: 'SIN pi', expected: '0' },
+              { input: 'factorial of five', expected: '120' },
+              { input: 'Tau divided by two', expected: '3.141593' },
+              { input: 'pi plus one', expected: '4.141593' },
+              { input: 'sqrt 100', expected: '10' },
+              { input: 'exp 1', expected: '2.718282' },
+              { input: 'log10 1000', expected: '3' },
+              { input: 'log2 32', expected: '5' },
+              { input: 'ln 1', expected: '0' },
+              { input: 'sin 0', expected: '0' },
+              { input: 'cos 0', expected: '1' },
+              { input: 'tan 0', expected: '0' },
+              { input: 'open bracket three plus five close bracket times two', expected: '16' },
             ];
 
             smokeTests.forEach((test) => {
