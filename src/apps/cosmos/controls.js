@@ -20,6 +20,12 @@ export function setupControlPanel(bodies, handlers = {}, overrides = {}) {
   const gui = new GUI({ title: 'Cosmos Controls' });
   gui.domElement.classList.add('cosmos-gui');
 
+  const simulationActions = {
+    resetSimulation: () => handlers.onSimulationReset?.(),
+  };
+
+  gui.add(simulationActions, 'resetSimulation').name('Reset simulation');
+
   gui
     .add(settings, 'timeSpeed', TIME_SPEED_RANGE.min, TIME_SPEED_RANGE.max, TIME_SPEED_RANGE.step)
     .name('Time speed (×)')

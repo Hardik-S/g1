@@ -35,6 +35,7 @@ let gravityMultiplier = 1;
 let trailLength = DEFAULT_TRAIL_LENGTH;
 let accumulatedSimSeconds = 0;
 let lastTimerColorHex = null;
+let originalBodyDefinitions = null;
 
 const keyboardState = {
   orbitLeft: false,
@@ -90,6 +91,14 @@ function clamp01(value) {
     return 0;
   }
   return Math.min(Math.max(value, 0), 1);
+}
+
+function cloneBodyDefinitions(definitions) {
+  if (!definitions) {
+    return null;
+  }
+
+  return JSON.parse(JSON.stringify(definitions));
 }
 
 function updateTimerDisplay() {
@@ -260,6 +269,39 @@ function resetCamera() {
   controls.update();
 }
 
+function resetSimulation() {
+  if (!originalBodyDefinitions) {
+    return;
+  }
+
+  const clonedDefinitions = cloneBodyDefinitions(originalBodyDefinitions);
+  if (!clonedDefinitions) {
+    return;
+  }
+
+  simulation = new SolarSystemSimulation(clonedDefinitions, { historyLimit: trailLength });
+  simulation.setHistoryLimit(trailLength);
+  accumulatedSimSeconds = 0;
+
+  if (Array.isArray(visuals)) {
+    visuals.forEach((visual) => {
+      visual.trailGeometry.setDrawRange(0, 0);
+      visual.trail.visible = false;
+      if (visual.trailGeometry.attributes?.position) {
+        visual.trailGeometry.attributes.position.needsUpdate = true;
+      }
+    });
+  }
+
+  if (Array.isArray(visuals) && simulation) {
+    updateBodyMeshes(visuals, simulation.bodies, { scale: SCALE, showTrails });
+    const sunVisual = visuals.find((item) => item.name === 'Sun');
+    if (sunVisual && sunLight) {
+      sunLight.position.copy(sunVisual.mesh.position);
+    }
+  }
+}
+
 function teleportCameraTo(name) {
   const targetBody = simulation?.getBodyByName(name);
   if (!targetBody) {
@@ -359,6 +401,7 @@ async function init() {
 
   try {
     const bodies = await loadBodyData('./data/bodies.json');
+    originalBodyDefinitions = cloneBodyDefinitions(bodies);
     simulation = new SolarSystemSimulation(bodies, { historyLimit: trailLength });
     const { group, visuals: createdVisuals, moonGroups: createdMoonGroups } = createBodyMeshes(
       simulation.bodies,
@@ -399,6 +442,10 @@ async function init() {
       },
       onTeleport: teleportCameraTo,
       onReset: resetCamera,
+      onSimulationReset: () => {
+        resetSimulation();
+        updateTimerDisplay();
+      },
     });
 
     clearStatus();
