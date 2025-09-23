@@ -41,6 +41,20 @@
         <div class="actions">
           <button type="button" class="secondary" id="restart-btn">↺ Restart</button>
         </div>
+        <div
+          class="hold-assist"
+          data-hold-display
+          data-hold-variant="test"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          <p class="hold-assist__text" data-hold-text>
+            Hold Space for 1 second to restart a 15-second run.
+          </p>
+          <div class="hold-assist__bar" aria-hidden="true">
+            <div class="hold-assist__fill" data-hold-fill></div>
+          </div>
+        </div>
       </section>
 
       <section class="card hidden" id="results-screen" data-screen aria-hidden="true">
@@ -60,6 +74,45 @@
           </div>
         </div>
         <p class="results-note" id="results-note"></p>
+        <div class="results-controls">
+          <fieldset class="duration-toggle" aria-labelledby="duration-toggle-heading">
+            <legend id="duration-toggle-heading">Choose your next run length</legend>
+            <div class="duration-toggle__options">
+              <label class="duration-toggle__option">
+                <input
+                  type="radio"
+                  name="next-duration"
+                  value="15"
+                  data-duration-option
+                  checked
+                />
+                <span>15 seconds</span>
+              </label>
+              <label class="duration-toggle__option">
+                <input type="radio" name="next-duration" value="30" data-duration-option />
+                <span>30 seconds</span>
+              </label>
+            </div>
+          </fieldset>
+          <div
+            class="hold-assist"
+            data-hold-display
+            data-hold-variant="results"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            <p class="hold-assist__text" data-hold-text>
+              Hold Space for 1 second to restart a 15-second run.
+            </p>
+            <div class="hold-assist__bar" aria-hidden="true">
+              <div class="hold-assist__fill" data-hold-fill></div>
+            </div>
+          </div>
+          <p class="results-tip">
+            Hold the spacebar for 1 second or press Try again to start a new run with the selected
+            duration.
+          </p>
+        </div>
         <div class="score-history" id="score-history" aria-live="polite">
           <h3>Score history</h3>
           <p class="history-empty" id="history-empty">Connect GitHub access from the global settings to sync your scores.</p>
