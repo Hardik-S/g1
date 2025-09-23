@@ -1,16 +1,22 @@
-import { useCallback, useMemo, useState } from 'react';
-
-const readFavoriteIds = () => {
-  try {
-    const stored = localStorage.getItem('favoriteAppIds');
-    return stored ? JSON.parse(stored) : [];
-  } catch (error) {
-    return [];
-  }
-};
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useFavoritesStorage } from '../../../state/favoritesStorage';
 
 const useFavorites = (allApps, selectedCategory, searchQuery) => {
-  const [favoriteIds, setFavoriteIds] = useState(readFavoriteIds);
+  const { readFavorites, writeFavorites } = useFavoritesStorage();
+
+  const [favoriteIds, setFavoriteIds] = useState(() => readFavorites());
+
+  useEffect(() => {
+    const next = readFavorites();
+
+    setFavoriteIds((previous) => {
+      if (previous.length === next.length && previous.every((id, index) => id === next[index])) {
+        return previous;
+      }
+
+      return next;
+    });
+  }, [readFavorites]);
 
   const toggleFavorite = useCallback((appId) => {
     setFavoriteIds((previous) => {
@@ -18,15 +24,11 @@ const useFavorites = (allApps, selectedCategory, searchQuery) => {
         ? previous.filter((id) => id !== appId)
         : [...previous, appId];
 
-      try {
-        localStorage.setItem('favoriteAppIds', JSON.stringify(next));
-      } catch (error) {
-        // Ignore write failures (e.g., private mode restrictions)
-      }
+      writeFavorites(next);
 
       return next;
     });
-  }, []);
+  }, [writeFavorites]);
 
   const isFavorited = useCallback((appId) => favoriteIds.includes(appId), [favoriteIds]);
 
