@@ -67,7 +67,19 @@ const LandingView = ({
             const order = Array.from(evt.to.querySelectorAll('[data-task-id]')).map((el) => el.dataset.taskId);
             onReorderDay(day, order);
           }
-          evt.item.remove();
+          const cameFromClone =
+            evt.pullMode === 'clone' ||
+            evt.clone ||
+            evt.from?.classList?.contains('zen-task-tree');
+          if (cameFromClone) {
+            requestAnimationFrame(() => {
+              if (evt.item?.parentNode) {
+                evt.item.parentNode.removeChild(evt.item);
+              } else {
+                evt.item?.remove();
+              }
+            });
+          }
         },
         onUpdate: (evt) => {
           const order = Array.from(evt.to.querySelectorAll('[data-task-id]')).map((el) => el.dataset.taskId);
