@@ -29,7 +29,22 @@
     "radius": 6.371e6,
     "position": [1.496e11, 0, 0],
     "velocity": [0, 29780, 0],
-    "color": "blue"
+    "color": "blue",
+    "moons": [
+      {
+        "name": "Moon",
+        "mass": 7.342e22,
+        "radius": 1.7374e6,
+        "color": "lightgray",
+        "orbit": {
+          "semiMajorAxis": 3.844e8,
+          "period": 2360591.5104,
+          "inclination": 5.145,
+          "ascendingNode": 125.08,
+          "phase": 45
+        }
+      }
+    ]
   },
   {
     "name": "Mars",
@@ -37,7 +52,35 @@
     "radius": 3.389e6,
     "position": [2.279e11, 0, 0],
     "velocity": [0, 24100, 0],
-    "color": "red"
+    "color": "red",
+    "moons": [
+      {
+        "name": "Phobos",
+        "mass": 1.0659e16,
+        "radius": 1.13e4,
+        "color": "dimgrey",
+        "orbit": {
+          "semiMajorAxis": 9.376e6,
+          "period": 27553.824,
+          "inclination": 1.093,
+          "ascendingNode": 40,
+          "phase": 10
+        }
+      },
+      {
+        "name": "Deimos",
+        "mass": 1.4762e15,
+        "radius": 6.2e3,
+        "color": "peru",
+        "orbit": {
+          "semiMajorAxis": 2.3463e7,
+          "period": 109123.2,
+          "inclination": 1.79,
+          "ascendingNode": 120,
+          "phase": 200
+        }
+      }
+    ]
   },
   {
     "name": "Jupiter",
@@ -45,7 +88,61 @@
     "radius": 6.9911e7,
     "position": [7.785e11, 0, 0],
     "velocity": [0, 13070, 0],
-    "color": "orange"
+    "color": "orange",
+    "moons": [
+      {
+        "name": "Io",
+        "mass": 8.93e22,
+        "radius": 1.8216e6,
+        "color": "goldenrod",
+        "orbit": {
+          "semiMajorAxis": 4.217e8,
+          "period": 152841.6,
+          "inclination": 0.04,
+          "ascendingNode": 43,
+          "phase": 15
+        }
+      },
+      {
+        "name": "Europa",
+        "mass": 4.8e22,
+        "radius": 1.5608e6,
+        "color": "lightsteelblue",
+        "orbit": {
+          "semiMajorAxis": 6.711e8,
+          "period": 306806.4,
+          "inclination": 0.47,
+          "ascendingNode": 76,
+          "phase": 120
+        }
+      },
+      {
+        "name": "Ganymede",
+        "mass": 1.48e23,
+        "radius": 2.6341e6,
+        "color": "sienna",
+        "orbit": {
+          "semiMajorAxis": 1.0704e9,
+          "period": 618192,
+          "inclination": 0.2,
+          "ascendingNode": 12,
+          "phase": 200
+        }
+      },
+      {
+        "name": "Callisto",
+        "mass": 1.08e23,
+        "radius": 2.4103e6,
+        "color": "slategray",
+        "orbit": {
+          "semiMajorAxis": 1.8827e9,
+          "period": 1441929.6,
+          "inclination": 0.19,
+          "ascendingNode": 98,
+          "phase": 300
+        }
+      }
+    ]
   },
   {
     "name": "Saturn",
@@ -53,7 +150,48 @@
     "radius": 5.8232e7,
     "position": [1.433e12, 0, 0],
     "velocity": [0, 9680, 0],
-    "color": "goldenrod"
+    "color": "goldenrod",
+    "moons": [
+      {
+        "name": "Titan",
+        "mass": 1.3452e23,
+        "radius": 2.5747e6,
+        "color": "navajowhite",
+        "orbit": {
+          "semiMajorAxis": 1.22187e9,
+          "period": 1377648,
+          "inclination": 0.348,
+          "ascendingNode": 50,
+          "phase": 60
+        }
+      },
+      {
+        "name": "Rhea",
+        "mass": 2.306e21,
+        "radius": 7.636e5,
+        "color": "lightgray",
+        "orbit": {
+          "semiMajorAxis": 5.2704e8,
+          "period": 390355.2,
+          "inclination": 0.345,
+          "ascendingNode": 140,
+          "phase": 150
+        }
+      },
+      {
+        "name": "Enceladus",
+        "mass": 1.08e20,
+        "radius": 2.521e5,
+        "color": "azure",
+        "orbit": {
+          "semiMajorAxis": 2.3802e8,
+          "period": 118368,
+          "inclination": 0.009,
+          "ascendingNode": 5,
+          "phase": 310
+        }
+      }
+    ]
   },
   {
     "name": "Uranus",
@@ -61,7 +199,35 @@
     "radius": 2.5362e7,
     "position": [2.872e12, 0, 0],
     "velocity": [0, 6800, 0],
-    "color": "lightblue"
+    "color": "lightblue",
+    "moons": [
+      {
+        "name": "Titania",
+        "mass": 3.527e21,
+        "radius": 7.889e5,
+        "color": "powderblue",
+        "orbit": {
+          "semiMajorAxis": 4.363e8,
+          "period": 752198.4,
+          "inclination": 0.34,
+          "ascendingNode": 60,
+          "phase": 90
+        }
+      },
+      {
+        "name": "Oberon",
+        "mass": 3.014e21,
+        "radius": 7.614e5,
+        "color": "lightsteelblue",
+        "orbit": {
+          "semiMajorAxis": 5.835e8,
+          "period": 1163203.2,
+          "inclination": 0.07,
+          "ascendingNode": 180,
+          "phase": 210
+        }
+      }
+    ]
   },
   {
     "name": "Neptune",
@@ -69,6 +235,21 @@
     "radius": 2.4622e7,
     "position": [4.495e12, 0, 0],
     "velocity": [0, 5430, 0],
-    "color": "darkblue"
+    "color": "darkblue",
+    "moons": [
+      {
+        "name": "Triton",
+        "mass": 2.14e22,
+        "radius": 1.3534e6,
+        "color": "lightcyan",
+        "orbit": {
+          "semiMajorAxis": 3.54759e8,
+          "period": 507772.8,
+          "inclination": 157.3,
+          "ascendingNode": 20,
+          "phase": 45
+        }
+      }
+    ]
   }
 ]
