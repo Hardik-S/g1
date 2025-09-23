@@ -9,11 +9,12 @@ import './ZenDoApp.css';
 import LandingView from './views/LandingView';
 import TodayView from './views/TodayView';
 import FocusView from './views/FocusView';
+import GardenView from './views/GardenView';
 import ArchiveView from './views/ArchiveView';
 import TaskEditorModal from './modals/TaskEditorModal';
 import useZenDoState from './useZenDoState';
 import { DAY_ORDER } from './constants';
-import { flattenTasks, sortTasksByDueDate } from './taskUtils';
+import { flattenTasks, getSubtaskProgress, sortTasksByDueDate } from './taskUtils';
 import { writeGlobalGistSettings } from '../../state/globalGistSettings';
 import { DragProvider } from './drag/DragContext';
 import DragPreview from './components/DragPreview';
@@ -22,6 +23,7 @@ const VIEW_TABS = [
   { id: 'landing', label: 'Landing' },
   { id: 'today', label: 'Today' },
   { id: 'focus', label: 'Focus' },
+  { id: 'garden', label: 'Garden' },
   { id: 'archive', label: 'Archive' },
 ];
 
@@ -106,6 +108,104 @@ const ZenDoApp = ({ onBack }) => {
     bonus.sort((a, b) => (a.schedule?.focusOrder || 0) - (b.schedule?.focusOrder || 0));
     return { priority, bonus };
   }, [tasks, todayKey]);
+
+  const gardenAssignments = useMemo(() => {
+    const priority = [];
+    const bonus = [];
+
+    const computeStageMetadata = (task) => {
+      const { total, completed } = getSubtaskProgress(task);
+      const totalStages = Math.max(1, total + 1);
+      const completedStages = Math.min(totalStages, completed + (task.completed ? 1 : 0));
+      return {
+        totalStages,
+        completedStages,
+        remainingStages: totalStages - completedStages,
+        subtaskTotal: total,
+        subtaskCompleted: completed,
+        progress: completedStages / totalStages,
+        isComplete: completedStages >= totalStages,
+      };
+    };
+
+    const addEntry = (task, bucket, isSnapshot) => {
+      if (bucket !== 'priority' && bucket !== 'bonus') {
+        return;
+      }
+      const entry = {
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        task,
+        bucket,
+        isSnapshot,
+        snapshot: isSnapshot ? task.gardenSnapshot : null,
+        completedAt: isSnapshot ? task.gardenSnapshot?.completedAt || null : null,
+        order: !isSnapshot ? (task.schedule?.focusOrder || 0) : null,
+        stage: computeStageMetadata(task),
+      };
+
+      if (bucket === 'priority') {
+        priority.push(entry);
+      } else {
+        bonus.push(entry);
+      }
+    };
+
+    const isSameCalendarDay = (first, second) => (
+      first.getFullYear() === second.getFullYear()
+      && first.getMonth() === second.getMonth()
+      && first.getDate() === second.getDate()
+    );
+
+    const traverse = (list) => {
+      if (!Array.isArray(list)) {
+        return;
+      }
+      list.forEach((task) => {
+        if (!task) return;
+
+        const focusBucket = task.schedule?.focusBucket || null;
+        const scheduleDay = task.schedule?.day || null;
+        if (!task.completed && (focusBucket === 'priority' || focusBucket === 'bonus') && scheduleDay === todayKey) {
+          addEntry(task, focusBucket, false);
+        }
+
+        const snapshot = task.gardenSnapshot;
+        if (task.completed && snapshot?.bucket && snapshot?.dayKey === todayKey) {
+          const completedAt = snapshot.completedAt ? new Date(snapshot.completedAt) : null;
+          if (completedAt && !Number.isNaN(completedAt.getTime()) && isSameCalendarDay(completedAt, now)) {
+            addEntry(task, snapshot.bucket, true);
+          }
+        }
+
+        if (task.subtasks?.length) {
+          traverse(task.subtasks);
+        }
+      });
+    };
+
+    traverse(tasks);
+
+    const sortEntries = (entries) => entries.sort((a, b) => {
+      if (a.isSnapshot !== b.isSnapshot) {
+        return a.isSnapshot ? 1 : -1;
+      }
+      if (a.isSnapshot && b.isSnapshot) {
+        const aTime = a.completedAt || '';
+        const bTime = b.completedAt || '';
+        return bTime.localeCompare(aTime);
+      }
+      const aOrder = typeof a.order === 'number' ? a.order : 0;
+      const bOrder = typeof b.order === 'number' ? b.order : 0;
+      return aOrder - bOrder;
+    });
+
+    sortEntries(priority);
+    sortEntries(bonus);
+
+    return { priority, bonus };
+  }, [now, tasks, todayKey]);
 
   const todayList = useMemo(() => tasks
     .filter((task) => !task.completed && task.schedule?.day === todayKey && !task.schedule?.focusBucket)
@@ -205,6 +305,8 @@ const ZenDoApp = ({ onBack }) => {
       setCurrentView('today');
     } else if (tabId === 'focus') {
       setCurrentView('focus');
+    } else if (tabId === 'garden') {
+      setCurrentView('garden');
     } else if (tabId === 'archive') {
       setCurrentView('archive');
     } else {
@@ -400,6 +502,13 @@ const ZenDoApp = ({ onBack }) => {
             bonusList={focusAssignments.bonus}
             onCompleteTask={completeTask}
             onBackToToday={() => setCurrentView('today')}
+          />
+        )}
+
+        {currentView === 'garden' && (
+          <GardenView
+            priority={gardenAssignments.priority}
+            bonus={gardenAssignments.bonus}
           />
         )}
 
