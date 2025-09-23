@@ -994,6 +994,57 @@
   box-shadow: inset 0 10px 24px rgba(148, 119, 88, 0.16);
 }
 
+.zen-garden-path {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 36%;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 0 2.5rem 1.25rem;
+}
+
+.zen-garden-path__title {
+  align-self: flex-end;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.5rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.84);
+  color: #3b6658;
+  font-size: 0.92rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: inset 0 0 0 1px rgba(108, 161, 143, 0.28);
+}
+
+.zen-garden-path__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.5rem;
+  min-width: 1.75rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #3b6658;
+  box-shadow: inset 0 0 0 1px rgba(108, 161, 143, 0.24);
+}
+
+.zen-garden-path__flowers {
+  position: relative;
+  width: 100%;
+  max-width: 760px;
+  flex: 1;
+  align-self: center;
+}
+
 .zen-garden-scene__content {
   position: relative;
   z-index: 1;
@@ -1016,11 +1067,6 @@
 .zen-garden-cluster--priority {
   left: 6%;
   bottom: 7.5rem;
-}
-
-.zen-garden-cluster--bonus {
-  right: 8%;
-  bottom: 3.75rem;
 }
 
 .zen-garden-cluster-header {
@@ -1093,11 +1139,6 @@
     left: 4%;
     bottom: 8.5rem;
   }
-
-  .zen-garden-cluster--bonus {
-    right: 4%;
-    bottom: 4.5rem;
-  }
 }
 
 @media (max-width: 860px) {
@@ -1123,6 +1164,20 @@
     flex-direction: column;
     gap: 1.5rem;
   }
+
+  .zen-garden-path {
+    height: 42%;
+    padding: 0 1.5rem 1.75rem;
+  }
+
+  .zen-garden-path__title {
+    align-self: center;
+    justify-content: center;
+  }
+
+  .zen-garden-path__flowers {
+    max-width: 100%;
+  }
 }
 
 @media (max-width: 720px) {
@@ -1146,6 +1201,17 @@
 
   .zen-garden-cluster-header {
     align-self: flex-start;
+  }
+
+  .zen-garden-path {
+    height: 44%;
+    padding: 0 1.25rem 2rem;
+  }
+
+  .zen-garden-path__title {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
   }
 }
 
@@ -1330,6 +1396,334 @@
   .zen-garden-tree-subtitle {
     font-size: 0.8rem;
   }
+
+  .zen-garden-flower__button {
+    width: 76px;
+    height: 120px;
+  }
+
+  .zen-garden-flower__leaf {
+    bottom: 22px;
+  }
+
+  .zen-garden-flower__bloom {
+    bottom: 64px;
+    width: 68px;
+    height: 68px;
+  }
+
+  .zen-garden-path__title {
+    font-size: 0.85rem;
+  }
+}
+
+.zen-garden-flower {
+  --flower-scale: 1;
+  --flower-rotation: 0deg;
+  position: absolute;
+  display: inline-flex;
+  justify-content: center;
+  pointer-events: auto;
+  transform-origin: bottom center;
+  transform: translate(-50%, 0) scale(var(--flower-scale)) rotate(var(--flower-rotation));
+  transition: transform 0.25s ease, filter 0.2s ease;
+}
+
+.zen-garden-flower::before {
+  content: '';
+  position: absolute;
+  bottom: -12px;
+  left: 50%;
+  width: 82px;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(64, 45, 27, 0.28) 0%, rgba(64, 45, 27, 0) 70%);
+  transform: translateX(-50%);
+  filter: blur(4px);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.zen-garden-flower.is-persisted::after {
+  content: '';
+  position: absolute;
+  bottom: -16px;
+  left: 50%;
+  width: 94px;
+  height: 26px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(199, 160, 228, 0.45) 0%, rgba(199, 160, 228, 0) 70%);
+  transform: translateX(-50%);
+  filter: blur(3px);
+  pointer-events: none;
+}
+
+.zen-garden-flower.is-active,
+.zen-garden-flower:hover {
+  transform: translate(-50%, 0) scale(calc(var(--flower-scale) * 1.05)) rotate(var(--flower-rotation));
+}
+
+.zen-garden-flower.is-active .zen-garden-flower__button,
+.zen-garden-flower:hover .zen-garden-flower__button {
+  filter: drop-shadow(0 14px 26px rgba(63, 72, 70, 0.28));
+}
+
+.zen-garden-flower__button {
+  position: relative;
+  width: 86px;
+  height: 132px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+  pointer-events: auto;
+}
+
+.zen-garden-flower__button:focus-visible {
+  border-radius: 24px;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.92), 0 0 0 6px rgba(88, 142, 115, 0.55);
+}
+
+.zen-garden-flower__stem {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 10px;
+  height: 70px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #6b9f7c 0%, #3c6952 100%);
+  transform: translateX(-50%);
+  box-shadow: inset 0 0 0 1px rgba(53, 87, 69, 0.32);
+}
+
+.zen-garden-flower__leaf {
+  position: absolute;
+  bottom: 26px;
+  width: 34px;
+  height: 22px;
+  border-radius: 50% 50% 45% 45%;
+  background: linear-gradient(90deg, rgba(119, 170, 126, 0.95) 0%, rgba(66, 112, 81, 0.95) 100%);
+  opacity: 0.9;
+  box-shadow: 0 6px 10px rgba(50, 86, 66, 0.18);
+}
+
+.zen-garden-flower__leaf--left {
+  left: calc(50% - 32px);
+  transform: rotate(-20deg);
+  transform-origin: right center;
+}
+
+.zen-garden-flower__leaf--right {
+  right: calc(50% - 32px);
+  transform: rotate(20deg);
+  transform-origin: left center;
+  background: linear-gradient(90deg, rgba(66, 112, 81, 0.95) 0%, rgba(119, 170, 126, 0.95) 100%);
+}
+
+.zen-garden-flower__bloom {
+  position: absolute;
+  bottom: 68px;
+  left: 50%;
+  width: 76px;
+  height: 76px;
+  transform: translateX(-50%);
+}
+
+.zen-garden-flower__petal {
+  position: absolute;
+  width: 46px;
+  height: 54px;
+  border-radius: 50% 50% 45% 45%;
+  background: radial-gradient(circle at 50% 28%, rgba(255, 255, 255, 0.95) 0%, rgba(232, 193, 246, 0.92) 52%, rgba(192, 135, 219, 0.9) 100%);
+  box-shadow: 0 6px 14px rgba(139, 76, 171, 0.24);
+  transform-origin: center 90%;
+}
+
+.zen-garden-flower__petal--top {
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.zen-garden-flower__petal--top-right {
+  top: -6px;
+  right: -6px;
+  transform: rotate(35deg);
+}
+
+.zen-garden-flower__petal--bottom-right {
+  bottom: -8px;
+  right: -4px;
+  transform: rotate(110deg);
+}
+
+.zen-garden-flower__petal--bottom {
+  bottom: -26px;
+  left: 50%;
+  transform: translateX(-50%) rotate(180deg);
+}
+
+.zen-garden-flower__petal--bottom-left {
+  bottom: -8px;
+  left: -4px;
+  transform: rotate(250deg);
+}
+
+.zen-garden-flower__petal--top-left {
+  top: -6px;
+  left: -6px;
+  transform: rotate(325deg);
+}
+
+.zen-garden-flower--mature .zen-garden-flower__petal {
+  background: radial-gradient(circle at 50% 26%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 225, 176, 0.92) 55%, rgba(238, 169, 92, 0.9) 100%);
+  box-shadow: 0 6px 16px rgba(177, 104, 60, 0.28);
+}
+
+.zen-garden-flower__core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle at 30% 35%, #fff6d6 0%, #f4c96b 60%, #d88b35 100%);
+  box-shadow: inset 0 0 0 1px rgba(204, 125, 60, 0.22);
+}
+
+.zen-garden-flower--mature .zen-garden-flower__core {
+  background: radial-gradient(circle at 30% 35%, #fff3c6 0%, #ffdc82 55%, #f19a39 100%);
+  box-shadow: inset 0 0 0 1px rgba(196, 118, 44, 0.32);
+}
+
+.zen-garden-flower__persisted-indicator {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 16px;
+  height: 16px;
+  transform: rotate(45deg);
+  border-radius: 4px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(225, 196, 255, 0.8) 100%);
+  box-shadow: 0 0 0 1px rgba(177, 117, 150, 0.25), 0 0 10px rgba(177, 117, 223, 0.35);
+}
+
+.zen-garden-flower__persisted-indicator::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.zen-garden-flower.is-persisted .zen-garden-flower__button {
+  filter: drop-shadow(0 10px 20px rgba(140, 92, 177, 0.22));
+}
+
+.zen-garden-flower__popover {
+  position: absolute;
+  bottom: calc(100% + 1.2rem);
+  left: 50%;
+  width: clamp(220px, 36vw, 260px);
+  padding: 0.85rem 1rem;
+  border-radius: 16px;
+  background: var(--popover-bg, rgba(255, 255, 255, 0.95));
+  color: #3b6658;
+  box-shadow: 0 24px 32px rgba(63, 72, 70, 0.25);
+  transform: translate(-50%, 16%) scale(0.96);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease-out, transform 0.22s ease-out;
+  z-index: 90;
+}
+
+.zen-garden-flower__popover::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -10px;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: var(--popover-bg, rgba(255, 255, 255, 0.95));
+  transform: translateX(-50%) rotate(45deg);
+  box-shadow: 0 18px 28px rgba(63, 72, 70, 0.22);
+}
+
+.zen-garden-flower__popover--left {
+  transform: translate(-42%, 16%) scale(0.96);
+}
+
+.zen-garden-flower__popover--left::after {
+  left: 40%;
+}
+
+.zen-garden-flower__popover--right {
+  transform: translate(-58%, 16%) scale(0.96);
+}
+
+.zen-garden-flower__popover--right::after {
+  left: 60%;
+}
+
+.zen-garden-flower__popover.is-visible {
+  opacity: 1;
+  transform: translate(-50%, -6%) scale(1);
+}
+
+.zen-garden-flower__popover--left.is-visible {
+  transform: translate(-42%, -6%) scale(1);
+}
+
+.zen-garden-flower__popover--right.is-visible {
+  transform: translate(-58%, -6%) scale(1);
+}
+
+.zen-garden-flower__popover--growing {
+  --popover-bg: rgba(248, 236, 255, 0.96);
+}
+
+.zen-garden-flower__popover--mature {
+  --popover-bg: rgba(255, 246, 226, 0.96);
+}
+
+.zen-garden-flower__popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.zen-garden-flower__popover-title {
+  margin: 0;
+  font-size: 1rem;
+  color: #2f5144;
+}
+
+.zen-garden-flower__popover-description {
+  margin: 0 0 0.45rem;
+  font-size: 0.9rem;
+  color: #47695a;
+}
+
+.zen-garden-flower__popover-stage {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #3f6d5a;
+  letter-spacing: 0.02em;
+}
+
+.zen-garden-flower__popover-complete {
+  margin: 0.4rem 0 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #c56b2b;
 }
 
 .zen-garden-plant {
