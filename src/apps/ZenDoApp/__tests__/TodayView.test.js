@@ -158,3 +158,80 @@ describe('TodayView drag-and-drop', () => {
     expect(bonusZone.querySelector('[data-placeholder="true"]')).not.toBeInTheDocument();
   });
 });
+
+describe('TodayView quick assign actions', () => {
+  const noop = jest.fn();
+
+  beforeEach(() => {
+    noop.mockReset();
+  });
+
+  it('quick assigns a today task to priority after hover', () => {
+    const onAssignToBucket = jest.fn();
+    const onReorderBucket = jest.fn();
+
+    render(
+      <TodayView
+        todayList={[createTask('t-1', 'Today Quick')]}
+        priorityList={[createTask('p-1', 'Existing Priority')]}
+        bonusList={[createTask('b-1', 'Existing Bonus')]}
+        onAssignToBucket={onAssignToBucket}
+        onReorderBucket={onReorderBucket}
+        onClearBucket={noop}
+        onBackToLanding={noop}
+        onOpenFocus={noop}
+      />,
+    );
+
+    const todayZone = screen.getByTestId('today-drop-zone');
+    const todayCardText = within(todayZone).getByText('Today Quick');
+    const card = todayCardText.closest('.zen-focus-card');
+    expect(card).not.toBeNull();
+
+    fireEvent.mouseEnter(card);
+
+    const quickPriority = within(card).getByLabelText(/quick assign to priority/i);
+    fireEvent.click(quickPriority);
+
+    expect(onAssignToBucket).toHaveBeenCalledTimes(1);
+    expect(onAssignToBucket).toHaveBeenCalledWith('t-1', 'priority', 1);
+
+    expect(onReorderBucket).toHaveBeenCalledTimes(2);
+    expect(onReorderBucket).toHaveBeenNthCalledWith(1, 'priority', ['p-1', 't-1']);
+    expect(onReorderBucket).toHaveBeenNthCalledWith(2, 'today', []);
+  });
+
+  it('quick assigns a today task to bonus after focus', () => {
+    const onAssignToBucket = jest.fn();
+    const onReorderBucket = jest.fn();
+
+    render(
+      <TodayView
+        todayList={[createTask('t-1', 'Focus Me'), createTask('t-2', 'Stay Put')]}
+        priorityList={[]}
+        bonusList={[]}
+        onAssignToBucket={onAssignToBucket}
+        onReorderBucket={onReorderBucket}
+        onClearBucket={noop}
+        onBackToLanding={noop}
+        onOpenFocus={noop}
+      />,
+    );
+
+    const todayZone = screen.getByTestId('today-drop-zone');
+    const todayCardText = within(todayZone).getByText('Focus Me');
+    const card = todayCardText.closest('.zen-focus-card');
+    expect(card).not.toBeNull();
+
+    const quickBonus = within(card).getByLabelText(/quick assign to bonus/i);
+    fireEvent.focus(quickBonus);
+    fireEvent.click(quickBonus);
+
+    expect(onAssignToBucket).toHaveBeenCalledTimes(1);
+    expect(onAssignToBucket).toHaveBeenCalledWith('t-1', 'bonus', 0);
+
+    expect(onReorderBucket).toHaveBeenCalledTimes(2);
+    expect(onReorderBucket).toHaveBeenNthCalledWith(1, 'bonus', ['t-1']);
+    expect(onReorderBucket).toHaveBeenNthCalledWith(2, 'today', ['t-2']);
+  });
+});
