@@ -32,6 +32,10 @@
   const syncStatusEl = document.getElementById('sync-status');
   const leaderboardList = document.getElementById('leaderboard-list');
   const leaderboardEmpty = document.getElementById('leaderboard-empty');
+  const historyList =
+    document.getElementById('history-list') || document.querySelector('[data-history-list]');
+  const historyEmpty =
+    document.getElementById('history-empty') || document.querySelector('[data-history-empty]');
 
   if (!testScreen || !resultsScreen || !typingInput) {
     return;
@@ -73,15 +77,6 @@
   let holdFrameId = null;
   let holdResetTimeout = null;
   let holdState = 'idle';
-  let gistSettings = { gistId: '', gistToken: '' };
-  let aliasValue = '';
-  let leaderboardRuns = [];
-  let leaderboardLoaded = false;
-  let leaderboardFetchPromise = null;
-  let isPersistingLeaderboard = false;
-  let persistQueued = false;
-  let currentEmptyMessage = 'Connect GitHub access from the global settings to sync your scores.';
-  let lastSyncedAt = null;
 
   const scheduleNextFrame = (callback) => {
     if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
@@ -344,6 +339,22 @@
     }
   };
 
+  let currentEmptyMessage = 'Connect GitHub access from the global settings to sync your scores.';
+  let currentHistoryMessage = 'Complete a run to build your personal history.';
+  let gistSettings = { gistId: '', gistToken: '' };
+  let aliasValue = '';
+  let storedRuns = [];
+  let leaderboardEntries = [];
+  let historyEntries = [];
+  let gistLoaded = false;
+  let gistLoadPromise = null;
+  let isPersistingLeaderboard = false;
+  let persistQueued = false;
+  let lastSyncedAt = null;
+  let gistRefreshTimeoutId = null;
+  let gistSettingsUnsubscribe = null;
+  let gistSettingsPollId = null;
+
   const setEmptyMessage = (message) => {
     if (typeof message !== 'string' || !message) {
       return;
@@ -351,6 +362,16 @@
     currentEmptyMessage = message;
     if (leaderboardEmpty) {
       leaderboardEmpty.textContent = message;
+    }
+  };
+
+  const setHistoryEmptyMessage = (message) => {
+    if (typeof message !== 'string' || !message) {
+      return;
+    }
+    currentHistoryMessage = message;
+    if (historyEmpty) {
+      historyEmpty.textContent = message;
     }
   };
 
@@ -366,7 +387,68 @@
     }
   };
 
-  const sortLeaderboardRuns = (runs) => {
+  const clearGistRefreshTimer = () => {
+    if (gistRefreshTimeoutId) {
+      clearTimeout(gistRefreshTimeoutId);
+      gistRefreshTimeoutId = null;
+    }
+  };
+
+  const scheduleGistRefresh = (delayMs = 60000) => {
+    clearGistRefreshTimer();
+    if (!aliasValue || !gistSettings.gistId || !gistSettings.gistToken) {
+      return;
+    }
+    gistRefreshTimeoutId = setTimeout(() => {
+      gistRefreshTimeoutId = null;
+      if (!aliasValue || !gistSettings.gistId || !gistSettings.gistToken) {
+        return;
+      }
+      loadGistRuns({ silent: true }).catch(() => {});
+    }, Math.max(5000, delayMs));
+  };
+
+  const normalizeRun = (run) => {
+    if (!run) {
+      return null;
+    }
+    const alias = sanitizeAlias(run.alias);
+    if (!alias) {
+      return null;
+    }
+
+    const numericWpm = Number(run.wpm);
+    const wpm = Number.isFinite(numericWpm) ? Math.max(0, Math.round(numericWpm * 100) / 100) : null;
+    if (wpm == null) {
+      return null;
+    }
+
+    const durationValue = Number(run.duration);
+    const duration = Number.isFinite(durationValue) && durationValue > 0
+      ? Math.round(durationValue)
+      : DEFAULT_DURATION;
+
+    const timestampValue = typeof run.timestamp === 'string' ? run.timestamp : run.completedAt;
+    const timestamp = (() => {
+      if (!timestampValue) {
+        return new Date().toISOString();
+      }
+      const parsed = Date.parse(timestampValue);
+      if (Number.isNaN(parsed)) {
+        return new Date().toISOString();
+      }
+      return new Date(parsed).toISOString();
+    })();
+
+    return {
+      alias,
+      wpm,
+      duration: Math.max(1, duration),
+      timestamp,
+    };
+  };
+
+  const sortRunsForRanking = (runs) => {
     return runs
       .slice()
       .sort((a, b) => {
@@ -382,31 +464,64 @@
           return aDuration - bDuration;
         }
 
-        const aAccuracy = Number.isFinite(a?.accuracy) ? a.accuracy : 0;
-        const bAccuracy = Number.isFinite(b?.accuracy) ? b.accuracy : 0;
-        if (bAccuracy !== aAccuracy) {
-          return bAccuracy - aAccuracy;
-        }
-
         const aTime = Date.parse(a?.timestamp || '') || 0;
         const bTime = Date.parse(b?.timestamp || '') || 0;
         return bTime - aTime;
       });
   };
 
-  const trimLeaderboardRuns = (runs) => {
-    return sortLeaderboardRuns(runs).slice(0, LEADERBOARD_MAX_ENTRIES);
+  const trimStoredRuns = (runs) => {
+    return sortRunsForRanking(runs).slice(0, LEADERBOARD_MAX_ENTRIES);
   };
 
-  const renderLeaderboard = () => {
+  const computeLeaderboardEntries = (runs) => {
+    return sortRunsForRanking(runs).slice(0, 5);
+  };
+
+  const computeHistoryEntries = (runs, alias) => {
+    if (!alias) {
+      return [];
+    }
+    const needle = alias.toLowerCase();
+    return runs
+      .filter((run) => run?.alias && run.alias.toLowerCase() === needle)
+      .sort((a, b) => {
+        const aTime = Date.parse(a?.timestamp || '') || 0;
+        const bTime = Date.parse(b?.timestamp || '') || 0;
+        return bTime - aTime;
+      })
+      .slice(0, 10);
+  };
+
+  const formatRelativeTime = (date) => {
+    if (!(date instanceof Date)) {
+      return 'just now';
+    }
+    const nowTs = Date.now();
+    const diffMs = Math.max(0, nowTs - date.getTime());
+    if (diffMs < 5000) {
+      return 'just now';
+    }
+    if (diffMs < 60000) {
+      return `${Math.round(diffMs / 1000)}s ago`;
+    }
+    if (diffMs < 3600000) {
+      return `${Math.round(diffMs / 60000)}m ago`;
+    }
+    if (diffMs < 86400000) {
+      return `${Math.round(diffMs / 3600000)}h ago`;
+    }
+    return date.toLocaleDateString();
+  };
+
+  const renderLeaderboardList = () => {
     if (!leaderboardList || !leaderboardEmpty) {
       return;
     }
 
-    const rankedRuns = sortLeaderboardRuns(leaderboardRuns).slice(0, 5);
     leaderboardList.innerHTML = '';
 
-    if (!rankedRuns.length) {
+    if (!leaderboardEntries.length) {
       leaderboardList.classList.add('hidden');
       leaderboardEmpty.classList.remove('hidden');
       leaderboardEmpty.textContent = currentEmptyMessage;
@@ -416,7 +531,7 @@
     leaderboardList.classList.remove('hidden');
     leaderboardEmpty.classList.add('hidden');
 
-    rankedRuns.forEach((run, index) => {
+    leaderboardEntries.forEach((run, index) => {
       const item = document.createElement('li');
       item.className = 'leaderboard-row';
       if (aliasValue && run.alias && run.alias.toLowerCase() === aliasValue.toLowerCase()) {
@@ -447,43 +562,58 @@
     });
   };
 
-  const sanitizeRun = (run) => {
-    if (!run) return null;
-    const alias = sanitizeAlias(run.alias);
-    if (!alias) return null;
-
-    const numericWpm = Number(run.wpm);
-    if (!Number.isFinite(numericWpm)) {
-      return null;
+  const renderPersonalHistory = () => {
+    if (!historyList || !historyEmpty) {
+      return;
     }
 
-    const duration = Math.max(1, Math.round(Number(run.duration) || DEFAULT_DURATION));
-    const accuracyValue = Number(run.accuracy);
-    const accuracy = Number.isFinite(accuracyValue)
-      ? Math.max(0, Math.min(100, Math.round(accuracyValue * 10) / 10))
-      : null;
-    const cpmValue = Number(run.cpm);
-    const cpm = Number.isFinite(cpmValue) ? Math.max(0, Math.round(cpmValue)) : null;
-    const timestampValue = run.timestamp || run.completedAt;
-    const timestamp = (() => {
-      if (!timestampValue) {
-        return new Date().toISOString();
-      }
-      const parsed = Date.parse(timestampValue);
-      if (Number.isNaN(parsed)) {
-        return new Date().toISOString();
-      }
-      return new Date(parsed).toISOString();
-    })();
+    historyList.innerHTML = '';
 
-    return {
-      alias,
-      wpm: Math.max(0, Math.round(numericWpm * 100) / 100),
-      duration,
-      accuracy,
-      cpm,
-      timestamp,
-    };
+    if (!aliasValue) {
+      historyList.classList.add('hidden');
+      historyEmpty.classList.remove('hidden');
+      historyEmpty.textContent = 'Enter an alias to see your personal history.';
+      return;
+    }
+
+    if (!historyEntries.length) {
+      historyList.classList.add('hidden');
+      historyEmpty.classList.remove('hidden');
+      historyEmpty.textContent = currentHistoryMessage;
+      return;
+    }
+
+    historyList.classList.remove('hidden');
+    historyEmpty.classList.add('hidden');
+
+    historyEntries.forEach((run) => {
+      const item = document.createElement('li');
+      item.className = 'history-row';
+
+      const wpmValue = Number.isFinite(run.wpm) ? run.wpm : 0;
+      const formattedWpm = wpmValue >= 100 ? Math.round(wpmValue).toString() : wpmValue.toFixed(1);
+      const timestamp = (() => {
+        try {
+          const parsed = new Date(run.timestamp);
+          if (Number.isNaN(parsed.getTime())) {
+            return 'just now';
+          }
+          return formatRelativeTime(parsed);
+        } catch {
+          return 'just now';
+        }
+      })();
+
+      item.textContent = `${formattedWpm} WPM · ${run.duration || DEFAULT_DURATION}s · ${timestamp}`;
+      historyList.appendChild(item);
+    });
+  };
+
+  const updateDerivedRuns = () => {
+    leaderboardEntries = computeLeaderboardEntries(storedRuns);
+    historyEntries = computeHistoryEntries(storedRuns, aliasValue);
+    renderLeaderboardList();
+    renderPersonalHistory();
   };
 
   const createGistHeaders = (token, { json = false } = {}) => {
@@ -574,76 +704,57 @@
     return response.json();
   };
 
-  const formatRelativeTime = (date) => {
-    if (!(date instanceof Date)) {
-      return 'just now';
-    }
-    const nowTs = Date.now();
-    const diffMs = Math.max(0, nowTs - date.getTime());
-    if (diffMs < 5000) {
-      return 'just now';
-    }
-    if (diffMs < 60000) {
-      return `${Math.round(diffMs / 1000)}s ago`;
-    }
-    if (diffMs < 3600000) {
-      return `${Math.round(diffMs / 60000)}m ago`;
-    }
-    if (diffMs < 86400000) {
-      return `${Math.round(diffMs / 3600000)}h ago`;
-    }
-    return date.toLocaleDateString();
-  };
-
-  const shouldSyncLeaderboard = () => {
-    return Boolean(aliasValue && gistSettings.gistId && gistSettings.gistToken);
-  };
-
-  const ensureLeaderboardLoaded = async () => {
-    if (!shouldSyncLeaderboard()) {
-      return leaderboardRuns;
+  const loadGistRuns = async ({ silent = false } = {}) => {
+    if (!aliasValue || !gistSettings.gistId || !gistSettings.gistToken) {
+      return storedRuns;
     }
 
-    if (leaderboardLoaded) {
-      return leaderboardRuns;
+    if (gistLoadPromise) {
+      return gistLoadPromise;
     }
 
-    if (leaderboardFetchPromise) {
-      return leaderboardFetchPromise;
+    if (!silent) {
+      setHistoryEmptyMessage('Loading your history…');
+      setSyncStatus('syncing', gistLoaded ? 'Refreshing leaderboard…' : 'Loading leaderboard…', 'Loading leaderboard…');
     }
 
-    setSyncStatus('syncing', 'Loading leaderboard…', 'Loading leaderboard…');
-
-    leaderboardFetchPromise = (async () => {
+    gistLoadPromise = (async () => {
       try {
         const remoteRuns = await fetchLeaderboardData(gistSettings);
-        const sanitized = remoteRuns
-          .map((run) => sanitizeRun(run))
-          .filter((run) => run != null);
-        leaderboardRuns = trimLeaderboardRuns(sanitized);
-        leaderboardLoaded = true;
-        renderLeaderboard();
+        const sanitized = remoteRuns.map((run) => normalizeRun(run)).filter((run) => run != null);
+        storedRuns = trimStoredRuns(sanitized);
+        gistLoaded = true;
+        updateDerivedRuns();
         lastSyncedAt = new Date();
-        if (leaderboardRuns.length === 0) {
+        if (!storedRuns.length) {
           setSyncStatus('success', 'Leaderboard ready. Finish a run to claim a spot.', 'No runs yet—finish a run to claim a spot.');
-        } else {
+          setHistoryEmptyMessage('Complete a run to build your personal history.');
+        } else if (!silent) {
           setSyncStatus('success', `Leaderboard updated ${formatRelativeTime(lastSyncedAt)}.`);
+          setHistoryEmptyMessage('Complete a run to build your personal history.');
         }
       } catch (error) {
-        leaderboardLoaded = false;
-        setSyncStatus('error', `Unable to load leaderboard: ${error.message}`, 'Unable to load leaderboard.');
+        if (!silent) {
+          gistLoaded = false;
+          storedRuns = [];
+          updateDerivedRuns();
+          setSyncStatus('error', `Unable to load leaderboard: ${error.message}`, 'Unable to load leaderboard.');
+          setHistoryEmptyMessage('Unable to load your history.');
+        }
         throw error;
       } finally {
-        leaderboardFetchPromise = null;
+        gistLoadPromise = null;
+        scheduleGistRefresh();
       }
-      return leaderboardRuns;
+
+      return storedRuns;
     })();
 
-    return leaderboardFetchPromise;
+    return gistLoadPromise;
   };
 
-  const persistLeaderboard = async () => {
-    if (!shouldSyncLeaderboard()) {
+  const requestPersist = () => {
+    if (!aliasValue || !gistSettings.gistId || !gistSettings.gistToken) {
       return;
     }
 
@@ -656,70 +767,69 @@
     persistQueued = false;
     setSyncStatus('syncing', 'Syncing your result…');
 
-    try {
-      await pushLeaderboardData(gistSettings, leaderboardRuns);
-      lastSyncedAt = new Date();
-      setSyncStatus('success', `Score synced ${formatRelativeTime(lastSyncedAt)}.`);
-    } catch (error) {
-      setSyncStatus('error', `Sync failed: ${error.message}`, 'Unable to sync leaderboard.');
-    } finally {
-      isPersistingLeaderboard = false;
-      if (persistQueued) {
-        persistQueued = false;
-        persistLeaderboard();
-      }
-    }
-  };
-
-  const recordLeaderboardRun = (run) => {
-    if (!shouldSyncLeaderboard()) {
-      return;
-    }
-
     (async () => {
       try {
-        await ensureLeaderboardLoaded();
-      } catch {
-        // Continue attempting to sync even if the initial fetch fails.
+        await pushLeaderboardData(gistSettings, storedRuns);
+        lastSyncedAt = new Date();
+        setSyncStatus('success', `Score synced ${formatRelativeTime(lastSyncedAt)}.`);
+        setHistoryEmptyMessage('Complete a run to build your personal history.');
+      } catch (error) {
+        setSyncStatus('error', `Sync failed: ${error.message}`, 'Unable to sync leaderboard.');
+        setHistoryEmptyMessage('Unable to sync your latest run.');
+      } finally {
+        isPersistingLeaderboard = false;
+        if (persistQueued) {
+          persistQueued = false;
+          requestPersist();
+        } else {
+          scheduleGistRefresh();
+        }
       }
-
-      const sanitized = sanitizeRun(run);
-      if (!sanitized) {
-        return;
-      }
-
-      leaderboardRuns = trimLeaderboardRuns([...leaderboardRuns, sanitized]);
-      renderLeaderboard();
-      await persistLeaderboard();
     })();
   };
 
-  const resetLeaderboardState = (message, type = 'idle') => {
-    leaderboardRuns = [];
-    leaderboardLoaded = false;
-    renderLeaderboard();
-    if (message) {
-      setSyncStatus(type, message, message);
+  const persistResult = async (run) => {
+    const sanitized = normalizeRun(run);
+    if (!sanitized) {
+      return;
     }
+
+    if (!aliasValue || !gistSettings.gistId || !gistSettings.gistToken) {
+      return;
+    }
+
+    try {
+      if (gistLoadPromise) {
+        await gistLoadPromise.catch(() => {});
+      } else if (!gistLoaded) {
+        await loadGistRuns({ silent: true }).catch(() => {});
+      }
+    } catch {
+      // Ignore load failures and continue attempting to persist the latest run.
+    }
+
+    if (!gistLoaded && storedRuns.length === 0) {
+      setSyncStatus('error', 'Unable to sync leaderboard until the latest data loads.', 'Unable to sync leaderboard.');
+      setHistoryEmptyMessage('Unable to sync your latest run.');
+      return;
+    }
+
+    storedRuns = trimStoredRuns([...storedRuns, sanitized]);
+    updateDerivedRuns();
+    requestPersist();
   };
 
-  const updateSyncReadiness = () => {
-    if (!gistSettings.gistId) {
-      resetLeaderboardState('Connect GitHub access from the global settings to sync your scores.', 'disabled');
-      return;
+  const resetLeaderboardState = (message, type = 'idle') => {
+    storedRuns = [];
+    leaderboardEntries = [];
+    historyEntries = [];
+    gistLoaded = false;
+    updateDerivedRuns();
+    if (message) {
+      setSyncStatus(type, message, message);
+      setHistoryEmptyMessage(message);
     }
-
-    if (!gistSettings.gistToken) {
-      resetLeaderboardState('Add a GitHub token with gist scope in settings to enable syncing.', 'disabled');
-      return;
-    }
-
-    if (!aliasValue) {
-      resetLeaderboardState('Enter an alias to join the leaderboard.');
-      return;
-    }
-
-    ensureLeaderboardLoaded();
+    clearGistRefreshTimer();
   };
 
   const applyGistSettings = (settings) => {
@@ -730,16 +840,84 @@
         ? settings.token.trim()
         : '';
 
-    const changed = gistSettings.gistId !== gistId || gistSettings.gistToken !== gistToken;
-    if (!changed) {
+    const idChanged = gistSettings.gistId !== gistId;
+    const tokenChanged = gistSettings.gistToken !== gistToken;
+    if (!idChanged && !tokenChanged) {
       return;
     }
 
     gistSettings = { gistId, gistToken };
-    leaderboardRuns = [];
-    leaderboardLoaded = false;
-    renderLeaderboard();
-    updateSyncReadiness();
+
+    if (idChanged) {
+      storedRuns = [];
+      gistLoaded = false;
+      updateDerivedRuns();
+    }
+
+    updateSyncReadiness({ refresh: true });
+  };
+
+  const subscribeToSharedGistSettings = (listener) => {
+    if (typeof window === 'undefined') {
+      return () => {};
+    }
+
+    if (typeof window.subscribeToGlobalGistSettings === 'function') {
+      try {
+        return window.subscribeToGlobalGistSettings((value) => {
+          listener(value);
+        });
+      } catch {
+        // Fall back to event subscription below.
+      }
+    }
+
+    const handler = (event) => {
+      listener(event?.detail);
+    };
+
+    window.addEventListener(GIST_SETTINGS_EVENT, handler);
+    return () => {
+      try {
+        window.removeEventListener(GIST_SETTINGS_EVENT, handler);
+      } catch {
+        // Ignore teardown failures.
+      }
+    };
+  };
+
+  const updateSyncReadiness = ({ refresh = false } = {}) => {
+    clearGistRefreshTimer();
+
+    if (!aliasValue) {
+      resetLeaderboardState('Enter an alias to join the leaderboard.');
+      setHistoryEmptyMessage('Enter an alias to see your personal history.');
+      return;
+    }
+
+    if (!gistSettings.gistId) {
+      resetLeaderboardState('Connect GitHub access from the global settings to sync your scores.', 'disabled');
+      setHistoryEmptyMessage('Connect GitHub access from the global settings to sync your scores.');
+      return;
+    }
+
+    if (!gistSettings.gistToken) {
+      resetLeaderboardState('Add a GitHub token with gist scope in settings to enable syncing.', 'disabled');
+      setHistoryEmptyMessage('Add a GitHub token with gist scope in settings to enable syncing.');
+      return;
+    }
+
+    setHistoryEmptyMessage('Loading your history…');
+
+    if (refresh || !gistLoaded) {
+      loadGistRuns().catch(() => {});
+    } else {
+      scheduleGistRefresh();
+      updateDerivedRuns();
+      if (lastSyncedAt) {
+        setSyncStatus('success', `Leaderboard updated ${formatRelativeTime(lastSyncedAt)}.`);
+      }
+    }
   };
 
   const handleAliasInput = (event) => {
@@ -750,8 +928,8 @@
       aliasInput.value = sanitized;
     }
     writeStoredAlias(sanitized);
-    renderLeaderboard();
-    updateSyncReadiness();
+    updateDerivedRuns();
+    updateSyncReadiness({ refresh: false });
   };
 
   const initializeLeaderboard = () => {
@@ -765,18 +943,23 @@
       });
     }
 
-    renderLeaderboard();
-    setSyncStatus('idle', 'Enter an alias to join the leaderboard.', 'Connect GitHub access from the global settings to sync your scores.');
+    updateDerivedRuns();
+    setSyncStatus('idle', 'Enter an alias to join the leaderboard.', currentEmptyMessage);
+    setHistoryEmptyMessage('Complete a run to build your personal history.');
 
     applyGistSettings(readSharedGistSettings());
 
-    if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
-      window.addEventListener(GIST_SETTINGS_EVENT, (event) => {
-        applyGistSettings(event?.detail);
-      });
+    gistSettingsUnsubscribe = subscribeToSharedGistSettings((nextSettings) => {
+      applyGistSettings(nextSettings);
+    });
+
+    if (typeof window !== 'undefined' && typeof window.setInterval === 'function') {
+      gistSettingsPollId = window.setInterval(() => {
+        applyGistSettings(readSharedGistSettings());
+      }, 30000);
     }
 
-    updateSyncReadiness();
+    updateSyncReadiness({ refresh: true });
   };
 
   const syncDurationOptions = () => {
@@ -1077,11 +1260,9 @@
     syncDurationOptions();
     refreshHoldDisplays();
     setScreen('results', { focusTarget: resultsRetry });
-    recordLeaderboardRun({
+    persistResult({
       alias: aliasValue,
       wpm: wpmValue,
-      cpm: cpmValue,
-      accuracy: accuracyValue,
       duration: testDuration,
       timestamp: new Date().toISOString(),
     });
@@ -1182,5 +1363,17 @@
 
   window.addEventListener('beforeunload', () => {
     stopTimer();
+    clearGistRefreshTimer();
+    if (typeof gistSettingsUnsubscribe === 'function') {
+      try {
+        gistSettingsUnsubscribe();
+      } catch {
+        // Ignore teardown errors.
+      }
+    }
+    if (gistSettingsPollId) {
+      clearInterval(gistSettingsPollId);
+      gistSettingsPollId = null;
+    }
   });
 })();
