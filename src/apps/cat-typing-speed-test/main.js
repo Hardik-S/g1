@@ -15,6 +15,7 @@
   const finalAccuracy = document.getElementById('final-accuracy');
   const resultsNote = document.getElementById('results-note');
   const resultsRetry = document.getElementById('results-retry');
+  const aliasInput = document.getElementById('alias-input');
 
   if (!testScreen || !resultsScreen || !typingInput) {
     return;
@@ -27,7 +28,7 @@
     },
     results: {
       element: resultsScreen,
-      getDefaultFocus: () => resultsRetry,
+      getDefaultFocus: () => aliasInput || resultsRetry,
     },
   };
 

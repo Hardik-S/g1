@@ -60,20 +60,30 @@
           </div>
         </div>
         <p class="results-note" id="results-note"></p>
-        <div class="score-history" id="score-history" aria-live="polite">
-          <h3>Score history</h3>
-          <p class="history-empty" id="history-empty">Connect GitHub access from the global settings to sync your scores.</p>
-          <table class="history-table hidden" id="history-table">
-            <thead>
-              <tr>
-                <th scope="col">Date</th>
-                <th scope="col">Duration</th>
-                <th scope="col">WPM</th>
-                <th scope="col">Accuracy</th>
-              </tr>
-            </thead>
-            <tbody id="history-rows"></tbody>
-          </table>
+        <div class="score-sync" id="score-sync" aria-live="polite">
+          <div class="alias-section">
+            <label class="alias-label" for="alias-input">Leaderboard alias</label>
+            <div class="alias-controls">
+              <input
+                type="text"
+                id="alias-input"
+                name="alias"
+                class="alias-input"
+                maxlength="30"
+                autocomplete="nickname"
+                placeholder="Choose an alias to sync your runs"
+              />
+              <p class="sync-status" id="sync-status" role="status">
+                Add an alias to sync scores and appear on the public leaderboard.
+              </p>
+            </div>
+          </div>
+
+          <div class="leaderboard" id="leaderboard">
+            <h3>Top scores</h3>
+            <p class="leaderboard-empty" id="leaderboard-empty">No leaderboard data yet. Finish a test to claim a spot.</p>
+            <ol class="leaderboard-list hidden" id="leaderboard-list"></ol>
+          </div>
         </div>
         <div class="actions">
           <button type="button" class="primary" id="results-retry">Try again</button>
