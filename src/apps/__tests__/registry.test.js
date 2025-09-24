@@ -1,4 +1,7 @@
+import React, { Suspense } from 'react';
+import { render, screen } from '@testing-library/react';
 import {
+  APP_METADATA,
   getAllApps,
   getAppById,
   getAppLoader,
@@ -6,7 +9,6 @@ import {
   getAppsCount,
   getFeaturedApps,
 } from '../registry';
-import { APP_METADATA } from '../registry/apps';
 import { appLoaderCache } from '../registry/loaders';
 
 describe('apps registry', () => {
@@ -51,5 +53,19 @@ describe('apps registry', () => {
     const second = getAppLoader('day-switcher');
 
     expect(first).toBe(second);
+  });
+
+  it('renders a lazy-loaded app component', async () => {
+    const LazyApp = getAppLoader('day-switcher');
+
+    expect(LazyApp).toBeTruthy();
+
+    render(
+      <Suspense fallback={<div>Loading...</div>}>
+        <LazyApp />
+      </Suspense>,
+    );
+
+    expect(await screen.findByText(/random day/i)).toBeInTheDocument();
   });
 });
