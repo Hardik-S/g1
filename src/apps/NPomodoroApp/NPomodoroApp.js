@@ -8,28 +8,16 @@ import {
 const RING_RADIUS = 118;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
-const NPomodoroAppContent = () => {
+const TimerCard = ({ variant = 'default' }) => {
   const {
     sessions,
     currentSessionIndex,
-    currentBlockIndex,
     currentSession,
     currentBlock,
-    isFocusMode,
-    isPlannerExpanded,
-    setIsPlannerExpanded,
-    editingSessionId,
-    setEditingSessionId,
-    editingSession,
-    editingSessionIndex,
-    editingSessionMinutes,
-    accentColor,
-    softenedAccent,
-    starDensity,
-    overallProgress,
-    ritualMinutes,
-    timeLeft,
     formatTime,
+    timeLeft,
+    softenedAccent,
+    accentColor,
     blockProgress,
     sessionMinutes,
     minutesRemaining,
@@ -41,22 +29,10 @@ const NPomodoroAppContent = () => {
     skipForward,
     isRunning,
     isPaused,
-    isComplete,
-    focusBlock,
-    handleFocusSession,
-    exitFocusMode,
-    closeSessionEditor,
-    updateSessionName,
-    updateBlock,
-    addSession,
-    removeSession,
-    addBlock,
-    removeBlock,
-    restoreDefaults,
-    timelineSegments
+    isComplete
   } = usePomodoroTimer();
 
-  const renderTimerCard = (variant = 'default') => (
+  return (
     <div
       className={`timer-card ${variant === 'focus' ? 'focus-mode-card' : ''}`}
       data-variant={variant}
@@ -193,6 +169,321 @@ const NPomodoroAppContent = () => {
       )}
     </div>
   );
+};
+
+const PlannerPanel = () => {
+  const {
+    sessions,
+    currentSessionIndex,
+    isFocusMode,
+    editingSessionId,
+    setEditingSessionId,
+    addSession,
+    restoreDefaults
+  } = usePomodoroTimer();
+
+  return (
+    <aside className="planner-panel">
+      <div className="planner-header">
+        <h2>Session planner</h2>
+        <p>
+          Compose as many sessions as you need (five and beyond), give
+          each block a purpose, and sculpt the flow of your day.
+        </p>
+      </div>
+
+      <div className="session-stack">
+        {sessions.map((session, index) => {
+          const totalMinutes = session.blocks.reduce(
+            (acc, block) => acc + block.minutes,
+            0
+          );
+          const isActiveSession = index === currentSessionIndex;
+          const isSessionFocused = isActiveSession && isFocusMode;
+          const isEditing = session.id === editingSessionId;
+          const accent = session.blocks[0]?.color || '#7F5AF0';
+          return (
+            <button
+              key={session.id}
+              type="button"
+              className={`session-preview ${
+                isActiveSession ? 'active' : ''
+              } ${isEditing ? 'editing' : ''} ${
+                isSessionFocused ? 'focused' : ''
+              }`}
+              data-testid="session-preview"
+              style={{ '--session-accent': accent }}
+              onClick={() => setEditingSessionId(session.id)}
+              aria-haspopup="dialog"
+            >
+              <span className="session-preview-accent" aria-hidden="true" />
+              <span className="session-preview-content">
+                <span className="session-preview-name">{session.name}</span>
+                <span className="session-preview-meta">
+                  {totalMinutes} min · {session.blocks.length}{' '}
+                  {session.blocks.length === 1 ? 'block' : 'blocks'}
+                </span>
+              </span>
+              <span className="session-preview-indicator">Edit</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="planner-footer">
+        <button type="button" className="add-session-btn" onClick={addSession}>
+          + Add session
+        </button>
+        <button
+          type="button"
+          className="restore-defaults-btn"
+          onClick={restoreDefaults}
+        >
+          Restore defaults
+        </button>
+      </div>
+    </aside>
+  );
+};
+
+const SessionTimeline = () => {
+  const { timelineSegments, currentSessionIndex, focusBlock } = usePomodoroTimer();
+
+  return (
+    <div className="session-timeline">
+      {timelineSegments.map((segment, index) => (
+        <button
+          key={segment.id}
+          type="button"
+          className={`timeline-segment ${index === currentSessionIndex ? 'active' : ''}`}
+          style={{
+            '--segment-accent': segment.accent,
+            flexGrow: segment.weight
+          }}
+          onClick={() => focusBlock(index, 0)}
+        >
+          <div className="timeline-progress" style={{ width: `${segment.completion}%` }} />
+          <span className="timeline-label">{segment.name}</span>
+        </button>
+      ))}
+    </div>
+  );
+};
+
+const PlayPanel = () => (
+  <section className="play-panel">
+    <TimerCard />
+    <SessionTimeline />
+  </section>
+);
+
+const SessionEditorModal = () => {
+  const {
+    sessions,
+    currentSessionIndex,
+    currentBlockIndex,
+    isFocusMode,
+    editingSession,
+    editingSessionIndex,
+    editingSessionMinutes,
+    closeSessionEditor,
+    handleFocusSession,
+    removeSession,
+    updateSessionName,
+    updateBlock,
+    removeBlock,
+    addBlock,
+    focusBlock
+  } = usePomodoroTimer();
+
+  if (!editingSession) {
+    return null;
+  }
+
+  return (
+    <div
+      className="session-editor-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Edit ${editingSession.name}`}
+      data-testid="session-editor-modal"
+      onClick={closeSessionEditor}
+    >
+      <div
+        className="session-editor-shell"
+        style={{
+          '--session-accent': editingSession.blocks[0]?.color || '#7F5AF0'
+        }}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="session-editor-header">
+          <div className="session-editor-title">
+            <input
+              className="session-name-input"
+              value={editingSession.name}
+              onChange={(event) =>
+                updateSessionName(editingSession.id, event.target.value)
+              }
+              autoFocus
+            />
+            <span className="session-duration">
+              {editingSessionMinutes} min planned
+            </span>
+          </div>
+          <button
+            type="button"
+            className="session-editor-close"
+            onClick={closeSessionEditor}
+            aria-label="Close session editor"
+          >
+            ✕
+          </button>
+        </div>
+        <div className="session-editor-actions">
+          <button
+            type="button"
+            className={`session-focus-btn ${
+              editingSessionIndex === currentSessionIndex && isFocusMode
+                ? 'active'
+                : ''
+            }`}
+            onClick={() => handleFocusSession(editingSessionIndex)}
+            aria-pressed={
+              editingSessionIndex === currentSessionIndex && isFocusMode
+            }
+            disabled={editingSessionIndex === -1}
+          >
+            {editingSessionIndex === currentSessionIndex && isFocusMode
+              ? 'Exit focus'
+              : 'Focus session'}
+          </button>
+          <button
+            type="button"
+            className="session-remove-btn"
+            onClick={() => removeSession(editingSession.id)}
+            disabled={sessions.length <= 1}
+          >
+            Remove session
+          </button>
+        </div>
+        <div className="block-editor">
+          {editingSession.blocks.map((block, blockIndex) => (
+            <div
+              key={block.id}
+              className={`block-row ${
+                editingSessionIndex === currentSessionIndex &&
+                blockIndex === currentBlockIndex
+                  ? 'current'
+                  : ''
+              }`}
+              data-testid="block-row"
+            >
+              <button
+                type="button"
+                className="block-handle"
+                onClick={() => focusBlock(editingSessionIndex, blockIndex)}
+              >
+                {blockIndex + 1}
+              </button>
+              <input
+                className="block-name-input"
+                value={block.name}
+                onChange={(event) =>
+                  updateBlock(editingSession.id, block.id, {
+                    name: event.target.value
+                  })
+                }
+              />
+              <div className="block-duration-input">
+                <input
+                  type="number"
+                  min="1"
+                  max="999"
+                  value={block.minutes}
+                  onChange={(event) => {
+                    const value = Math.max(
+                      1,
+                      Math.min(999, parseInt(event.target.value, 10) || 0)
+                    );
+                    updateBlock(editingSession.id, block.id, {
+                      minutes: value
+                    });
+                  }}
+                />
+                <span>min</span>
+              </div>
+              <input
+                type="color"
+                className="block-color-input"
+                value={block.color}
+                onChange={(event) =>
+                  updateBlock(editingSession.id, block.id, {
+                    color: event.target.value
+                  })
+                }
+              />
+              <button
+                type="button"
+                className="block-remove-btn"
+                onClick={() => removeBlock(editingSession.id, block.id)}
+                disabled={editingSession.blocks.length <= 1}
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          className="add-block-btn"
+          onClick={() => addBlock(editingSession.id)}
+        >
+          + Add block
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const FocusModeOverlay = () => {
+  const { isFocusMode, currentSession, exitFocusMode } = usePomodoroTimer();
+
+  if (!isFocusMode) {
+    return null;
+  }
+
+  return (
+    <div
+      className="focus-mode-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Focus session full screen"
+      data-testid="focus-mode-overlay"
+      onClick={exitFocusMode}
+    >
+      <div className="focus-mode-shell" onClick={(event) => event.stopPropagation()}>
+        <div className="focus-mode-header">
+          <span className="focus-mode-subtitle">
+            {currentSession?.name || 'Focus session'}
+          </span>
+          <button type="button" className="focus-mode-close" onClick={exitFocusMode}>
+            Exit focus
+          </button>
+        </div>
+        <TimerCard variant="focus" />
+      </div>
+    </div>
+  );
+};
+
+const NPomodoroAppContent = () => {
+  const {
+    starDensity,
+    overallProgress,
+    ritualMinutes,
+    isPlannerExpanded,
+    setIsPlannerExpanded
+  } = usePomodoroTimer();
 
   return (
     <div className="n-pomodoro-app">
@@ -238,97 +529,8 @@ const NPomodoroAppContent = () => {
             isPlannerExpanded ? 'planner-open' : 'planner-collapsed'
           }`}
         >
-          <aside className="planner-panel">
-            <div className="planner-header">
-              <h2>Session planner</h2>
-              <p>
-                Compose as many sessions as you need (five and beyond), give
-                each block a purpose, and sculpt the flow of your day.
-              </p>
-            </div>
-
-            <div className="session-stack">
-              {sessions.map((session, index) => {
-                const totalMinutes = session.blocks.reduce(
-                  (acc, block) => acc + block.minutes,
-                  0
-                );
-                const isActiveSession = index === currentSessionIndex;
-                const isSessionFocused = isActiveSession && isFocusMode;
-                const isEditing = session.id === editingSessionId;
-                const accent = session.blocks[0]?.color || '#7F5AF0';
-                return (
-                  <button
-                    key={session.id}
-                    type="button"
-                    className={`session-preview ${
-                      isActiveSession ? 'active' : ''
-                    } ${isEditing ? 'editing' : ''} ${
-                      isSessionFocused ? 'focused' : ''
-                    }`}
-                    data-testid="session-preview"
-                    style={{ '--session-accent': accent }}
-                    onClick={() => setEditingSessionId(session.id)}
-                    aria-haspopup="dialog"
-                  >
-                    <span className="session-preview-accent" aria-hidden="true" />
-                    <span className="session-preview-content">
-                      <span className="session-preview-name">{session.name}</span>
-                      <span className="session-preview-meta">
-                        {totalMinutes} min · {session.blocks.length}{' '}
-                        {session.blocks.length === 1 ? 'block' : 'blocks'}
-                      </span>
-                    </span>
-                    <span className="session-preview-indicator">Edit</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="planner-footer">
-              <button
-                type="button"
-                className="add-session-btn"
-                onClick={addSession}
-              >
-                + Add session
-              </button>
-              <button
-                type="button"
-                className="restore-defaults-btn"
-                onClick={restoreDefaults}
-              >
-                Restore defaults
-              </button>
-            </div>
-          </aside>
-
-          <section className="play-panel">
-            {renderTimerCard()}
-
-            <div className="session-timeline">
-              {timelineSegments.map((segment, index) => (
-                <button
-                  key={segment.id}
-                  type="button"
-                  className={`timeline-segment ${
-                    index === currentSessionIndex ? 'active' : ''
-                  }`}
-                  style={{
-                    '--segment-accent': segment.accent,
-                    flexGrow: segment.weight
-                  }}
-                  onClick={() => focusBlock(index, 0)}
-                >
-                  <div
-                    className="timeline-progress"
-                    style={{ width: `${segment.completion}%` }}
-                  />
-                  <span className="timeline-label">{segment.name}</span>
-                </button>
-              ))}
-            </div>
-          </section>
+          <PlannerPanel />
+          <PlayPanel />
 
           {isPlannerExpanded && (
             <button
@@ -340,183 +542,8 @@ const NPomodoroAppContent = () => {
           )}
         </div>
 
-        {editingSession && (
-          <div
-            className="session-editor-overlay"
-            role="dialog"
-            aria-modal="true"
-            aria-label={`Edit ${editingSession.name}`}
-            data-testid="session-editor-modal"
-            onClick={closeSessionEditor}
-          >
-            <div
-              className="session-editor-shell"
-              style={{
-                '--session-accent':
-                  editingSession.blocks[0]?.color || '#7F5AF0'
-              }}
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="session-editor-header">
-                <div className="session-editor-title">
-                  <input
-                    className="session-name-input"
-                    value={editingSession.name}
-                    onChange={(event) =>
-                      updateSessionName(editingSession.id, event.target.value)
-                    }
-                    autoFocus
-                  />
-                  <span className="session-duration">
-                    {editingSessionMinutes} min planned
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  className="session-editor-close"
-                  onClick={closeSessionEditor}
-                  aria-label="Close session editor"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="session-editor-actions">
-                <button
-                  type="button"
-                  className={`session-focus-btn ${
-                    editingSessionIndex === currentSessionIndex && isFocusMode
-                      ? 'active'
-                      : ''
-                  }`}
-                  onClick={() => handleFocusSession(editingSessionIndex)}
-                  aria-pressed={
-                    editingSessionIndex === currentSessionIndex && isFocusMode
-                  }
-                  disabled={editingSessionIndex === -1}
-                >
-                  {editingSessionIndex === currentSessionIndex && isFocusMode
-                    ? 'Exit focus'
-                    : 'Focus session'}
-                </button>
-                <button
-                  type="button"
-                  className="session-remove-btn"
-                  onClick={() => removeSession(editingSession.id)}
-                  disabled={sessions.length <= 1}
-                >
-                  Remove session
-                </button>
-              </div>
-              <div className="block-editor">
-                {editingSession.blocks.map((block, blockIndex) => (
-                  <div
-                    key={block.id}
-                    className={`block-row ${
-                      editingSessionIndex === currentSessionIndex &&
-                      blockIndex === currentBlockIndex
-                        ? 'current'
-                        : ''
-                    }`}
-                    data-testid="block-row"
-                  >
-                    <button
-                      type="button"
-                      className="block-handle"
-                      onClick={() => focusBlock(editingSessionIndex, blockIndex)}
-                    >
-                      {blockIndex + 1}
-                    </button>
-                    <input
-                      className="block-name-input"
-                      value={block.name}
-                      onChange={(event) =>
-                        updateBlock(editingSession.id, block.id, {
-                          name: event.target.value
-                        })
-                      }
-                    />
-                    <div className="block-duration-input">
-                      <input
-                        type="number"
-                        min="1"
-                        max="999"
-                        value={block.minutes}
-                        onChange={(event) => {
-                          const value = Math.max(
-                            1,
-                            Math.min(
-                              999,
-                              parseInt(event.target.value, 10) || 0
-                            )
-                          );
-                          updateBlock(editingSession.id, block.id, {
-                            minutes: value
-                          });
-                        }}
-                      />
-                      <span>min</span>
-                    </div>
-                    <input
-                      type="color"
-                      className="block-color-input"
-                      value={block.color}
-                      onChange={(event) =>
-                        updateBlock(editingSession.id, block.id, {
-                          color: event.target.value
-                        })
-                      }
-                    />
-                    <button
-                      type="button"
-                      className="block-remove-btn"
-                      onClick={() => removeBlock(editingSession.id, block.id)}
-                      disabled={editingSession.blocks.length <= 1}
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <button
-                type="button"
-                className="add-block-btn"
-                onClick={() => addBlock(editingSession.id)}
-              >
-                + Add block
-              </button>
-            </div>
-          </div>
-        )}
-
-        {isFocusMode && (
-          <div
-            className="focus-mode-overlay"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Focus session full screen"
-            data-testid="focus-mode-overlay"
-            onClick={exitFocusMode}
-          >
-            <div
-              className="focus-mode-shell"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="focus-mode-header">
-                <span className="focus-mode-subtitle">
-                  {currentSession?.name || 'Focus session'}
-                </span>
-                <button
-                  type="button"
-                  className="focus-mode-close"
-                  onClick={exitFocusMode}
-                >
-                  Exit focus
-                </button>
-              </div>
-              {renderTimerCard('focus')}
-            </div>
-          </div>
-        )}
+        <SessionEditorModal />
+        <FocusModeOverlay />
       </div>
     </div>
   );
