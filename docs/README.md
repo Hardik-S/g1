@@ -37,6 +37,7 @@ Gif coming soon
 * **Cache Lab**: explore cache mapping, replacement, hierarchy, and assessments via `/cache-lab`.
 * **Cosmos Simulator**: orbit a scaled solar system with live Newtonian physics, camera fly-to controls, and keyboard navigation (arrows to orbit, WASD to pan, Q/E or +/- to dolly).
 * **LangMath**: convert natural-language arithmetic into validated expressions evaluated with Pyodide.
+* **Namecraft**: create linguistics-focused rooms, craft candidate names, and run deterministic PLATO heuristics with PLATO.md/PDF/JSON exports plus ≤2KB share URLs.
 * **Playlist Curator**: translate natural-language music prompts into relational algebra, visualize σ/π/⋈ plans, and inspect execution timelines.
 * **Relational Algebra Playground**: compose relational algebra pipelines with drag-and-drop blocks, step execution, SQL translation, CSV import, and guided challenges.
 
