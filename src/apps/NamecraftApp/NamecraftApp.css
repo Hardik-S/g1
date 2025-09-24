@@ -1,0 +1,319 @@
+.namecraft-app {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+  min-height: 100vh;
+  color: #e2e8f0;
+}
+
+.namecraft-sidebar {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 18px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.35);
+}
+
+.namecraft-sidebar h2,
+.namecraft-main h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.namecraft-room-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.namecraft-room-button {
+  background: rgba(30, 41, 59, 0.75);
+  border: 1px solid transparent;
+  border-radius: 14px;
+  padding: 0.75rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+  color: inherit;
+}
+
+.namecraft-room-button:hover,
+.namecraft-room-button:focus-visible {
+  border-color: rgba(94, 234, 212, 0.5);
+  box-shadow: 0 0 0 2px rgba(94, 234, 212, 0.3);
+}
+
+.namecraft-room-button.is-active {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(94, 234, 212, 0.18));
+  border-color: rgba(94, 234, 212, 0.45);
+}
+
+.namecraft-room-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.namecraft-room-meta {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.namecraft-sidebar-actions {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.namecraft-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  padding: 0.55rem 0.85rem;
+  background: rgba(30, 41, 59, 0.72);
+  color: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.namecraft-button:hover,
+.namecraft-button:focus-visible {
+  border-color: rgba(94, 234, 212, 0.55);
+  box-shadow: 0 0 0 2px rgba(94, 234, 212, 0.35);
+}
+
+.namecraft-button.is-primary {
+  background: linear-gradient(135deg, rgba(94, 234, 212, 0.9), rgba(56, 189, 248, 0.75));
+  color: #0f172a;
+  border: none;
+}
+
+.namecraft-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 1.5rem;
+}
+
+.namecraft-panel {
+  background: rgba(15, 23, 42, 0.65);
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.namecraft-field-group {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.namecraft-field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.namecraft-field label {
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #cbd5f5;
+}
+
+.namecraft-field input,
+.namecraft-field textarea {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: rgba(15, 23, 42, 0.88);
+  color: #f8fafc;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.9rem;
+  resize: vertical;
+  min-height: 2.5rem;
+}
+
+.namecraft-grid-two {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.namecraft-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.18);
+  color: #e2e8f0;
+  font-size: 0.7rem;
+}
+
+.namecraft-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.namecraft-table thead {
+  background: rgba(30, 41, 59, 0.82);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  color: #cbd5f5;
+}
+
+.namecraft-table th,
+.namecraft-table td {
+  padding: 0.65rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.namecraft-score-strong {
+  color: #5ef3c4;
+}
+
+.namecraft-score-medium {
+  color: #fbbf24;
+}
+
+.namecraft-score-weak {
+  color: #f87171;
+}
+
+.namecraft-diagnostics {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.namecraft-diagnostic-line {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 0.5rem;
+  align-items: start;
+  font-size: 0.85rem;
+}
+
+.namecraft-results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.namecraft-keyboard-hint {
+  font-size: 0.75rem;
+  color: rgba(226, 232, 240, 0.8);
+  display: flex;
+  gap: 0.4rem;
+}
+
+.namecraft-keyboard-hint span {
+  padding: 0.1rem 0.4rem;
+  border-radius: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(15, 23, 42, 0.8);
+}
+
+.namecraft-empty-state {
+  border: 1px dashed rgba(148, 163, 184, 0.3);
+  border-radius: 14px;
+  padding: 1rem;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.namecraft-result-card {
+  border: 1px solid rgba(94, 234, 212, 0.22);
+  border-radius: 16px;
+  padding: 1rem;
+  display: grid;
+  gap: 0.75rem;
+  background: rgba(14, 24, 42, 0.88);
+}
+
+.namecraft-rubric {
+  display: grid;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.namecraft-export-grid {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.namecraft-inline-hint {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.namecraft-merge-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.82);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.namecraft-merge-dialog {
+  max-width: 640px;
+  background: rgba(17, 24, 39, 0.95);
+  border-radius: 18px;
+  border: 1px solid rgba(94, 234, 212, 0.25);
+  padding: 1.5rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.namecraft-merge-options {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.namecraft-merge-row {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.namecraft-merge-choice {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  font-size: 0.85rem;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 0.45rem 0.6rem;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+}
+
+@media (max-width: 1080px) {
+  .namecraft-app {
+    grid-template-columns: 1fr;
+  }
+
+  .namecraft-main {
+    grid-template-columns: 1fr;
+  }
+}

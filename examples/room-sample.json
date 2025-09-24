@@ -1,0 +1,40 @@
+{
+  "id": "room-field-methods",
+  "title": "Field Methods Cohort",
+  "notes": "Graduate phonology cohort designing a project codename that is memorable yet academically neutral.",
+  "createdAt": "2025-01-12T10:15:00.000Z",
+  "updatedAt": "2025-01-12T10:15:00.000Z",
+  "names": [
+    {
+      "id": "name-sonora-1",
+      "label": "Sonora",
+      "meaning": "Signals warm resonance and field audio practice",
+      "phonetics": "so-NO-rah",
+      "tags": ["warm", "resonant", "phonetics"]
+    },
+    {
+      "id": "name-glossa-2",
+      "label": "GlossaLab",
+      "meaning": "Echoes articulatory focus with lab neutrality",
+      "phonetics": "GLOSS-uh-lab",
+      "tags": ["articulation", "lab"]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "scenario-conference-1",
+      "title": "Conference Poster Reveal",
+      "goal": "Name should highlight collaborative phonetic analysis and feel welcoming to community partners.",
+      "stressTest": "Avoid similarity with existing labs such as LinguaLab or Sonority Lab to reduce confusion.",
+      "riskNotes": "Participants include Dene and Salish speakers; aim for respectful consonant patterns."
+    },
+    {
+      "id": "scenario-field-kit-2",
+      "title": "Field Kit Labelling",
+      "goal": "Short sticker-friendly word that encodes sound documentation toolkit vibes.",
+      "stressTest": "Must stay legible on handheld recorders under low light.",
+      "riskNotes": "Should not resemble commercial recorder model names (Zoom, Tascam, Sony)."
+    }
+  ],
+  "evaluations": []
+}

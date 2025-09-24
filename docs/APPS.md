@@ -84,6 +84,15 @@ Zen Go invites quick 9×9 sparring against a lightweight GNU Go engine compiled 
 - Layer SGF export, move history, and review tools for deeper post-game study.
 - Surface AI insight overlays such as win-rate charts or candidate variation summaries.
 
+## Namecraft
+Namecraft gives graduate linguistics cohorts an offline-first workspace to co-design candidate names. Rooms keep candidates,
+scenarios, and deterministic heuristics—Goal Alignment, Discriminability, Imitation, Transparency, Pronounceability, and
+Robustness—weighted to the PLATO rubric. Primary flows stay under four clicks while diagnostics summarise threshold failures in
+one line. PLATO.md, PDF, JSON, and clipboard exports remain offline friendly, and base64 share URLs stay under 2KB via
+deterministic compression. LocalStorage persistence uses a dedicated namespace to avoid interfering with other launcher apps.
+- Add opt-in GitHub commit export once PAT wiring is complete.
+- Extend regression fixtures with endangered language datasets to keep heuristics explainable at scale.
+
 ## Cosmos Simulator
 Cosmos Simulator shrinks the solar system by 1×10⁻⁹ and renders it with Three.js, a velocity Verlet integrator, and lil-gui control panel. Planets load from JSON metadata, trails showcase orbital history, and buttons teleport the camera to any world for close-up inspections. Arrow keys orbit the scene, WASD pans, and Q/E or +/- dolly the camera while OrbitControls damping keeps motions smooth alongside mouse input.
 - Add moon and asteroid presets to extend the data-driven catalogue beyond the eight planets.
