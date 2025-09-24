@@ -15,3 +15,4 @@ Use this file to track commits, pushes, merges, and noteworthy design choices. E
 - 2025-10-18 — removal — Retired the Chessboard Summit experience and deleted associated assets, tests, and documentation.
 - 2025-10-20 — feature+docs — Added LangMath natural-language calculator with Pyodide evaluation, launcher wiring, and refreshed documentation.
 - 2025-10-24 — feature+docs — Added Relational Algebra Playground with RA operators, parser, SQL translator, CSV import, challenges, and documentation updates.
+- 2025-10-26 — feature+tests — Modularized the Snake app with a deterministic engine, requestAnimationFrame game loop, and new Jest coverage.
