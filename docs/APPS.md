@@ -42,6 +42,12 @@ Snake Game modernizes the classic grid chase with keyboard-friendly controls, re
 - Publish leaderboards and social sharing to encourage friendly competition.
 - Offer touch controls and haptic feedback for mobile and tablet players.
 
+## Snake 2.0
+Snake 2.0 reinvents the classic with an atmospheric canvas renderer, smooth lerped motion, and three art-directed themes (Neon Grid, Organic Garden, Minimal Elegance). The board now supports Classic, Zen, Survival, and Multiplayer modes with particle-rich growth pulses, looping wraps, combo multipliers, and optional audio cues powered by the Web Audio API. Edge-integrated HUD metrics, floating combo indicators, and animated death blooms make each run feel like a polished arcade vignette fit for casual flow or competitive duels.
+- Expose advanced tuning toggles for board size, speed curves, and hazard density so competitors can craft custom ladders.
+- Layer daily challenge seeds with curated theme/audio pairings and score leaderboards to encourage revisits.
+- Add online multiplayer with rollback-friendly prediction so remote duels keep the responsive feel of local play.
+
 ## Hexa-Snake (Bee Edition)
 Hexa-Snake drops players into a honeycomb arena where a cheerful bee chases nectar across a hexagonal grid. Momentum-based turns, buzzing audio cues, and sticky walls encourage thoughtful routing while staying approachable. The board scales responsively so the experience feels polished on desktop or handheld devices alike.
 - Add seasonal nectar types with different point values to deepen scoring variety.
