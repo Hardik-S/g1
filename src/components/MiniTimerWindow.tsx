@@ -14,7 +14,7 @@ type MiniTimerWindowProps = React.PropsWithChildren<{
 const DEFAULT_WIDTH = 360;
 const DEFAULT_HEIGHT = 520;
 const DEFAULT_FEATURES =
-  'toolbar=no,location=no,status=no,menubar=no,scrollbars=no,resizable=yes,noopener=yes';
+  'toolbar=no,location=no,status=no,menubar=no,scrollbars=no,resizable=yes';
 
 const MiniTimerWindow: React.FC<MiniTimerWindowProps> = ({
   children,
@@ -74,6 +74,8 @@ const MiniTimerWindow: React.FC<MiniTimerWindowProps> = ({
       setContainerEl(null);
       return () => undefined;
     }
+
+    popup.opener = null;
 
     let cancelled = false;
     const extDoc = popup.document;
