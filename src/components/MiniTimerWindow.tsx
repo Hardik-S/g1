@@ -23,7 +23,8 @@ const MiniTimerWindow: React.FC<MiniTimerWindowProps> = ({
   windowName = 'mini-timer',
   features,
   onClose,
-  onBlocked
+  onBlocked,
+  onOpen
 }) => {
   const [containerEl, setContainerEl] = useState<HTMLDivElement | null>(null);
   const styleObserverRef = useRef<MutationObserver | null>(null);

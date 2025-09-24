@@ -31,7 +31,7 @@ Quantum Playground invites curious learners to assemble drag-and-drop circuits o
 - Support exporting circuits to OpenQASM or JSON for sharing and importing beyond the playground.
 
 ## N-Pomodoro Timer
-N-Pomodoro Timer choreographs customizable work cycles within a cosmic interface. Users pick multi-activity presets, monitor progress through animated rings, and toggle configuration panels without losing context. Timers persist across states, enabling focused sprints, reflective breaks, and celebratory completions through ambient stars, all tailored to evolving productivity rituals and team rhythms.
+N-Pomodoro Timer choreographs customizable work cycles within a cosmic interface. Users pick multi-activity presets, monitor progress through animated rings, and toggle configuration panels without losing context. A pop-out mini timer mirrors the active session in its own window, staying in sync with the main dashboard and closing automatically when the ritual resets, so focused sprints, reflective breaks, and celebratory completions remain cohesive across surfaces.
 - Enable user-defined activity presets with saved profiles synchronized across devices.
 - Add analytics for completed cycles, streaks, and activity performance over time.
 - Integrate ambient audio cues and focus playlists aligned with each activity.
