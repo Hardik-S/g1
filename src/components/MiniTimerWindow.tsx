@@ -8,6 +8,7 @@ type MiniTimerWindowProps = React.PropsWithChildren<{
   features?: string;
   onClose?: () => void;
   onBlocked?: () => void;
+  onOpen?: (popup: Window) => void;
 }>;
 
 const DEFAULT_WIDTH = 360;
@@ -28,6 +29,7 @@ const MiniTimerWindow: React.FC<MiniTimerWindowProps> = ({
   const styleObserverRef = useRef<MutationObserver | null>(null);
   const onCloseRef = useRef(onClose);
   const onBlockedRef = useRef(onBlocked);
+  const onOpenRef = useRef(onOpen);
 
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -36,6 +38,10 @@ const MiniTimerWindow: React.FC<MiniTimerWindowProps> = ({
   useEffect(() => {
     onBlockedRef.current = onBlocked;
   }, [onBlocked]);
+
+  useEffect(() => {
+    onOpenRef.current = onOpen;
+  }, [onOpen]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -148,6 +154,7 @@ const MiniTimerWindow: React.FC<MiniTimerWindowProps> = ({
       syncStyleSheets();
 
       setContainerEl(portalHost);
+      onOpenRef.current?.(popup);
       popup.focus();
     };
 

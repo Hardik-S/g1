@@ -1,7 +1,57 @@
 import React from 'react';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+
+jest.mock('../../../components/MiniTimerWindow', () => {
+  const React = require('react');
+  const mockWindow = {
+    focus: jest.fn(),
+    closed: false
+  };
+
+  const MiniTimerWindowMock = (props) => {
+    const propsRef = React.useRef(props);
+    propsRef.current = props;
+
+    React.useEffect(() => {
+      MiniTimerWindowMock.propsRef = propsRef;
+      mockWindow.closed = false;
+      if (MiniTimerWindowMock.shouldBlock) {
+        propsRef.current.onBlocked?.();
+        return undefined;
+      }
+      propsRef.current.onOpen?.(mockWindow);
+      return () => {
+        MiniTimerWindowMock.propsRef = null;
+        propsRef.current.onClose?.();
+      };
+    }, []);
+
+    return <div data-testid="mock-mini-window">{props.children}</div>;
+  };
+
+  MiniTimerWindowMock.mockWindow = mockWindow;
+  MiniTimerWindowMock.propsRef = null;
+  MiniTimerWindowMock.shouldBlock = false;
+  MiniTimerWindowMock.close = () => {
+    mockWindow.closed = true;
+    MiniTimerWindowMock.propsRef?.current?.onClose?.();
+  };
+  MiniTimerWindowMock.block = () => {
+    MiniTimerWindowMock.propsRef?.current?.onBlocked?.();
+  };
+  MiniTimerWindowMock.reset = () => {
+    mockWindow.focus = jest.fn();
+    mockWindow.closed = false;
+    MiniTimerWindowMock.shouldBlock = false;
+    MiniTimerWindowMock.propsRef = null;
+  };
+
+  return { __esModule: true, default: MiniTimerWindowMock };
+});
+
 import NPomodoroApp from '../NPomodoroApp';
+import MiniTimerWindow from '../../../components/MiniTimerWindow';
 
 describe('NPomodoroApp interactions', () => {
   beforeEach(() => {
@@ -11,6 +61,7 @@ describe('NPomodoroApp interactions', () => {
       configurable: true,
       value: 1200
     });
+    MiniTimerWindow.reset();
   });
 
   it('toggles focus mode when the focus session button is used', async () => {
@@ -82,5 +133,41 @@ describe('NPomodoroApp interactions', () => {
       const updatedBlocks = within(updatedEditor).getAllByTestId('block-row');
       expect(updatedBlocks).toHaveLength(initialBlocks.length + 1);
     });
+  });
+
+  it('opens the mini timer window and focuses it on repeat clicks', async () => {
+    render(<NPomodoroApp />);
+    const user = userEvent.setup();
+
+    const popoutButton = screen.getByRole('button', { name: /mini timer window/i });
+    MiniTimerWindow.mockWindow.focus = jest.fn();
+
+    await user.click(popoutButton);
+    expect(screen.getByTestId('mock-mini-window')).toBeInTheDocument();
+    expect(popoutButton).toHaveAttribute('aria-pressed', 'true');
+
+    await user.click(popoutButton);
+    expect(MiniTimerWindow.mockWindow.focus).toHaveBeenCalledTimes(1);
+  });
+
+  it('resets the popout state when the mini window closes', async () => {
+    render(<NPomodoroApp />);
+    const user = userEvent.setup();
+
+    const popoutButton = screen.getByRole('button', { name: /mini timer window/i });
+
+    await user.click(popoutButton);
+    expect(popoutButton).toHaveAttribute('aria-pressed', 'true');
+
+    await act(async () => {
+      MiniTimerWindow.close();
+    });
+
+    await waitFor(() => {
+      expect(popoutButton).toHaveAttribute('aria-pressed', 'false');
+    });
+
+    await user.click(popoutButton);
+    expect(screen.getByTestId('mock-mini-window')).toBeInTheDocument();
   });
 });
