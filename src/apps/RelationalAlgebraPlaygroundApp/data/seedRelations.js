@@ -1,0 +1,98 @@
+export const seedRelations = [
+  {
+    name: 'Employee',
+    schema: [
+      { name: 'EmpID', type: 'int' },
+      { name: 'Name', type: 'string' },
+      { name: 'DeptID', type: 'int' },
+      { name: 'Salary', type: 'int' },
+    ],
+    rows: [
+      [101, 'Ava Patel', 1, 4200],
+      [102, 'Liam Chen', 2, 3900],
+      [103, 'Noah Williams', 3, 5200],
+      [104, 'Emma Garcia', 1, 4800],
+      [105, 'Olivia Brown', 2, 3100],
+      [106, 'Lucas Martin', 4, 4500],
+      [107, 'Sophia Rossi', 3, 6100],
+      [108, 'Ethan Davis', 4, 3600],
+      [109, 'Mia Fernández', 5, 3300],
+      [110, 'Henry Müller', 2, 2950],
+      [111, 'Zara Ahmed', 1, 3700],
+      [112, 'Mateo Silva', 5, 4050],
+    ],
+  },
+  {
+    name: 'Department',
+    schema: [
+      { name: 'DeptID', type: 'int' },
+      { name: 'DeptName', type: 'string' },
+    ],
+    rows: [
+      [1, 'Research'],
+      [2, 'Design'],
+      [3, 'Engineering'],
+      [4, 'Operations'],
+      [5, 'People'],
+      [6, 'Finance'],
+    ],
+  },
+  {
+    name: 'Project',
+    schema: [
+      { name: 'ProjID', type: 'int' },
+      { name: 'DeptID', type: 'int' },
+      { name: 'Title', type: 'string' },
+    ],
+    rows: [
+      [201, 1, 'Graph Engine Revamp'],
+      [202, 2, 'Brand Identity Refresh'],
+      [203, 2, 'Design System 3.0'],
+      [204, 3, 'Mobile App Rollout'],
+      [205, 3, 'Telemetry Pipeline'],
+      [206, 4, 'Logistics Automation'],
+      [207, 5, 'Hiring Roadshow'],
+      [208, 1, 'Knowledge Base'],
+      [209, 5, 'Wellness Initiative'],
+    ],
+  },
+  {
+    name: 'Assignment',
+    schema: [
+      { name: 'EmpID', type: 'int' },
+      { name: 'ProjID', type: 'int' },
+    ],
+    rows: [
+      [101, 201],
+      [101, 208],
+      [102, 202],
+      [102, 203],
+      [103, 204],
+      [103, 205],
+      [104, 201],
+      [104, 208],
+      [105, 202],
+      [106, 206],
+      [107, 201],
+      [107, 202],
+      [107, 203],
+      [107, 204],
+      [107, 205],
+      [107, 206],
+      [107, 207],
+      [107, 208],
+      [107, 209],
+      [108, 206],
+      [109, 207],
+      [109, 209],
+      [110, 203],
+      [111, 201],
+      [112, 207],
+      [112, 209],
+    ],
+  },
+];
+
+export function relationByName(name) {
+  return seedRelations.find((relation) => relation.name === name);
+}
