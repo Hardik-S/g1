@@ -396,10 +396,40 @@ const NPomodoroAppContent = () => {
     overallProgress,
     ritualMinutes,
     isPlannerExpanded,
-    setIsPlannerExpanded
+    setIsPlannerExpanded,
+    providerVersion
   } = timerState;
   const [isMiniTimerOpen, setIsMiniTimerOpen] = React.useState(false);
   const miniTimerWindowRef = React.useRef(null);
+  const providerVersionRef = React.useRef(providerVersion);
+
+  const closeMiniTimerWindow = React.useCallback(() => {
+    const popup = miniTimerWindowRef.current;
+    miniTimerWindowRef.current = null;
+    setIsMiniTimerOpen(false);
+    if (popup && !popup.closed) {
+      popup.close();
+    }
+  }, [setIsMiniTimerOpen]);
+
+  React.useEffect(
+    () => () => {
+      const popup = miniTimerWindowRef.current;
+      miniTimerWindowRef.current = null;
+      if (popup && !popup.closed) {
+        popup.close();
+      }
+    },
+    []
+  );
+
+  React.useEffect(() => {
+    if (providerVersionRef.current === providerVersion) {
+      return;
+    }
+    providerVersionRef.current = providerVersion;
+    closeMiniTimerWindow();
+  }, [providerVersion, closeMiniTimerWindow]);
 
   const handleMiniTimerButtonClick = React.useCallback(() => {
     const popup = miniTimerWindowRef.current;

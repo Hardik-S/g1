@@ -48,6 +48,7 @@ type TimelineSegment = {
 };
 
 type PomodoroTimerContextValue = {
+  providerVersion: number;
   sessions: PomodoroSession[];
   currentSessionIndex: number;
   currentBlockIndex: number;
@@ -188,6 +189,7 @@ export const PomodoroTimerProvider: React.FC<React.PropsWithChildren> = ({
   });
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+  const [providerVersion, setProviderVersion] = useState(0);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -701,6 +703,7 @@ export const PomodoroTimerProvider: React.FC<React.PropsWithChildren> = ({
     setIsComplete(false);
     setIsFocusMode(false);
     setEditingSessionId(null);
+    setProviderVersion((version) => version + 1);
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem(STORAGE_KEY);
     }
@@ -747,6 +750,7 @@ export const PomodoroTimerProvider: React.FC<React.PropsWithChildren> = ({
   ]);
 
   const contextValue: PomodoroTimerContextValue = {
+    providerVersion,
     sessions,
     currentSessionIndex,
     currentBlockIndex,
