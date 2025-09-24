@@ -38,6 +38,7 @@ Gif coming soon
 * **Cosmos Simulator**: orbit a scaled solar system with live Newtonian physics, camera fly-to controls, and keyboard navigation (arrows to orbit, WASD to pan, Q/E or +/- to dolly).
 * **LangMath**: convert natural-language arithmetic into validated expressions evaluated with Pyodide.
 * **Playlist Curator**: translate natural-language music prompts into relational algebra, visualize σ/π/⋈ plans, and inspect execution timelines.
+* **Relational Algebra Playground**: compose relational algebra pipelines with drag-and-drop blocks, step execution, SQL translation, CSV import, and guided challenges.
 
 #### Zen Do developer tips
 
@@ -74,6 +75,7 @@ Both commands are provided by the standard launcher scripts in `package.json`. �
 * [`AGENTS.md`](AGENTS.md): contribution workflow, checks, and conventions.
 * [`APPS.md`](APPS.md): catalog of bundled micro-apps with behavior notes.
 * [`GITSTORY.md`](GITSTORY.md): chronological log of commits, merges, and design decisions.
+* [`RelationalAlgebraPlayground.md`](RelationalAlgebraPlayground.md): quickstart, dataset format, and RA↔SQL reference for the playground.
 
 ---
 

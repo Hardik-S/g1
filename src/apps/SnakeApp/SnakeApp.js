@@ -1,241 +1,190 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import './SnakeApp.css';
+import { useSnakeGame, DIRECTIONS, GameStatus } from './game/useSnakeGame';
 
-const GRID_SIZE = 20;
-const INITIAL_SNAKE = [{ x: 10, y: 10 }];
-const INITIAL_FOOD = { x: 15, y: 15 };
-const INITIAL_DIRECTION = { x: 0, y: 0 };
-const GAME_SPEED = 150;
+const KEY_TO_DIRECTION = {
+  arrowup: DIRECTIONS.Up,
+  w: DIRECTIONS.Up,
+  arrowdown: DIRECTIONS.Down,
+  s: DIRECTIONS.Down,
+  arrowleft: DIRECTIONS.Left,
+  a: DIRECTIONS.Left,
+  arrowright: DIRECTIONS.Right,
+  d: DIRECTIONS.Right
+};
+
+const positionKey = (x, y) => `${x}-${y}`;
+
+const useHighScore = () => {
+  const [highScore, setHighScore] = useState(0);
+
+  useEffect(() => {
+    const savedHighScore = parseInt(localStorage.getItem('snakeHighScore') ?? '0', 10);
+    if (!Number.isNaN(savedHighScore)) {
+      setHighScore(savedHighScore);
+    }
+  }, []);
+
+  const updateHighScore = useCallback((score) => {
+    setHighScore((prev) => {
+      if (score > prev) {
+        localStorage.setItem('snakeHighScore', String(score));
+        return score;
+      }
+      return prev;
+    });
+  }, []);
+
+  return [highScore, updateHighScore];
+};
 
 const SnakeApp = ({ onBack }) => {
-  const [snake, setSnake] = useState(INITIAL_SNAKE);
-  const [food, setFood] = useState(INITIAL_FOOD);
-  const [direction, setDirection] = useState(INITIAL_DIRECTION);
-  const [gameOver, setGameOver] = useState(false);
-  const [score, setScore] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [highScore, setHighScore] = useState(0);
-  const [gameStarted, setGameStarted] = useState(false);
-  const gameLoopRef = useRef();
-  const directionRef = useRef(INITIAL_DIRECTION);
+  const { state, actions } = useSnakeGame({ gridSize: 20, stepMs: 110 });
+  const { snake, food, score, status, gameOverReason, gridSize, seed } = state;
+  const { setDirection, pause, resume, reset } = actions;
+  const [highScore, updateHighScore] = useHighScore();
 
-  // Load high score from localStorage
   useEffect(() => {
-    const savedHighScore = localStorage.getItem('snakeHighScore');
-    if (savedHighScore) {
-      setHighScore(parseInt(savedHighScore));
-    }
-  }, []);
+    updateHighScore(score);
+  }, [score, updateHighScore]);
 
-  // Generate random food position
-  const generateFood = useCallback(() => {
-    const newFood = {
-      x: Math.floor(Math.random() * GRID_SIZE),
-      y: Math.floor(Math.random() * GRID_SIZE)
-    };
-    return newFood;
-  }, []);
+  const handleReset = useCallback(() => {
+    const nextSeed = `${Date.now()}`;
+    reset({ seed: nextSeed });
+  }, [reset]);
 
-  // Check if position is occupied by snake
-  const isPositionOccupied = useCallback((pos, snakeBody) => {
-    return snakeBody.some(segment => segment.x === pos.x && segment.y === pos.y);
-  }, []);
-
-  // Generate new food that's not on snake
-  const generateNewFood = useCallback(() => {
-    let newFood;
-    do {
-      newFood = generateFood();
-    } while (isPositionOccupied(newFood, snake));
-    return newFood;
-  }, [snake, generateFood, isPositionOccupied]);
-
-  // Move snake
-  const moveSnake = useCallback(() => {
-    setSnake(prevSnake => {
-      const newSnake = [...prevSnake];
-      const head = { ...newSnake[0] };
-      
-      // Only move if direction is set
-      if (directionRef.current.x === 0 && directionRef.current.y === 0) {
-        return prevSnake;
+  const handleDirection = useCallback(
+    (direction) => {
+      if (!direction) {
+        return;
       }
-      
-      head.x += directionRef.current.x;
-      head.y += directionRef.current.y;
-
-      // Check wall collision
-      if (head.x < 0 || head.x >= GRID_SIZE || head.y < 0 || head.y >= GRID_SIZE) {
-        setGameOver(true);
-        setIsPlaying(false);
-        return prevSnake;
+      if (status === GameStatus.GameOver || status === GameStatus.Completed) {
+        return;
       }
+      setDirection(direction);
+    },
+    [setDirection, status]
+  );
 
-      // Check self collision (exclude head)
-      const body = newSnake.slice(1);
-      if (isPositionOccupied(head, body)) {
-        setGameOver(true);
-        setIsPlaying(false);
-        return prevSnake;
+  const handleKeyDown = useCallback(
+    (event) => {
+      const key = event.key.toLowerCase();
+      if (key === ' ') {
+        event.preventDefault();
+        if (status === GameStatus.Running) {
+          pause();
+        } else if (status === GameStatus.Paused) {
+          resume();
+        }
+        return;
       }
-
-      newSnake.unshift(head);
-
-      // Check food collision
-      if (head.x === food.x && head.y === food.y) {
-        setScore(prev => {
-          const newScore = prev + 1;
-          if (newScore > highScore) {
-            setHighScore(newScore);
-            localStorage.setItem('snakeHighScore', newScore.toString());
-          }
-          return newScore;
-        });
-        setFood(generateNewFood());
-      } else {
-        newSnake.pop();
+      const direction = KEY_TO_DIRECTION[key];
+      if (direction) {
+        event.preventDefault();
+        handleDirection(direction);
       }
+    },
+    [handleDirection, pause, resume, status]
+  );
 
-      return newSnake;
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
+
+  const snakeLookup = useMemo(() => {
+    const lookup = new Map();
+    snake.forEach((segment, index) => {
+      lookup.set(positionKey(segment.x, segment.y), index);
     });
-  }, [food, highScore, generateNewFood, isPositionOccupied]);
+    return lookup;
+  }, [snake]);
 
-  // Game loop
-  useEffect(() => {
-    if (isPlaying && !gameOver) {
-      gameLoopRef.current = setInterval(moveSnake, GAME_SPEED);
-    } else {
-      clearInterval(gameLoopRef.current);
-    }
-
-    return () => clearInterval(gameLoopRef.current);
-  }, [isPlaying, gameOver, moveSnake]);
-
-  // Handle keyboard input
-  useEffect(() => {
-    const handleKeyPress = (e) => {
-      const key = e.key.toLowerCase();
-      const newDirection = { ...directionRef.current };
-
-      // Start game on first key press
-      if (!gameStarted && !gameOver) {
-        setGameStarted(true);
-        setIsPlaying(true);
-      }
-
-      // Don't process input if game is over
-      if (gameOver) return;
-
-      switch (key) {
-        case 'arrowup':
-        case 'w':
-          if (directionRef.current.y !== 1) {
-            newDirection.x = 0;
-            newDirection.y = -1;
-          }
-          break;
-        case 'arrowdown':
-        case 's':
-          if (directionRef.current.y !== -1) {
-            newDirection.x = 0;
-            newDirection.y = 1;
-          }
-          break;
-        case 'arrowleft':
-        case 'a':
-          if (directionRef.current.x !== 1) {
-            newDirection.x = -1;
-            newDirection.y = 0;
-          }
-          break;
-        case 'arrowright':
-        case 'd':
-          if (directionRef.current.x !== -1) {
-            newDirection.x = 1;
-            newDirection.y = 0;
-          }
-          break;
-        default:
-          return;
-      }
-
-      directionRef.current = newDirection;
-      setDirection(newDirection);
-    };
-
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [gameStarted, gameOver]);
-
-  const resetGame = () => {
-    setSnake(INITIAL_SNAKE);
-    setFood(INITIAL_FOOD);
-    setDirection(INITIAL_DIRECTION);
-    directionRef.current = INITIAL_DIRECTION;
-    setGameOver(false);
-    setScore(0);
-    setIsPlaying(false);
-    setGameStarted(false);
-  };
-
-  const renderGrid = () => {
-    const grid = [];
-    for (let y = 0; y < GRID_SIZE; y++) {
-      for (let x = 0; x < GRID_SIZE; x++) {
-        const isSnake = snake.some(segment => segment.x === x && segment.y === y);
-        const isFood = food.x === x && food.y === y;
-        const isHead = snake[0].x === x && snake[0].y === y;
-
-        grid.push(
+  const gridCells = useMemo(() => {
+    const cells = [];
+    for (let y = 0; y < gridSize; y++) {
+      for (let x = 0; x < gridSize; x++) {
+        const key = positionKey(x, y);
+        const segmentIndex = snakeLookup.has(key) ? snakeLookup.get(key) : undefined;
+        const isSnake = segmentIndex !== undefined;
+        const isHead = segmentIndex === 0;
+        const isFood = food && food.x === x && food.y === y;
+        cells.push(
           <div
-            key={`${x}-${y}`}
+            key={key}
             className={`grid-cell ${isSnake ? 'snake' : ''} ${isFood ? 'food' : ''} ${isHead ? 'head' : ''}`}
-            style={{
-              gridColumn: x + 1,
-              gridRow: y + 1
-            }}
+            style={{ gridColumn: x + 1, gridRow: y + 1 }}
           />
         );
       }
     }
-    return grid;
-  };
+    return cells;
+  }, [gridSize, snakeLookup, food]);
+
+  const boardStyle = useMemo(
+    () => ({
+      gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
+      gridTemplateRows: `repeat(${gridSize}, 1fr)`
+    }),
+    [gridSize]
+  );
+
+  const gameStarted = status !== GameStatus.Idle;
+  const isGameOver = status === GameStatus.GameOver;
+  const isVictory = status === GameStatus.Completed;
+  const isPaused = status === GameStatus.Paused;
+  const isRunning = status === GameStatus.Running;
 
   return (
     <div className="snake-app">
       <div className="game-background">
         <div className="grid-pattern"></div>
       </div>
-      
+
       <div className="app-content">
         <header className="app-header">
           <div className="score-display">
             <div className="score">Score: {score}</div>
             <div className="high-score">High: {highScore}</div>
           </div>
+          <div className="meta">
+            <span className="meta-item">Seed: {seed}</span>
+            <span className={`meta-item status ${status}`}>{status.replace('_', ' ')}</span>
+          </div>
         </header>
 
         <div className="game-container">
           <div className="game-board">
-            <div className="grid-container">
-              {renderGrid()}
-            </div>
+            <div className="grid-container" style={boardStyle}>{gridCells}</div>
           </div>
 
           <div className="game-controls">
-            {!gameStarted && !gameOver && (
+            {!gameStarted && !isGameOver && !isVictory && (
               <div className="start-message">
                 <h3>Press any arrow key or WASD to start!</h3>
+                <p>Space toggles pause.</p>
               </div>
             )}
-            
-            {gameOver && (
-              <button className="control-btn resume-btn" onClick={resetGame}>
+
+            {(isGameOver || isVictory) && (
+              <button className="control-btn resume-btn" onClick={handleReset}>
                 🔄 Play Again
               </button>
             )}
-            
-            <button className="control-btn reset-btn" onClick={resetGame}>
+
+            {isRunning && (
+              <button className="control-btn pause-btn" onClick={pause}>
+                ⏸ Pause
+              </button>
+            )}
+
+            {isPaused && (
+              <button className="control-btn resume-btn" onClick={resume}>
+                ▶️ Resume
+              </button>
+            )}
+
+            <button className="control-btn reset-btn" onClick={handleReset}>
               🔄 Reset
             </button>
           </div>
@@ -249,16 +198,32 @@ const SnakeApp = ({ onBack }) => {
                 <div className="control-item">↓ S</div>
                 <div className="control-item">→ D</div>
               </div>
-              <p>Use WASD or Arrow Keys to control the snake</p>
+              <p>Use WASD or Arrow Keys to control the snake. Space toggles pause.</p>
             </div>
 
-            {gameOver && (
+            {isPaused && (
+              <div className="game-over">
+                <h2>Game Paused</h2>
+                <p>Take a breather, then resume when ready.</p>
+              </div>
+            )}
+
+            {isGameOver && (
               <div className="game-over">
                 <h2>Game Over!</h2>
                 <p>Final Score: {score}</p>
+                {gameOverReason === 'self' && <p>You ran into yourself — tight turns are risky!</p>}
+                {gameOverReason === 'wall' && <p>The arena walls are unforgiving. Plan ahead.</p>}
                 {score === highScore && score > 0 && (
                   <p className="new-high-score">🎉 New High Score!</p>
                 )}
+              </div>
+            )}
+
+            {isVictory && (
+              <div className="game-over">
+                <h2>Perfect Run!</h2>
+                <p>You filled the entire board. Legendary!</p>
               </div>
             )}
           </div>
