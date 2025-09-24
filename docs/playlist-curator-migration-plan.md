@@ -101,8 +101,8 @@ This plan outlines how to replace the mock playlist curator database with a Musi
 | Incremental sync conflicts | Medium | Use deterministic keys (MBID), track updated timestamps, and build idempotent upserts. |
 
 ## Deliverables Checklist
-- [ ] MusicBrainz export spec drafted and approved.
-- [ ] ETL prototype ingests initial dataset into staging.
+- [x] MusicBrainz export spec drafted and approved.
+- [x] ETL prototype ingests initial dataset into staging.
 - [ ] Database schema migrated and documented.
 - [ ] RA executor updated with provider abstraction and schema changes.
 - [ ] Frontend supports pagination, caching, and source toggling UI/flags.
