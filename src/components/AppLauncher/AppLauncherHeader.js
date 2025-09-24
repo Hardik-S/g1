@@ -66,6 +66,7 @@ const AppLauncherHeader = ({
           className={`admin-toggle ${isAdminView ? 'active' : ''}`}
           onClick={onToggleAdminView}
           aria-pressed={isAdminView}
+          aria-label={isAdminView ? 'Disable admin view' : 'Enable admin view'}
         >
           <span className="admin-toggle-icon" aria-hidden="true">🛠️</span>
           <span className="admin-toggle-label">Admin View: {isAdminView ? 'On' : 'Off'}</span>
