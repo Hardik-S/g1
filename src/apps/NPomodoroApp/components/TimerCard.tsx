@@ -50,8 +50,46 @@ const TimerCard: React.FC<TimerCardProps> = ({
   onSkipBackward,
   onSkipForward
 }) => {
-  const showQuickStats = variant !== 'mini';
-  const showCompletionBanner = variant !== 'mini' && isComplete;
+  const isMiniVariant = variant === 'mini';
+  const showPlannerControls = !isMiniVariant;
+  const showQuickStats = !isMiniVariant;
+  const showCompletionBanner = !isMiniVariant && isComplete;
+
+  const renderPrimaryControl = () => {
+    if (isRunning) {
+      return (
+        <button type="button" className="control-btn warning" onClick={onPause}>
+          ⏸ Pause
+        </button>
+      );
+    }
+
+    if (isPaused) {
+      return (
+        <button
+          type="button"
+          className="control-btn primary"
+          onClick={onStart}
+          disabled={controlsDisabled}
+        >
+          ▶ Resume
+        </button>
+      );
+    }
+
+    return (
+      <button
+        type="button"
+        className="control-btn primary"
+        onClick={onStart}
+        disabled={controlsDisabled}
+      >
+        ▶ Start
+      </button>
+    );
+  };
+
+  const primaryControl = renderPrimaryControl();
 
   return (
     <div
@@ -62,6 +100,9 @@ const TimerCard: React.FC<TimerCardProps> = ({
         <span className="session-label">{sessionLabel}</span>
         <h2>{sessionName}</h2>
         <p className="block-label">{blockLabel}</p>
+        {isMiniVariant && (
+          <p className="mini-block-duration">{currentBlockDurationLabel}</p>
+        )}
       </div>
 
       <div className="timer-visual">
@@ -111,50 +152,37 @@ const TimerCard: React.FC<TimerCardProps> = ({
       )}
 
       <div className="timer-controls">
-        <button
-          type="button"
-          className="control-btn ghost"
-          onClick={onSkipBackward}
-          disabled={controlsDisabled}
-        >
-          ⟲ Previous
-        </button>
-        {!isRunning && !isPaused && (
+        {showPlannerControls && (
           <button
             type="button"
-            className="control-btn primary"
-            onClick={onStart}
+            className="control-btn ghost"
+            onClick={onSkipBackward}
             disabled={controlsDisabled}
           >
-            ▶ Start
+            ⟲ Previous
           </button>
         )}
-        {isRunning && (
-          <button type="button" className="control-btn warning" onClick={onPause}>
-            ⏸ Pause
+        {primaryControl}
+        {showPlannerControls && (
+          <button
+            type="button"
+            className="control-btn ghost"
+            onClick={onReset}
+            disabled={controlsDisabled}
+          >
+            ⟲ Reset
           </button>
         )}
-        {isPaused && !isRunning && (
-          <button type="button" className="control-btn primary" onClick={onStart}>
-            ▶ Resume
+        {showPlannerControls && (
+          <button
+            type="button"
+            className="control-btn ghost"
+            onClick={onSkipForward}
+            disabled={controlsDisabled}
+          >
+            Next ⟳
           </button>
         )}
-        <button
-          type="button"
-          className="control-btn ghost"
-          onClick={onReset}
-          disabled={controlsDisabled}
-        >
-          ⟲ Reset
-        </button>
-        <button
-          type="button"
-          className="control-btn ghost"
-          onClick={onSkipForward}
-          disabled={controlsDisabled}
-        >
-          Next ⟳
-        </button>
       </div>
 
       {showCompletionBanner && (
