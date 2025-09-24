@@ -11,11 +11,6 @@ export const resolveAppLoader = (app) => {
     return app.loader;
   }
 
-  if (typeof app.importPath === 'string' && app.importPath.length > 0) {
-    const importPath = app.importPath;
-    return () => import(importPath);
-  }
-
   return null;
 };
 
