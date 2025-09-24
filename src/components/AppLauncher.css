@@ -514,6 +514,66 @@
   line-height: 1.5;
 }
 
+.landing-theme-selector {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.landing-theme-selector-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 10px;
+}
+
+.landing-theme-options {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.landing-theme-option {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(148, 163, 184, 0.1);
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 600;
+}
+
+.landing-theme-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.landing-theme-option span {
+  pointer-events: none;
+}
+
+.landing-theme-option:hover {
+  border-color: rgba(59, 130, 246, 0.5);
+  background: rgba(191, 219, 254, 0.3);
+}
+
+.landing-theme-option.selected {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.12);
+  color: #1d4ed8;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.landing-theme-toggle-btn {
+  align-self: flex-start;
+}
+
 .admin-app-list {
   display: flex;
   flex-direction: column;
@@ -1092,6 +1152,197 @@
   font-size: 1.5rem;
   margin-bottom: 10px;
   color: #333;
+}
+
+/* Light landing theme overrides */
+.app-launcher.mechanical-view.landing-theme-light {
+  background: linear-gradient(135deg, #f8fafc 0%, #dbeafe 100%);
+  color: #1e293b;
+}
+
+.app-launcher.mechanical-view.landing-theme-light::after {
+  background-image: linear-gradient(rgba(148, 163, 184, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.15) 1px, transparent 1px);
+  opacity: 0.6;
+}
+
+.app-launcher.mechanical-view.landing-theme-light .launcher-header {
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+}
+
+.app-launcher.mechanical-view.landing-theme-light .launcher-title,
+.app-launcher.mechanical-view.landing-theme-light .app-count {
+  color: #0f172a;
+}
+
+.app-launcher.mechanical-view.landing-theme-light .toronto-clock {
+  border: 2px solid rgba(59, 130, 246, 0.25);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: none;
+}
+
+.app-launcher.mechanical-view.landing-theme-light .clock-time {
+  color: #1d4ed8;
+  text-shadow: none;
+}
+
+.app-launcher.mechanical-view.landing-theme-light .search-input {
+  border: 2px solid #dbeafe;
+  background: rgba(255, 255, 255, 0.95);
+  color: #1f2933;
+  box-shadow: none;
+}
+
+.app-launcher.mechanical-view.landing-theme-light .search-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
+}
+
+.app-launcher.mechanical-view.landing-theme-light .search-icon {
+  color: #475569;
+}
+
+.app-launcher.mechanical-view.landing-theme-light .view-btn,
+.app-launcher.mechanical-view.landing-theme-light .random-launch-btn {
+  background: white;
+  border-color: #e2e8f0;
+  color: #1f2933;
+  box-shadow: none;
+}
+
+.app-launcher.mechanical-view.landing-theme-light .view-btn:hover,
+.app-launcher.mechanical-view.landing-theme-light .random-launch-btn:hover,
+.app-launcher.mechanical-view.landing-theme-light .random-launch-btn:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 6px 12px rgba(59, 130, 246, 0.2);
+}
+
+.app-launcher.mechanical-view.landing-theme-light .view-btn.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.app-launcher.mechanical-view.landing-theme-light .admin-toggle {
+  background: white;
+  border-color: #e2e8f0;
+  color: #1f2933;
+  box-shadow: none;
+}
+
+.app-launcher.mechanical-view.landing-theme-light .admin-toggle.active {
+  border-color: #3b82f6;
+  color: #1d4ed8;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
+}
+
+.app-launcher.mechanical-view.landing-theme-light .admin-toggle-switch {
+  background: #e2e8f0;
+  border: 1px solid #cbd5f5;
+}
+
+.app-launcher.mechanical-view.landing-theme-light .admin-toggle.active .admin-toggle-switch {
+  background: #bfdbfe;
+  border-color: #3b82f6;
+}
+
+.app-launcher.mechanical-view.landing-theme-light .mechanical-housing {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.95), rgba(226, 232, 240, 0.92));
+  border: 1px solid rgba(191, 219, 254, 0.75);
+  box-shadow: 0 22px 40px rgba(148, 163, 184, 0.35);
+}
+
+.app-launcher.mechanical-view.landing-theme-light .mechanical-frame {
+  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.5), transparent);
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.25);
+}
+
+.app-launcher.mechanical-view.landing-theme-light .favorites-section,
+.app-launcher.mechanical-view.landing-theme-light .featured-section {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.app-launcher.mechanical-view.landing-theme-light .section-title {
+  color: #1f2937;
+}
+
+.app-launcher.mechanical-view.landing-theme-light .section-toggle {
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: white;
+  color: #1f2937;
+  box-shadow: none;
+}
+
+.app-launcher.mechanical-view.landing-theme-light .section-toggle:hover,
+.app-launcher.mechanical-view.landing-theme-light .section-toggle:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.app-launcher.mechanical-view.landing-theme-light .favorites-empty-message {
+  border: 1px dashed rgba(59, 130, 246, 0.4);
+  background: rgba(191, 219, 254, 0.25);
+  color: #1d4ed8;
+}
+
+.app-launcher.mechanical-view.landing-theme-light .app-card {
+  background: white;
+  border-color: rgba(148, 163, 184, 0.35);
+  box-shadow: 0 18px 32px rgba(148, 163, 184, 0.2);
+  color: #1f2937;
+}
+
+.app-launcher.mechanical-view.landing-theme-light .app-card:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 24px 42px rgba(59, 130, 246, 0.25);
+}
+
+.app-launcher.mechanical-view.landing-theme-light .app-title {
+  color: #0f172a;
+}
+
+.app-launcher.mechanical-view.landing-theme-light .app-description {
+  color: #475569;
+}
+
+.app-launcher.mechanical-view.landing-theme-light .app-category {
+  background: rgba(191, 219, 254, 0.35);
+  color: #1d4ed8;
+  border: 1px solid rgba(59, 130, 246, 0.45);
+}
+
+.app-launcher.mechanical-view.landing-theme-light .app-version {
+  color: #64748b;
+}
+
+.app-launcher.mechanical-view.landing-theme-light .favorite-toggle {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.15);
+  color: #1d4ed8;
+  opacity: 1;
+}
+
+.app-launcher.mechanical-view.landing-theme-light .favorite-toggle:hover {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.18);
+}
+
+.app-launcher.mechanical-view.landing-theme-light .favorite-toggle.favorited {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.18);
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.app-launcher.mechanical-view.landing-theme-light .favorited-badge {
+  background: rgba(59, 130, 246, 0.18);
+  color: #1d4ed8;
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+.app-launcher.mechanical-view.landing-theme-light .no-apps {
+  color: #1f2937;
 }
 
 /* Responsive Design */
