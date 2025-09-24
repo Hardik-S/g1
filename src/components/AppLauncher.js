@@ -1,4 +1,9 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { APP_CATEGORIES, getAllApps } from '../apps/registry';
 import matchesAppQuery from '../apps/filtering';
@@ -17,6 +22,34 @@ const AppLauncher = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid');
   const [isFeaturedCollapsed, setIsFeaturedCollapsed] = useState(false);
+  const [isAdminView, setIsAdminView] = useState(false);
+
+  const hiddenAppsStorageKey = 'g1.hiddenApps';
+  const hiddenFeaturedStorageKey = 'g1.hiddenFeaturedApps';
+
+  const readStoredIds = useCallback((storageKey) => {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return [];
+    }
+
+    try {
+      const stored = window.localStorage.getItem(storageKey);
+      if (!stored) {
+        return [];
+      }
+
+      const parsed = JSON.parse(stored);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      console.warn(`Unable to parse stored data for ${storageKey}`, error);
+      return [];
+    }
+  }, []);
+
+  const [hiddenAppIds, setHiddenAppIds] = useState(() => readStoredIds(hiddenAppsStorageKey));
+  const [hiddenFeaturedAppIds, setHiddenFeaturedAppIds] = useState(
+    () => readStoredIds(hiddenFeaturedStorageKey)
+  );
 
   const torontoTime = useClock();
   const {
@@ -35,6 +68,31 @@ const AppLauncher = () => {
   } = useGistSettingsModal();
 
   const allApps = useMemo(() => getAllApps(), []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return;
+    }
+
+    window.localStorage.setItem(hiddenAppsStorageKey, JSON.stringify(hiddenAppIds));
+  }, [hiddenAppIds, hiddenAppsStorageKey]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return;
+    }
+
+    window.localStorage.setItem(
+      hiddenFeaturedStorageKey,
+      JSON.stringify(hiddenFeaturedAppIds)
+    );
+  }, [hiddenFeaturedAppIds, hiddenFeaturedStorageKey]);
+
+  const hiddenAppIdSet = useMemo(() => new Set(hiddenAppIds), [hiddenAppIds]);
+  const hiddenFeaturedIdSet = useMemo(
+    () => new Set(hiddenFeaturedAppIds),
+    [hiddenFeaturedAppIds]
+  );
 
   const categories = useMemo(() => {
     const categoriesFromApps = [];
@@ -83,12 +141,34 @@ const AppLauncher = () => {
           return 1;
         }
         return a.title.localeCompare(b.title);
-      });
-  }, [allApps, favoriteIds, filterOptions]);
+      })
+      .filter((app) => (isAdminView ? true : !hiddenAppIdSet.has(app.id)));
+  }, [
+    allApps,
+    favoriteIds,
+    filterOptions,
+    hiddenAppIdSet,
+    isAdminView,
+  ]);
 
-  const featuredApps = useMemo(() => allApps
-    .filter((app) => app.featured && !app.disabled)
-    .sort((a, b) => a.title.localeCompare(b.title)), [allApps]);
+  const featuredApps = useMemo(() => {
+    const baseFeatured = allApps
+      .filter((app) => app.featured && !app.disabled)
+      .sort((a, b) => a.title.localeCompare(b.title));
+
+    if (isAdminView) {
+      return baseFeatured;
+    }
+
+    return baseFeatured.filter(
+      (app) => !hiddenAppIdSet.has(app.id) && !hiddenFeaturedIdSet.has(app.id)
+    );
+  }, [
+    allApps,
+    hiddenAppIdSet,
+    hiddenFeaturedIdSet,
+    isAdminView,
+  ]);
 
   const handleAppClick = useCallback((app) => {
     if (!app || app.disabled) {
@@ -156,20 +236,38 @@ const AppLauncher = () => {
     );
   }, [handleAppClick, isFavorited, toggleFavorite, viewMode]);
 
-  return (
-    <div className="app-launcher">
-      <AppLauncherHeader
-        appCount={allApps.length}
-        onOpenSettings={openSettingsModal}
-        onRandomLaunch={handleRandomLaunch}
-        onSearchChange={(event) => setSearchQuery(event.target.value)}
-        onViewModeChange={setViewMode}
-        searchQuery={searchQuery}
-        settingsButtonRef={settingsButtonRef}
-        torontoTime={torontoTime}
-        viewMode={viewMode}
-      />
+  const handleToggleHiddenApp = useCallback((appId) => {
+    setHiddenAppIds((previous) => (
+      previous.includes(appId)
+        ? previous.filter((id) => id !== appId)
+        : [...previous, appId]
+    ));
+  }, []);
 
+  const handleToggleHiddenFeaturedApp = useCallback((appId) => {
+    setHiddenFeaturedAppIds((previous) => (
+      previous.includes(appId)
+        ? previous.filter((id) => id !== appId)
+        : [...previous, appId]
+    ));
+  }, []);
+
+  const favoriteAppsForView = useMemo(() => (
+    isAdminView
+      ? favoriteApps
+      : favoriteApps.filter((app) => !hiddenAppIdSet.has(app.id))
+  ), [favoriteApps, hiddenAppIdSet, isAdminView]);
+
+  const adminHiddenFavoritesCount = useMemo(() => {
+    if (isAdminView) {
+      return 0;
+    }
+
+    return favoriteApps.filter((app) => hiddenAppIdSet.has(app.id)).length;
+  }, [favoriteApps, hiddenAppIdSet, isAdminView]);
+
+  const renderAdminPanel = () => (
+    <div className="launcher-content admin-content">
       {gistSettingsStatus.type && (
         <div
           className={`gist-status-banner ${gistSettingsStatus.type}`}
@@ -183,61 +281,72 @@ const AppLauncher = () => {
         </div>
       )}
 
-      <div className="launcher-content">
-        <CategoryNav
-          categories={categories}
-          onSelectCategory={setSelectedCategory}
-          selectedCategory={selectedCategory}
-        />
+      <section className="admin-panel">
+        <div className="admin-panel-header">
+          <h2>Admin Controls</h2>
+          <p>Manage visibility and integrations for the public launcher.</p>
+        </div>
 
-        <FavoritesSection
-          favoriteApps={favoriteApps}
-          hasFavoriteIds={favoriteIds.length > 0}
-          hasHiddenFavoritesInCategory={hasHiddenFavoritesInCategory}
-          renderAppCard={renderAppCard}
-          viewMode={viewMode}
-        />
+        <div className="admin-panel-grid">
+          <div className="admin-panel-card">
+            <h3>App Visibility</h3>
+            <p className="admin-panel-description">
+              Toggle whether each app appears in the regular mechanical launcher view or the featured belt.
+            </p>
+            <div className="admin-app-list">
+              {allApps.map((app) => {
+                const hiddenFromLauncher = hiddenAppIdSet.has(app.id);
+                const hiddenFromFeatured = hiddenFeaturedIdSet.has(app.id);
 
-        {selectedCategory === 'All' && featuredApps.length > 0 && (
-          <section
-            className={`featured-section${isFeaturedCollapsed ? ' collapsed' : ''}`}
-          >
-            <div className="section-header">
-              <h2 className="section-title">⭐ Featured Apps</h2>
-              <button
-                type="button"
-                className="section-toggle"
-                aria-expanded={!isFeaturedCollapsed}
-                onClick={toggleFeaturedSection}
-              >
-                {isFeaturedCollapsed ? 'Show' : 'Hide'}
-              </button>
+                return (
+                  <div key={app.id} className="admin-app-row">
+                    <div className="admin-app-summary">
+                      <span className="admin-app-icon" aria-hidden="true">{app.icon}</span>
+                      <div>
+                        <h4>{app.title}</h4>
+                        <p>{app.description}</p>
+                      </div>
+                    </div>
+                    <div className="admin-app-toggles">
+                      <label className="admin-toggle-option">
+                        <input
+                          type="checkbox"
+                          checked={hiddenFromLauncher}
+                          onChange={() => handleToggleHiddenApp(app.id)}
+                        />
+                        Hide from launcher
+                      </label>
+                      <label className="admin-toggle-option">
+                        <input
+                          type="checkbox"
+                          checked={hiddenFromFeatured}
+                          onChange={() => handleToggleHiddenFeaturedApp(app.id)}
+                        />
+                        Hide from featured
+                      </label>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            <div className={`apps-container ${viewMode}`}>
-              {!isFeaturedCollapsed && featuredApps.map(renderAppCard)}
-            </div>
-          </section>
-        )}
+          </div>
 
-        <section className="apps-section">
-          <h2 className="section-title">
-            {selectedCategory === 'All' ? 'All Apps' : `${selectedCategory} Apps`}
-            <span className="app-count">({filteredApps.length})</span>
-          </h2>
-
-          {filteredApps.length === 0 ? (
-            <div className="no-apps">
-              <div className="no-apps-icon">🔍</div>
-              <h3>No apps found</h3>
-              <p>Try adjusting your search or category filter</p>
-            </div>
-          ) : (
-            <div className={`apps-container ${viewMode}`}>
-              {filteredApps.map(renderAppCard)}
-            </div>
-          )}
-        </section>
-      </div>
+          <div className="admin-panel-card">
+            <h3>Gist Sync</h3>
+            <p className="admin-panel-description">
+              Configure the shared GitHub Gist connection that certain apps rely on for state.
+            </p>
+            <button
+              type="button"
+              className="admin-action-btn"
+              onClick={openSettingsModal}
+              ref={settingsButtonRef}
+            >
+              Configure gist settings
+            </button>
+          </div>
+        </div>
+      </section>
 
       <GistSettingsModal
         cancelButtonRef={cancelButtonRef}
@@ -250,6 +359,89 @@ const AppLauncher = () => {
         onSubmit={handleSaveSettings}
         saveButtonRef={saveButtonRef}
       />
+    </div>
+  );
+
+  const renderMechanicalView = () => (
+    <div className="launcher-content mechanical-content">
+      <div className="mechanical-housing">
+        <div className="mechanical-frame" aria-hidden="true" />
+        <div className="mechanical-frame mechanical-frame-bottom" aria-hidden="true" />
+        <div className="mechanical-core">
+          <CategoryNav
+            categories={categories}
+            onSelectCategory={setSelectedCategory}
+            selectedCategory={selectedCategory}
+          />
+
+          <FavoritesSection
+            adminHiddenFavoritesCount={adminHiddenFavoritesCount}
+            favoriteApps={favoriteAppsForView}
+            hasFavoriteIds={favoriteIds.length > 0}
+            hasHiddenFavoritesInCategory={hasHiddenFavoritesInCategory}
+            renderAppCard={renderAppCard}
+            viewMode={viewMode}
+          />
+
+          {selectedCategory === 'All' && featuredApps.length > 0 && (
+            <section
+              className={`featured-section${isFeaturedCollapsed ? ' collapsed' : ''}`}
+            >
+              <div className="section-header">
+                <h2 className="section-title">⭐ Featured Apps</h2>
+                <button
+                  type="button"
+                  className="section-toggle"
+                  aria-expanded={!isFeaturedCollapsed}
+                  onClick={toggleFeaturedSection}
+                >
+                  {isFeaturedCollapsed ? 'Show' : 'Hide'}
+                </button>
+              </div>
+              <div className={`apps-container ${viewMode}`}>
+                {!isFeaturedCollapsed && featuredApps.map(renderAppCard)}
+              </div>
+            </section>
+          )}
+
+          <section className="apps-section">
+            <h2 className="section-title">
+              {selectedCategory === 'All' ? 'All Apps' : `${selectedCategory} Apps`}
+              <span className="app-count">({filteredApps.length})</span>
+            </h2>
+
+            {filteredApps.length === 0 ? (
+              <div className="no-apps">
+                <div className="no-apps-icon">🔍</div>
+                <h3>No apps found</h3>
+                <p>Try adjusting your search or category filter</p>
+              </div>
+            ) : (
+              <div className={`apps-container ${viewMode}`}>
+                {filteredApps.map(renderAppCard)}
+              </div>
+            )}
+          </section>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className={`app-launcher ${isAdminView ? 'admin-view' : 'mechanical-view'}`}>
+      <AppLauncherHeader
+        appCount={allApps.length}
+        isAdminView={isAdminView}
+        onRandomLaunch={handleRandomLaunch}
+        onSearchChange={(event) => setSearchQuery(event.target.value)}
+        onToggleAdminView={() => setIsAdminView((previous) => !previous)}
+        onViewModeChange={setViewMode}
+        searchQuery={searchQuery}
+        torontoTime={torontoTime}
+        viewMode={viewMode}
+      />
+
+      {isAdminView ? renderAdminPanel() : renderMechanicalView()}
     </div>
   );
 };

@@ -2,12 +2,12 @@ import React from 'react';
 
 const AppLauncherHeader = ({
   appCount,
-  onOpenSettings,
+  isAdminView,
   onRandomLaunch,
   onSearchChange,
   onViewModeChange,
+  onToggleAdminView,
   searchQuery,
-  settingsButtonRef,
   torontoTime,
   viewMode,
 }) => (
@@ -63,12 +63,15 @@ const AppLauncherHeader = ({
         </div>
         <button
           type="button"
-          className="settings-btn"
-          onClick={onOpenSettings}
-          ref={settingsButtonRef}
+          className={`admin-toggle ${isAdminView ? 'active' : ''}`}
+          onClick={onToggleAdminView}
+          aria-pressed={isAdminView}
         >
-          <span aria-hidden="true">⚙️</span>
-          <span className="settings-btn-label">Settings</span>
+          <span className="admin-toggle-icon" aria-hidden="true">🛠️</span>
+          <span className="admin-toggle-label">Admin View: {isAdminView ? 'On' : 'Off'}</span>
+          <span className="admin-toggle-switch" aria-hidden="true">
+            <span className="admin-toggle-knob" />
+          </span>
         </button>
       </div>
     </div>
