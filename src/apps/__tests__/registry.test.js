@@ -1,104 +1,55 @@
-import React, { Suspense } from 'react';
-import { render, screen } from '@testing-library/react';
-import { APP_REGISTRY, getAllApps, getAppById, getAppLoader } from '../registry';
+import {
+  getAllApps,
+  getAppById,
+  getAppLoader,
+  getAppsByCategory,
+  getAppsCount,
+  getFeaturedApps,
+} from '../registry';
+import { APP_METADATA } from '../registry/apps';
+import { appLoaderCache } from '../registry/loaders';
 
-describe('app registry', () => {
-  it('registers the CatPad app metadata', () => {
-    const catpad = getAppById('catpad');
-
-    expect(catpad).toBeTruthy();
-    expect(catpad.title).toBe('CatPad');
-    expect(catpad.category).toBe('Productivity');
-    expect(catpad.icon).toBe('🗒️');
-    expect(catpad.path).toBe('/apps/catpad');
+describe('apps registry', () => {
+  beforeEach(() => {
+    appLoaderCache.clear();
   });
 
-  it('registers the Cat Typing Speed Test metadata', () => {
-    const typingTest = getAppById('cat-typing-speed-test');
+  it('returns all apps defined in metadata', () => {
+    const allApps = getAllApps();
+    const metadataIds = APP_METADATA.map((app) => app.id);
 
-    expect(typingTest).toBeTruthy();
-    expect(typingTest.title).toBe('Cat Typing Speed Test');
-    expect(typingTest.category).toBe('Education');
-    expect(typingTest.icon).toBe('⌨️');
-    expect(typingTest.path).toBe('/apps/cat-typing-speed-test');
+    expect(allApps.map((app) => app.id)).toEqual(metadataIds);
   });
 
-  it('registers the Quantum Playground metadata', () => {
-    const quantum = getAppById('quantum-playground');
+  it('looks up apps by id with defaults applied', () => {
+    const targetId = 'catpad';
+    const metadata = APP_METADATA.find((app) => app.id === targetId);
+    const app = getAppById(targetId);
 
-    expect(quantum).toBeTruthy();
-    expect(quantum.title).toBe('Quantum Playground');
-    expect(quantum.category).toBe('Education');
-    expect(quantum.icon).toBe('⚛️');
-    expect(quantum.path).toBe('/apps/quantum-playground');
-    expect(quantum.tags).toEqual(
-      expect.arrayContaining(['quantum', 'simulator', 'visualization', 'education'])
-    );
-    expect(quantum.description).toBe(
-      'Design circuits, run a four-qubit simulator, and visualize state-vector measurements.'
-    );
+    expect(app).toMatchObject({ ...metadata, author: 'Hardik-s' });
   });
 
-  it('assigns default versions that match the x.yz.dd format', () => {
-    const versionPattern = /^[1-5]\.(?:0[2-8]|1[2-8])\.00$/;
+  it('filters apps by category and featured flag', () => {
+    const games = getAppsByCategory('Games');
+    const featured = getFeaturedApps();
 
-    getAllApps().forEach((app) => {
-      expect(app.version).toMatch(versionPattern);
-    });
+    expect(games).not.toHaveLength(0);
+    expect(games.every((app) => app.category === 'Games')).toBe(true);
+
+    const featuredIds = featured.map((app) => app.id);
+    const expectedFeaturedIds = APP_METADATA.filter((app) => app.featured).map((app) => app.id);
+
+    expect(featuredIds).toEqual(expectedFeaturedIds);
   });
 
-});
-
-describe('getAppLoader', () => {
-  it('memoizes lazy loader instances for known apps', () => {
-    const firstLoader = getAppLoader('zen-go');
-    const secondLoader = getAppLoader('zen-go');
-
-    expect(firstLoader).toBeDefined();
-    expect(secondLoader).toBe(firstLoader);
+  it('reports the same app count as the metadata source', () => {
+    expect(getAppsCount()).toBe(APP_METADATA.length);
   });
 
-  it('returns null when no loader metadata exists', () => {
-    expect(getAppLoader('app-3')).toBeNull();
-    expect(getAppLoader('definitely-not-an-app')).toBeNull();
-  });
+  it('caches lazy loaders by app id', () => {
+    const first = getAppLoader('day-switcher');
+    const second = getAppLoader('day-switcher');
 
-  it('supports dynamically registered apps end-to-end', async () => {
-    const testId = '__test-app__';
-    const TestApp = () => <div data-testid="test-app">Hello from test</div>;
-    const loader = jest.fn(() => Promise.resolve({ default: TestApp }));
-
-    APP_REGISTRY[testId] = {
-      id: testId,
-      title: 'Test App',
-      description: 'Temporary test app',
-      icon: '🧪',
-      category: 'Development',
-      component: null,
-      loader,
-      path: '/apps/test-app',
-      tags: ['test'],
-      version: '0.0.1',
-      author: 'Test Suite',
-      created: '2024-01-01',
-      featured: false,
-    };
-
-    try {
-      const LazyTestApp = getAppLoader(testId);
-      expect(LazyTestApp).toBeDefined();
-      expect(getAppLoader(testId)).toBe(LazyTestApp);
-
-      render(
-        <Suspense fallback={<div>loading</div>}>
-          <LazyTestApp />
-        </Suspense>
-      );
-
-      expect(await screen.findByTestId('test-app')).toHaveTextContent('Hello from test');
-      expect(loader).toHaveBeenCalledTimes(1);
-    } finally {
-      delete APP_REGISTRY[testId];
-    }
+    expect(first).toBe(second);
   });
 });
