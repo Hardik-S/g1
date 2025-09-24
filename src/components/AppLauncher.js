@@ -11,6 +11,7 @@ import AppLauncherHeader from './AppLauncher/AppLauncherHeader';
 import CategoryNav from './AppLauncher/CategoryNav';
 import FavoritesSection from './AppLauncher/FavoritesSection';
 import GistSettingsModal from './AppLauncher/GistSettingsModal';
+import AdminLandingThemeCard from './AppLauncher/admin/AdminLandingThemeCard';
 import useClock from './AppLauncher/hooks/useClock';
 import useFavorites from './AppLauncher/hooks/useFavorites';
 import useGistSettingsModal from './AppLauncher/hooks/useGistSettingsModal';
@@ -18,14 +19,23 @@ import './AppLauncher.css';
 
 const AppLauncher = () => {
   const navigate = useNavigate();
+  const hiddenAppsStorageKey = 'g1.hiddenApps';
+  const hiddenFeaturedStorageKey = 'g1.hiddenFeaturedApps';
+  const landingThemeStorageKey = 'g1.landingTheme';
+
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid');
   const [isFeaturedCollapsed, setIsFeaturedCollapsed] = useState(false);
   const [isAdminView, setIsAdminView] = useState(false);
+  const [landingTheme, setLandingTheme] = useState(() => {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return 'dark';
+    }
 
-  const hiddenAppsStorageKey = 'g1.hiddenApps';
-  const hiddenFeaturedStorageKey = 'g1.hiddenFeaturedApps';
+    const stored = window.localStorage.getItem(landingThemeStorageKey);
+    return stored === 'light' ? 'light' : 'dark';
+  });
 
   const readStoredIds = useCallback((storageKey) => {
     if (typeof window === 'undefined' || !window.localStorage) {
@@ -87,6 +97,14 @@ const AppLauncher = () => {
       JSON.stringify(hiddenFeaturedAppIds)
     );
   }, [hiddenFeaturedAppIds, hiddenFeaturedStorageKey]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return;
+    }
+
+    window.localStorage.setItem(landingThemeStorageKey, landingTheme);
+  }, [landingTheme, landingThemeStorageKey]);
 
   const hiddenAppIdSet = useMemo(() => new Set(hiddenAppIds), [hiddenAppIds]);
   const hiddenFeaturedIdSet = useMemo(
@@ -266,6 +284,14 @@ const AppLauncher = () => {
     return favoriteApps.filter((app) => hiddenAppIdSet.has(app.id)).length;
   }, [favoriteApps, hiddenAppIdSet, isAdminView]);
 
+  const handleSelectLandingTheme = useCallback((nextTheme) => {
+    setLandingTheme(nextTheme === 'light' ? 'light' : 'dark');
+  }, []);
+
+  const toggleLandingTheme = useCallback(() => {
+    setLandingTheme((current) => (current === 'dark' ? 'light' : 'dark'));
+  }, []);
+
   const renderAdminPanel = () => (
     <div className="launcher-content admin-content">
       {gistSettingsStatus.type && (
@@ -330,6 +356,12 @@ const AppLauncher = () => {
               })}
             </div>
           </div>
+
+          <AdminLandingThemeCard
+            landingTheme={landingTheme}
+            onSelectTheme={handleSelectLandingTheme}
+            onToggleTheme={toggleLandingTheme}
+          />
 
           <div className="admin-panel-card">
             <h3>Gist Sync</h3>
@@ -427,8 +459,11 @@ const AppLauncher = () => {
     </div>
   );
 
+  const launcherModeClass = isAdminView ? 'admin-view' : 'mechanical-view';
+  const landingThemeClass = !isAdminView ? `landing-theme-${landingTheme}` : '';
+
   return (
-    <div className={`app-launcher ${isAdminView ? 'admin-view' : 'mechanical-view'}`}>
+    <div className={`app-launcher ${launcherModeClass} ${landingThemeClass}`.trim()}>
       <AppLauncherHeader
         appCount={allApps.length}
         isAdminView={isAdminView}
