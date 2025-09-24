@@ -26,6 +26,6 @@ describe('playlist curator parser', () => {
     const result = parseQuery(query);
     expectOk(result, query);
     const titles = result.result.rows.map((row) => row.values.title);
-    expect(titles).not.toContain('Acoustic Dawn');
+    expect(titles).not.toContain('Ogbaje Acoustic');
   });
 });

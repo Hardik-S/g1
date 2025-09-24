@@ -10,6 +10,10 @@ export const RELATIONS = {
       'energy',
       'bpm',
       'isDuet',
+      'source',
+      'releaseId',
+      'releaseTitle',
+      'coverArtUrl',
     ],
   },
   Artists: {
@@ -46,10 +50,17 @@ export const RELATIONS = {
       'year',
       'energy',
       'bpm',
+      'source',
+      'releaseTitle',
+      'coverArtUrl',
       'moods',
       'activities',
       'likedBy',
     ],
+  },
+  Releases: {
+    name: 'Releases',
+    columns: ['releaseId', 'title', 'year', 'coverArtUrl'],
   },
 };
 
