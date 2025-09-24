@@ -16,7 +16,10 @@
     "lint:fix": "eslint \"src/**/*.{js,jsx}\" --fix",
     "deploy": "gh-pages -d dist",
     "test:cache-lab": "pnpm --filter cache-lab test",
-    "e2e:cache-lab": "pnpm --filter cache-lab exec playwright test"
+    "e2e:cache-lab": "pnpm --filter cache-lab exec playwright test",
+    "etymosphere:dev": "npm --prefix apps/etymosphere run dev",
+    "etymosphere:build": "npm --prefix apps/etymosphere run build",
+    "etymosphere:test": "npm --prefix apps/etymosphere run test:run"
   },
   "homepage": "https://hardik-s.github.io/g1",
   "dependencies": {
