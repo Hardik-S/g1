@@ -90,3 +90,7 @@ same sequence covered by the automated acceptance test.
 - Optional PAT (off by default): `localStorage['namecraft::gh-pat']`
 
 Clear storage from the sidebar, or run `localStorage.removeItem('namecraft::rooms')` from the console.
+
+## Bonus experiences
+
+- **Snake 2.0** — A canvas-powered creative redesign of the classic snake, complete with Neon Grid, Organic Garden, and Minimal Elegance themes, Classic/Zen/Survival/Multiplayer modes, combo multipliers, and floating HUD overlays. Launch it from the g1 grid under 🌀 Snake 2.0 (`#/apps/snake-2`).
