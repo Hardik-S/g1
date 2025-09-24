@@ -18,3 +18,4 @@ Use this file to track commits, pushes, merges, and noteworthy design choices. E
 - 2025-10-26 — feature+docs — Introduced Playlist Curator with rule-based NL→RA planner, mock dataset, launcher integration, and documentation/tests.
 - 2025-10-24 — feature+docs — Added Relational Algebra Playground with RA operators, parser, SQL translator, CSV import, challenges, and documentation updates.
 - 2025-10-26 — feature+tests — Modularized the Snake app with a deterministic engine, requestAnimationFrame game loop, and new Jest coverage.
+- 2025-10-27 — feature+docs — Migrated Playlist Curator schema to MusicBrainz IDs, added sources/genre relations, seeded wide view refresh, and documented the SQL migration.
