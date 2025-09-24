@@ -1,17 +1,19 @@
 (function (globalScope, factory) {
-  const existing = factory();
+  const existing = factory(globalScope);
 
   if (typeof module === 'object' && typeof module.exports === 'object') {
     module.exports = existing;
     module.exports.default = existing;
-  } else if (typeof define === 'function' && define.amd) {
-    define([], function () {
+  } else if (typeof globalScope.define === 'function' && globalScope.define.amd) {
+    globalScope.define([], function () {
       return existing;
     });
   } else {
     globalScope.ZenGoTensorflow = existing;
   }
-})(typeof globalThis !== 'undefined' ? globalThis : typeof self !== 'undefined' ? self : this, function () {
+})(
+  typeof globalThis !== 'undefined' ? globalThis : typeof self !== 'undefined' ? self : this,
+  function (globalScope) {
   'use strict';
 
   const DEFAULT_MODEL_SOURCES = Object.freeze({

@@ -51,7 +51,7 @@ function tokenise(condition) {
     if (/[0-9]/.test(char)) {
       let buffer = char;
       index += 1;
-      while (index < length && /[0-9\.]/.test(source[index])) {
+      while (index < length && /[0-9.]/.test(source[index])) {
         buffer += source[index];
         index += 1;
       }
@@ -85,10 +85,27 @@ function tokenise(condition) {
       index += keywordMatch[0].length;
       continue;
     }
-    const identifierMatch = /^[A-Za-z_][A-Za-z0-9_\.\[\]]*/.exec(source.slice(index));
-    if (identifierMatch) {
-      pushToken('identifier', identifierMatch[0]);
-      index += identifierMatch[0].length;
+    if (/[A-Za-z_]/.test(char)) {
+      let buffer = char;
+      index += 1;
+      while (index < length) {
+        const next = source[index];
+        if (
+          (next >= 'A' && next <= 'Z') ||
+          (next >= 'a' && next <= 'z') ||
+          (next >= '0' && next <= '9') ||
+          next === '_' ||
+          next === '.' ||
+          next === '[' ||
+          next === ']'
+        ) {
+          buffer += next;
+          index += 1;
+          continue;
+        }
+        break;
+      }
+      pushToken('identifier', buffer);
       continue;
     }
     throw new Error(`Unexpected token near "${source.slice(index, index + 10)}"`);
