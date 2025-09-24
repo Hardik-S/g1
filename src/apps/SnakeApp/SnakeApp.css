@@ -86,6 +86,44 @@
   color: #4caf50;
 }
 
+.meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+}
+
+.meta-item {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.meta-item.status {
+  font-weight: 700;
+}
+
+.meta-item.status.idle {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.meta-item.status.running {
+  color: #4caf50;
+}
+
+.meta-item.status.paused {
+  color: #ff9800;
+}
+
+.meta-item.status.game_over {
+  color: #f44336;
+}
+
+.meta-item.status.completed {
+  color: #00bcd4;
+}
+
 .game-container {
   flex: 1;
   display: flex;

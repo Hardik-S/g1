@@ -105,6 +105,18 @@ LangMath converts short natural-language math prompts into validated arithmetic 
 - Offer inline hints when parsing fails, suggesting supported operator phrasing.
 - Cache the Pyodide runtime between sessions to shorten subsequent cold starts.
 
+## Playlist Curator
+Playlist Curator teaches relational algebra by turning natural-language music requests into a deterministic operator plan. A rules-based parser highlights detected entities in real time, renders σ/π/⋈ expressions, and streams executor steps with intermediate table previews so learners can trace how each filter, set operation, or join transforms the dataset.
+- Add KaTeX rendering for math-perfect operator glyphs and subscripts.
+- Expand the lexicon with more genres, moods, and pattern coverage beyond the initial 10 curated prompts.
+- Layer provenance highlighting that shades result rows based on contributing intermediate tuples.
+
+## Relational Algebra Playground
+Relational Algebra Playground visualises classic operators as draggable blocks, Unicode/ASCII expression parsing, and SQL translation for each pipeline node. Learners can preview intermediate tables with row/column highlights, inspect set-operation venn summaries, toggle dark mode, and copy SQL, JSON, or SVG snapshots for sharing.
+- Expand support for outer joins, aggregation, and `θ`-joins to cover advanced coursework scenarios.
+- Add collaborative mode so instructors can distribute starter pipelines and review submissions in real time.
+- Layer in Venn-area quantification for every set operator and animated explanations for division proofs.
+
 ## Cache Lab
 Cache Lab embeds the dedicated cache-learning subapp that lives under `/cache-lab`. Eight mini-modules cover mapping, replacement, parameter sweeps, locality visualisation, miss classification, hierarchy exploration, pipeline impact, and trace loading. Auxiliary tabs (Learn, Experiment, Assess, Dashboard) guide newcomers, let advanced users tinker, and track quiz progress with localStorage persistence.
 - Ship more visualisations (e.g., animated heatmaps) for large traces while maintaining performance.
