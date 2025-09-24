@@ -76,10 +76,10 @@ const GardenScene = ({ priority = [], bonus = [] }) => {
       <div className="zen-garden-scene__layer zen-garden-scene__layer--path" aria-hidden="true" />
 
       {hasBonus && (
-        <section className="zen-garden-path" aria-label="Bonus blooms">
+        <section className="zen-garden-path" aria-label="Wildflower trail">
           <h2 className="zen-garden-path__title">
-            Bonus Blooms
-            <span className="zen-garden-path__count" aria-label={`${bonus.length} bonus tasks`}>
+            Bonus Wildflowers
+            <span className="zen-garden-path__count" aria-label={`${bonus.length} bonus wildflowers`}>
               {bonus.length}
             </span>
           </h2>
@@ -91,10 +91,10 @@ const GardenScene = ({ priority = [], bonus = [] }) => {
 
       <div className="zen-garden-scene__content">
         {hasPriority && (
-          <section className="zen-garden-cluster zen-garden-cluster--priority" aria-label="Priority grove">
+          <section className="zen-garden-cluster zen-garden-cluster--priority" aria-label="Priority canopy">
             <header className="zen-garden-cluster-header">
-              <h2>Priority Grove</h2>
-              <span className="zen-garden-cluster-count" aria-label={`${priority.length} priority tasks`}>
+              <h2>Priority Canopy</h2>
+              <span className="zen-garden-cluster-count" aria-label={`${priority.length} priority trees`}>
                 {priority.length}
               </span>
             </header>
@@ -105,7 +105,7 @@ const GardenScene = ({ priority = [], bonus = [] }) => {
 
         {!hasAny && (
           <div className="zen-garden-scene-empty" role="status">
-            <p>Assign tasks to the Priority or Bonus focus lists to watch seedlings sprout here.</p>
+            <p>Assign focus tasks to cultivate the canopy and light up the wildflower trail.</p>
           </div>
         )}
       </div>

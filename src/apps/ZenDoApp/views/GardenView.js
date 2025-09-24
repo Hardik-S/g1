@@ -5,13 +5,13 @@ import GardenScene from '../components/garden/GardenScene';
 const GardenView = ({ priority = [], bonus = [] }) => {
   return (
     <div className="zen-garden">
-      <div className="zen-garden-header">
+      <header className="zen-garden-header">
         <div>
           <h1 className="zen-garden-title">Zen Garden</h1>
-          <p className="zen-garden-subtitle">Grow today&apos;s focus work into tomorrow&apos;s blooms.</p>
+          <p className="zen-garden-subtitle">Where steady focus paints the landscape.</p>
         </div>
         <GardenLegend />
-      </div>
+      </header>
 
       <GardenScene priority={priority} bonus={bonus} />
     </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import GardenView from '../views/GardenView';
 
 describe('GardenView', () => {
@@ -41,9 +41,9 @@ describe('GardenView', () => {
 
     render(<GardenView priority={[entry]} bonus={[]} />);
 
-    expect(screen.getByRole('heading', { name: 'Priority Grove' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Priority Canopy' })).toBeInTheDocument();
     expect(screen.getByText('Morning priority')).toBeInTheDocument();
-    expect(screen.getByText('Morning priority is at growth stage 3 of 4')).toBeInTheDocument();
+    expect(screen.getByText('Morning priority canopy growth stage 3 of 4')).toBeInTheDocument();
   });
 
   it('labels completed focus snapshots as persisted for the current day', () => {
@@ -66,17 +66,18 @@ describe('GardenView', () => {
 
     render(<GardenView priority={[]} bonus={[snapshotEntry]} />);
 
-    expect(screen.getByRole('heading', { name: /Bonus Blooms/ })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Bonus Wildflowers/ })).toBeInTheDocument();
     const flowerButton = screen.getByRole('button', { name: /Finished bonus bloom/i });
     expect(flowerButton).toHaveAccessibleName(
-      'Finished bonus bloom. Fully bloomed. Persisted from a previous day.',
+      'Finished bonus bloom. Wildflower stage 3 of 3. Wildflower complete. Carried forward on the trail.',
     );
 
     fireEvent.focus(flowerButton);
 
     expect(screen.getByText('Finished bonus bloom')).toBeInTheDocument();
-    expect(screen.getByText('Persisted bloom')).toBeInTheDocument();
-    expect(screen.getByText('Completed bloom')).toBeInTheDocument();
+    const popover = screen.getByRole('tooltip');
+    expect(within(popover).getByText('Carried forward wildflower')).toBeInTheDocument();
+    expect(within(popover).getByText('Wildflower complete')).toBeInTheDocument();
   });
 
   it('announces empty buckets with readable fallback copy', () => {
@@ -84,7 +85,7 @@ describe('GardenView', () => {
 
     const callout = screen.getByRole('status');
     expect(callout).toHaveTextContent(
-      'Assign tasks to the Priority or Bonus focus lists to watch seedlings sprout here.',
+      'Assign focus tasks to cultivate the canopy and light up the wildflower trail.',
     );
   });
 });

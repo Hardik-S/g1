@@ -24,14 +24,14 @@ const GardenFlowerPopover = ({
     <div id={id} role="tooltip" className={className} aria-hidden={!isVisible}>
       <header className="zen-garden-flower__popover-header">
         <h3 className="zen-garden-flower__popover-title">{title}</h3>
-        {persisted && <span className="zen-garden-plant-badge">Persisted bloom</span>}
+        {persisted && <span className="zen-garden-plant-badge">Carried forward wildflower</span>}
       </header>
 
       {description && <p className="zen-garden-flower__popover-description">{description}</p>}
 
       <p className="zen-garden-flower__popover-stage">{stageStatus}</p>
 
-      {isComplete && <p className="zen-garden-flower__popover-complete">Completed bloom</p>}
+      {isComplete && <p className="zen-garden-flower__popover-complete">Wildflower complete</p>}
     </div>
   );
 };

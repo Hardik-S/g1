@@ -19,13 +19,12 @@ const GardenFlower = ({
   const cappedStage = clamp(stageIndex || 0, 0, safeTotal);
   const stageNumber = Math.min(cappedStage + 1, safeTotal);
 
-  const stageStatus = isComplete
-    ? 'Fully bloomed'
-    : `Bloom stage ${stageNumber} of ${safeTotal}`;
-
+  const stageStatus = `Wildflower stage ${Math.min(stageNumber, safeTotal)} of ${safeTotal}`;
+  const completionNote = isComplete ? '. Wildflower complete.' : '.';
+  const accessibleLabelBase = `${title}. ${stageStatus}${completionNote}`;
   const accessibleLabel = persisted
-    ? `${title}. ${stageStatus}. Persisted from a previous day.`
-    : `${title}. ${stageStatus}.`;
+    ? `${accessibleLabelBase} Carried forward on the trail.`
+    : accessibleLabelBase;
 
   const describedBy = isActive ? popoverId : undefined;
   const alignment = placement.alignment || 'center';
