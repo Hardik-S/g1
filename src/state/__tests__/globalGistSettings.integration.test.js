@@ -96,7 +96,10 @@ describe('global gist settings integration', () => {
       </MemoryRouter>,
     );
 
-    await user.click(launcher.getByRole('button', { name: /settings/i }));
+    const adminToggle = launcher.getByRole('button', { name: /admin view/i });
+    await user.click(adminToggle);
+
+    await user.click(launcher.getByRole('button', { name: /configure gist settings/i }));
     const launcherDialog = await launcher.findByRole('dialog', { name: /GitHub Gist Sync/i });
     const launcherGistInput = within(launcherDialog).getByLabelText('Gist ID');
     const launcherTokenInput = within(launcherDialog).getByLabelText('Personal Access Token');
