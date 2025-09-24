@@ -315,7 +315,7 @@ function VirtualTable({ relation, highlightedRows = new Set(), highlightedColumn
           </table>
         </div>
       </div>
-      <footer style={{ padding: '8px 12px', fontSize: 12, display: 'flex', justify-content: 'space-between' }}>
+      <footer style={{ padding: '8px 12px', fontSize: 12, display: 'flex', justifyContent: 'space-between' }}>
         <span>
           {rows.length} row{rows.length === 1 ? '' : 's'} • {columns.length} column{columns.length === 1 ? '' : 's'}
         </span>
