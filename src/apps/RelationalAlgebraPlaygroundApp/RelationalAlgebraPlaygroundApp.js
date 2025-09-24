@@ -421,11 +421,11 @@ function PipelineNodeCard({
       {node.type === 'σ' && (
         <div className="ra-node-body">
           <label>
-            Predicate (e.g. Salary > 3000 AND DeptID = 1)
+            Predicate (e.g. Salary &gt; 3000 AND DeptID = 1)
             <input
               value={node.condition || ''}
               onChange={(event) => onUpdate(node.id, { condition: event.target.value })}
-              placeholder="Salary > 3000"
+              placeholder="Salary &gt; 3000"
             />
           </label>
         </div>
@@ -433,11 +433,11 @@ function PipelineNodeCard({
       {node.type === 'π' && (
         <div className="ra-node-body">
           <label>
-            Columns (comma separated, optional alias via ->)
+            Columns (comma separated, optional alias via -&gt;)
             <input
               value={columnsInput}
               onChange={(event) => onUpdate(node.id, { columns: parseColumnsInput(event.target.value) })}
-              placeholder="EmpID, Name->EmployeeName"
+              placeholder="EmpID, Name-&gt;EmployeeName"
             />
           </label>
         </div>
@@ -445,11 +445,11 @@ function PipelineNodeCard({
       {node.type === 'ρ' && (
         <div className="ra-node-body">
           <label>
-            Rename map (comma separated old->new)
+            Rename map (comma separated old-&gt;new)
             <input
               value={renameInput}
               onChange={(event) => onUpdate(node.id, { renameMap: parseRenameInput(event.target.value) })}
-              placeholder="DeptID->DepartmentId"
+              placeholder="DeptID-&gt;DepartmentId"
             />
           </label>
         </div>
@@ -856,6 +856,11 @@ function RelationalAlgebraPlaygroundApp() {
       } else if (event.ctrlKey && (event.key === 'y' || (event.shiftKey && event.key === 'Z'))) {
         event.preventDefault();
         dispatch({ type: 'REDO' });
+      } else if (event.ctrlKey && event.shiftKey && event.key === 'Enter') {
+        event.preventDefault();
+        if (state.nodes.length) {
+          dispatch({ type: 'SET_CURSOR', cursor: state.nodes.length - 1 });
+        }
       } else if (event.ctrlKey && event.key === 'Enter') {
         event.preventDefault();
         const target = state.selectedNodeId
@@ -863,11 +868,6 @@ function RelationalAlgebraPlaygroundApp() {
           : state.nodes.length - 1;
         if (target >= 0) {
           dispatch({ type: 'SET_CURSOR', cursor: target });
-        }
-      } else if (event.ctrlKey && event.shiftKey && event.key === 'Enter') {
-        event.preventDefault();
-        if (state.nodes.length) {
-          dispatch({ type: 'SET_CURSOR', cursor: state.nodes.length - 1 });
         }
       } else if (event.key === 'Delete' && state.selectedNodeId) {
         dispatch({ type: 'DELETE_NODE', id: state.selectedNodeId });

@@ -84,7 +84,7 @@ function parseIdentifier(context) {
     }
     throw new ParserError('Unterminated quoted identifier', context.index);
   }
-  const matchResult = /[a-zA-Z_][a-zA-Z0-9_\.]*/.exec(context.source.slice(context.index));
+  const matchResult = /[a-zA-Z_][a-zA-Z0-9_.]*/.exec(context.source.slice(context.index));
   if (!matchResult) {
     throw new ParserError('Expected identifier', context.index);
   }
@@ -93,7 +93,10 @@ function parseIdentifier(context) {
 }
 
 function parseColumnsList(raw) {
-  const trimmed = raw.trim().replace(/[{}\[\]]/g, '');
+  const trimmed = raw.trim()
+    .replace(/[{}]/g, '')
+    .replace(/\[/g, '')
+    .replace(/\]/g, '');
   if (!trimmed) {
     return [];
   }
@@ -110,7 +113,10 @@ function parseColumnsList(raw) {
 }
 
 function parseRenameMap(raw) {
-  const trimmed = raw.trim().replace(/[{}\[\]]/g, '');
+  const trimmed = raw.trim()
+    .replace(/[{}]/g, '')
+    .replace(/\[/g, '')
+    .replace(/\]/g, '');
   if (!trimmed) {
     return {};
   }
