@@ -6,13 +6,12 @@ export const RELATIONS = {
       'title',
       'primaryArtistId',
       'genre',
-      'year',
+      'releaseYear',
       'energy',
       'bpm',
       'isDuet',
       'source',
       'releaseId',
-      'releaseTitle',
       'coverArtUrl',
     ],
   },
@@ -47,7 +46,7 @@ export const RELATIONS = {
       'title',
       'artists',
       'genre',
-      'year',
+      'releaseYear',
       'energy',
       'bpm',
       'source',
@@ -60,7 +59,19 @@ export const RELATIONS = {
   },
   Releases: {
     name: 'Releases',
-    columns: ['releaseId', 'title', 'year', 'coverArtUrl'],
+    columns: ['releaseId', 'title', 'releaseYear', 'coverArtUrl'],
+  },
+  Genres: {
+    name: 'Genres',
+    columns: ['genreId', 'name'],
+  },
+  SongGenres: {
+    name: 'SongGenres',
+    columns: ['songId', 'genreId'],
+  },
+  Sources: {
+    name: 'Sources',
+    columns: ['sourceId', 'name', 'description', 'isPrimary'],
   },
 };
 

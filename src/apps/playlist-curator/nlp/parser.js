@@ -90,7 +90,7 @@ const buildBaseFilterPlan = (entities, options = {}) => {
     clauses.push({ type: 'includes', field: 'activities', value: entities.activity });
   }
   if (entities.yearRange) {
-    clauses.push({ type: 'between', field: 'year', min: entities.yearRange.start, max: entities.yearRange.end });
+    clauses.push({ type: 'between', field: 'releaseYear', min: entities.yearRange.start, max: entities.yearRange.end });
   }
   if (entities.bpm) {
     clauses.push({ type: 'comparison', field: 'bpm', operator: entities.bpm.operator, value: entities.bpm.value });
@@ -192,11 +192,11 @@ const buildCartesianPlan = (genre, rangeStart, rangeEnd, activity) => {
   const base = baseNode('SongWideView', 'Songs');
   const clauses = [
     { type: 'equals', field: 'genre', value: genre },
-    { type: 'between', field: 'year', min: rangeStart, max: rangeEnd },
+    { type: 'between', field: 'releaseYear', min: rangeStart, max: rangeEnd },
   ];
   const predicate = buildPredicate(clauses);
   const filteredSongs = selectNode(base, predicate);
-  const projectedSongs = projectNode(filteredSongs, ['songId', 'title', 'genre', 'year']);
+  const projectedSongs = projectNode(filteredSongs, ['songId', 'title', 'genre', 'releaseYear']);
   const activityPredicate = buildPredicate([{ type: 'equals', field: 'activityTag', value: activity }]);
   const activitySelection = selectNode(baseNode('SongActivity'), activityPredicate);
   const activityRelation = projectNode(activitySelection, ['activityTag']);
