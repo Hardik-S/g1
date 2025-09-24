@@ -1,6 +1,7 @@
 import React from 'react';
 import './NPomodoroApp.css';
 import TimerCard from './components/TimerCard';
+import MiniTimerWindow from '../../components/MiniTimerWindow';
 import {
   PomodoroTimerProvider,
   usePomodoroTimer
@@ -389,13 +390,39 @@ const FocusModeOverlay = () => {
 };
 
 const NPomodoroAppContent = () => {
+  const timerState = usePomodoroTimer();
   const {
     starDensity,
     overallProgress,
     ritualMinutes,
     isPlannerExpanded,
     setIsPlannerExpanded
-  } = usePomodoroTimer();
+  } = timerState;
+  const [isMiniTimerOpen, setIsMiniTimerOpen] = React.useState(false);
+  const miniTimerWindowRef = React.useRef(null);
+
+  const handleMiniTimerButtonClick = React.useCallback(() => {
+    const popup = miniTimerWindowRef.current;
+    if (popup && !popup.closed) {
+      popup.focus();
+      return;
+    }
+    setIsMiniTimerOpen(true);
+  }, []);
+
+  const handleMiniTimerOpen = React.useCallback((popup) => {
+    miniTimerWindowRef.current = popup || null;
+  }, []);
+
+  const handleMiniTimerClose = React.useCallback(() => {
+    miniTimerWindowRef.current = null;
+    setIsMiniTimerOpen(false);
+  }, []);
+
+  const handleMiniTimerBlocked = React.useCallback(() => {
+    miniTimerWindowRef.current = null;
+    setIsMiniTimerOpen(false);
+  }, []);
 
   return (
     <div className="n-pomodoro-app">
@@ -428,6 +455,18 @@ const NPomodoroAppContent = () => {
             </div>
             <button
               type="button"
+              className="popout-timer-btn"
+              onClick={handleMiniTimerButtonClick}
+              aria-pressed={isMiniTimerOpen}
+              aria-label={
+                isMiniTimerOpen ? 'Focus mini timer window' : 'Open mini timer window'
+              }
+              title="Pop out timer"
+            >
+              Pop out timer
+            </button>
+            <button
+              type="button"
               className="planner-toggle"
               onClick={() => setIsPlannerExpanded((prev) => !prev)}
             >
@@ -456,6 +495,20 @@ const NPomodoroAppContent = () => {
 
         <SessionEditorModal />
         <FocusModeOverlay />
+        {isMiniTimerOpen && (
+          <MiniTimerWindow
+            windowName="n-pomodoro-mini-timer"
+            onOpen={handleMiniTimerOpen}
+            onClose={handleMiniTimerClose}
+            onBlocked={handleMiniTimerBlocked}
+            width={360}
+            height={520}
+          >
+            <div className="mini-timer-window">
+              <TimerCard variant="mini" {...createTimerCardProps(timerState)} />
+            </div>
+          </MiniTimerWindow>
+        )}
       </div>
     </div>
   );

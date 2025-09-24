@@ -141,7 +141,8 @@ body.n-pomodoro-focus-active {
   color: rgba(255, 255, 255, 0.55);
 }
 
-.planner-toggle {
+.planner-toggle,
+.popout-timer-btn {
   appearance: none;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 999px;
@@ -155,10 +156,23 @@ body.n-pomodoro-focus-active {
   backdrop-filter: blur(12px);
 }
 
-.planner-toggle:hover {
+.planner-toggle:hover,
+.popout-timer-btn:hover {
   background: rgba(255, 255, 255, 0.16);
   transform: translateY(-2px);
   box-shadow: 0 18px 40px rgba(8, 10, 28, 0.35);
+}
+
+.popout-timer-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.popout-timer-btn[aria-pressed='true'] {
+  background: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 20px 42px rgba(8, 10, 28, 0.4);
 }
 
 .n-pomodoro-layout {
@@ -700,6 +714,64 @@ body.n-pomodoro-focus-active {
   background: linear-gradient(160deg, rgba(127, 90, 240, 0.35) 0%, rgba(44, 177, 188, 0.18) 100%);
   box-shadow: 0 30px 70px rgba(15, 16, 46, 0.45);
   overflow: hidden;
+}
+
+.timer-card[data-variant='mini'] {
+  max-width: 320px;
+  margin: 0 auto;
+  gap: 18px;
+  padding: 24px;
+  border-radius: 24px;
+}
+
+.timer-card[data-variant='mini'] .timer-meta {
+  gap: 10px;
+}
+
+.timer-card[data-variant='mini'] .session-label {
+  font-size: 0.7rem;
+  padding: 5px 12px;
+}
+
+.timer-card[data-variant='mini'] .timer-meta h2 {
+  font-size: 1.6rem;
+}
+
+.timer-card[data-variant='mini'] .block-label {
+  font-size: 0.95rem;
+}
+
+.timer-card[data-variant='mini'] .timer-visual {
+  width: min(220px, 68vw);
+}
+
+.timer-card[data-variant='mini'] .time-display {
+  font-size: 2.4rem;
+}
+
+.timer-card[data-variant='mini'] .timer-controls {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.timer-card[data-variant='mini'] .control-btn {
+  width: 100%;
+  padding: 10px 18px;
+  justify-content: center;
+}
+
+.mini-timer-window {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  background: radial-gradient(circle at top, rgba(15, 19, 45, 0.95), rgba(5, 7, 22, 0.98));
+}
+
+.mini-timer-window .timer-card {
+  box-shadow: 0 28px 60px rgba(8, 10, 28, 0.55);
 }
 
 .timer-card::before {

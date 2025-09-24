@@ -4,7 +4,7 @@ const RING_RADIUS = 118;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
 type TimerCardProps = {
-  variant?: 'default' | 'focus';
+  variant?: 'default' | 'focus' | 'mini';
   sessionLabel: string;
   sessionName: string;
   blockLabel: string;
@@ -49,122 +49,129 @@ const TimerCard: React.FC<TimerCardProps> = ({
   onReset,
   onSkipBackward,
   onSkipForward
-}) => (
-  <div
-    className={`timer-card ${variant === 'focus' ? 'focus-mode-card' : ''}`}
-    data-variant={variant}
-  >
-    <div className="timer-meta">
-      <span className="session-label">{sessionLabel}</span>
-      <h2>{sessionName}</h2>
-      <p className="block-label">{blockLabel}</p>
-    </div>
+}) => {
+  const showQuickStats = variant !== 'mini';
+  const showCompletionBanner = variant !== 'mini' && isComplete;
 
-    <div className="timer-visual">
-      <div className="time-display">{timeLabel}</div>
-      <svg className="progress-ring" viewBox="0 0 260 260">
-        <circle className="progress-ring-bg" cx="130" cy="130" r={RING_RADIUS} />
-        <circle
-          className="progress-ring-track"
-          cx="130"
-          cy="130"
-          r={RING_RADIUS}
-          style={{ stroke: softenedAccent }}
-        />
-        <circle
-          className="progress-ring-indicator"
-          cx="130"
-          cy="130"
-          r={RING_RADIUS}
-          style={{
-            stroke: accentColor,
-            strokeDasharray: RING_CIRCUMFERENCE,
-            strokeDashoffset: RING_CIRCUMFERENCE * (1 - blockProgress / 100)
-          }}
-        />
-      </svg>
-    </div>
+  return (
+    <div
+      className={`timer-card ${variant === 'focus' ? 'focus-mode-card' : ''}`}
+      data-variant={variant}
+    >
+      <div className="timer-meta">
+        <span className="session-label">{sessionLabel}</span>
+        <h2>{sessionName}</h2>
+        <p className="block-label">{blockLabel}</p>
+      </div>
 
-    <div className="quick-stats">
-      <div className="stat-card">
-        <span className="stat-label">Current block</span>
-        <strong className="stat-value">{currentBlockDurationLabel}</strong>
+      <div className="timer-visual">
+        <div className="time-display">{timeLabel}</div>
+        <svg className="progress-ring" viewBox="0 0 260 260">
+          <circle className="progress-ring-bg" cx="130" cy="130" r={RING_RADIUS} />
+          <circle
+            className="progress-ring-track"
+            cx="130"
+            cy="130"
+            r={RING_RADIUS}
+            style={{ stroke: softenedAccent }}
+          />
+          <circle
+            className="progress-ring-indicator"
+            cx="130"
+            cy="130"
+            r={RING_RADIUS}
+            style={{
+              stroke: accentColor,
+              strokeDasharray: RING_CIRCUMFERENCE,
+              strokeDashoffset: RING_CIRCUMFERENCE * (1 - blockProgress / 100)
+            }}
+          />
+        </svg>
       </div>
-      <div className="stat-card">
-        <span className="stat-label">Session total</span>
-        <strong className="stat-value">{sessionTotalLabel}</strong>
-      </div>
-      <div className="stat-card">
-        <span className="stat-label">Ritual remaining</span>
-        <strong className="stat-value">{ritualRemainingLabel}</strong>
-      </div>
-      <div className="stat-card">
-        <span className="stat-label">Next up</span>
-        <strong className="stat-value">{nextUpLabel}</strong>
-      </div>
-    </div>
 
-    <div className="timer-controls">
-      <button
-        type="button"
-        className="control-btn ghost"
-        onClick={onSkipBackward}
-        disabled={controlsDisabled}
-      >
-        ⟲ Previous
-      </button>
-      {!isRunning && !isPaused && (
+      {showQuickStats && (
+        <div className="quick-stats">
+          <div className="stat-card">
+            <span className="stat-label">Current block</span>
+            <strong className="stat-value">{currentBlockDurationLabel}</strong>
+          </div>
+          <div className="stat-card">
+            <span className="stat-label">Session total</span>
+            <strong className="stat-value">{sessionTotalLabel}</strong>
+          </div>
+          <div className="stat-card">
+            <span className="stat-label">Ritual remaining</span>
+            <strong className="stat-value">{ritualRemainingLabel}</strong>
+          </div>
+          <div className="stat-card">
+            <span className="stat-label">Next up</span>
+            <strong className="stat-value">{nextUpLabel}</strong>
+          </div>
+        </div>
+      )}
+
+      <div className="timer-controls">
         <button
           type="button"
-          className="control-btn primary"
-          onClick={onStart}
+          className="control-btn ghost"
+          onClick={onSkipBackward}
           disabled={controlsDisabled}
         >
-          ▶ Start
+          ⟲ Previous
         </button>
-      )}
-      {isRunning && (
-        <button type="button" className="control-btn warning" onClick={onPause}>
-          ⏸ Pause
+        {!isRunning && !isPaused && (
+          <button
+            type="button"
+            className="control-btn primary"
+            onClick={onStart}
+            disabled={controlsDisabled}
+          >
+            ▶ Start
+          </button>
+        )}
+        {isRunning && (
+          <button type="button" className="control-btn warning" onClick={onPause}>
+            ⏸ Pause
+          </button>
+        )}
+        {isPaused && !isRunning && (
+          <button type="button" className="control-btn primary" onClick={onStart}>
+            ▶ Resume
+          </button>
+        )}
+        <button
+          type="button"
+          className="control-btn ghost"
+          onClick={onReset}
+          disabled={controlsDisabled}
+        >
+          ⟲ Reset
         </button>
-      )}
-      {isPaused && !isRunning && (
-        <button type="button" className="control-btn primary" onClick={onStart}>
-          ▶ Resume
-        </button>
-      )}
-      <button
-        type="button"
-        className="control-btn ghost"
-        onClick={onReset}
-        disabled={controlsDisabled}
-      >
-        ⟲ Reset
-      </button>
-      <button
-        type="button"
-        className="control-btn ghost"
-        onClick={onSkipForward}
-        disabled={controlsDisabled}
-      >
-        Next ⟳
-      </button>
-    </div>
-
-    {isComplete && (
-      <div className="completion-banner">
-        <h3>Cycle complete ✨</h3>
-        <p>
-          You navigated every planned block. Feel free to adjust your sessions and
-          launch a fresh journey.
-        </p>
-        <button type="button" className="control-btn primary" onClick={onReset}>
-          Restart journey
+        <button
+          type="button"
+          className="control-btn ghost"
+          onClick={onSkipForward}
+          disabled={controlsDisabled}
+        >
+          Next ⟳
         </button>
       </div>
-    )}
-  </div>
-);
+
+      {showCompletionBanner && (
+        <div className="completion-banner">
+          <h3>Cycle complete ✨</h3>
+          <p>
+            You navigated every planned block. Feel free to adjust your sessions and
+            launch a fresh journey.
+          </p>
+          <button type="button" className="control-btn primary" onClick={onReset}>
+            Restart journey
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export type { TimerCardProps };
 export default TimerCard;
