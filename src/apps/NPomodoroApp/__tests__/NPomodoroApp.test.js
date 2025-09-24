@@ -10,6 +10,7 @@ class PopupWindowStub {
     this.focus = jest.fn();
     this.listeners = new Map();
     this.document = document.implementation.createHTMLDocument('mini');
+    this.opener = window;
     Object.defineProperty(this.document, 'readyState', {
       configurable: true,
       get: () => 'complete'
@@ -171,7 +172,8 @@ describe('NPomodoroApp interactions', () => {
     expect(name).toBe('n-pomodoro-mini-timer');
     expect(features).toContain('width=360');
     expect(features).toContain('height=520');
-    expect(features).toContain('noopener=yes');
+    expect(features).not.toContain('noopener=yes');
+    expect(popup.opener).toBeNull();
     expect(popoutButton).toHaveAttribute('aria-pressed', 'true');
     expect(popup.focus).toHaveBeenCalled();
 
