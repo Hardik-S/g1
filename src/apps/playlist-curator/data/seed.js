@@ -12,6 +12,89 @@ const {
   likes,
 } = MUSICBRAINZ_DATASET;
 
+const toTitleCase = (value) =>
+  value
+    .split(/[-_/\s]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+
+const normalizeSources = () => {
+  const ids = new Set();
+  if (metadata.source) {
+    ids.add(metadata.source);
+  }
+  songs.forEach((song) => {
+    if (song.source) {
+      ids.add(song.source);
+    }
+  });
+
+  const labelFor = (id) => {
+    if (!id) return 'Unknown';
+    const lowered = id.toLowerCase();
+    if (lowered === 'musicbrainz') {
+      return 'MusicBrainz';
+    }
+    if (lowered === 'mock') {
+      return 'Mock Dataset';
+    }
+    return toTitleCase(id);
+  };
+
+  const kindFor = (id) => {
+    if (!id) return 'unknown';
+    const lowered = id.toLowerCase();
+    if (lowered === 'musicbrainz') {
+      return 'open-data';
+    }
+    if (lowered === 'mock') {
+      return 'fixture';
+    }
+    return 'external';
+  };
+
+  return Array.from(ids)
+    .filter(Boolean)
+    .map((sourceId) => ({
+      sourceId,
+      label: labelFor(sourceId),
+      kind: kindFor(sourceId),
+    }));
+};
+
+const sourceCatalog = normalizeSources();
+
+const genreCatalog = Array.from(
+  new Set([
+    ...(metadata.genres ?? []),
+    ...songs.map((song) => song.genre).filter(Boolean),
+  ]),
+).map((genreId) => ({
+  genreId,
+  name: toTitleCase(genreId),
+}));
+
+const genreNameById = new Map(genreCatalog.map((entry) => [entry.genreId, entry.name]));
+
+const songGenreLinks = songs
+  .filter((song) => song.genre)
+  .map((song) => ({ songId: song.songId, genreId: song.genre }));
+
+const normalizedSongs = songs.map((song) => ({
+  songId: song.songId,
+  title: song.title,
+  primaryArtistId: song.primaryArtistId,
+  releaseYear: song.year ?? null,
+  energy: song.energy ?? null,
+  bpm: song.bpm ?? null,
+  isDuet: song.isDuet ?? false,
+  sourceId: song.source ?? metadata.source ?? 'unknown',
+  releaseId: song.releaseId ?? null,
+  releaseTitle: song.releaseTitle ?? null,
+  coverArtUrl: song.coverArtUrl ?? null,
+}));
+
 const releases = Array.from(
   songs.reduce((acc, song) => {
     if (!song.releaseId) {
@@ -30,7 +113,7 @@ const releases = Array.from(
 );
 
 const relationData = {
-  Songs: songs,
+  Songs: normalizedSongs,
   Artists: artists,
   SongArtists: songArtists,
   SongMood: songMood,
@@ -39,6 +122,9 @@ const relationData = {
   Users: users,
   SongWideView: [],
   Releases: releases,
+  Genres: genreCatalog,
+  SongGenres: songGenreLinks,
+  Sources: sourceCatalog,
 };
 
 const buildLookup = (entries, key, value) => {
@@ -56,6 +142,7 @@ function createWideView() {
   const artistLookup = new Map(artists.map((artist) => [artist.artistId, artist]));
   const moodsBySong = buildLookup(songMood, 'songId', 'mood');
   const activitiesBySong = buildLookup(songActivity, 'songId', 'activityTag');
+  const genresBySong = buildLookup(songGenreLinks, 'songId', 'genreId');
   const songArtistNames = new Map();
   songArtists.forEach((entry) => {
     if (!songArtistNames.has(entry.songId)) {
@@ -75,21 +162,28 @@ function createWideView() {
     likesBySong.get(entry.songId).push(label);
   });
 
-  return songs.map((song) => ({
-    songId: song.songId,
-    title: song.title,
-    artists: songArtistNames.get(song.songId) ?? [],
-    genre: song.genre,
-    year: song.year,
-    energy: song.energy,
-    bpm: song.bpm,
-    source: song.source,
-    releaseTitle: song.releaseTitle,
-    coverArtUrl: song.coverArtUrl,
-    moods: moodsBySong.get(song.songId) ?? [],
-    activities: activitiesBySong.get(song.songId) ?? [],
-    likedBy: likesBySong.get(song.songId) ?? [],
-  }));
+  return normalizedSongs.map((song) => {
+    const genreNames = (genresBySong.get(song.songId) ?? []).map(
+      (genreId) => genreNameById.get(genreId) ?? toTitleCase(genreId),
+    );
+    const displayGenres = genreNames.length > 0 ? genreNames : ['Unknown'];
+
+    return {
+      songId: song.songId,
+      title: song.title,
+      artists: songArtistNames.get(song.songId) ?? [],
+      genres: displayGenres,
+      releaseYear: song.releaseYear,
+      energy: song.energy,
+      bpm: song.bpm,
+      sourceId: song.sourceId,
+      releaseTitle: song.releaseTitle,
+      coverArtUrl: song.coverArtUrl,
+      moods: moodsBySong.get(song.songId) ?? [],
+      activities: activitiesBySong.get(song.songId) ?? [],
+      likedBy: likesBySong.get(song.songId) ?? [],
+    };
+  });
 }
 
 const wideViewRows = createWideView();
@@ -121,12 +215,15 @@ export function getAllRelations() {
 
 export const DATASET = {
   metadata,
-  songs,
+  songs: normalizedSongs,
   artists,
   releases,
   songArtists,
+  songGenres: songGenreLinks,
   songMood,
   songActivity,
   likes,
   users,
+  genres: genreCatalog,
+  sources: sourceCatalog,
 };

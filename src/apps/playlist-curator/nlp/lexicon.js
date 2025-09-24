@@ -2,7 +2,7 @@ import { DATASET } from '../data/seed';
 
 const unique = (values) => Array.from(new Set(values)).sort();
 
-export const GENRES = unique(DATASET.songs.map((song) => song.genre));
+export const GENRES = unique(DATASET.genres.map((genre) => genre.genreId));
 export const MOODS = unique(DATASET.songMood.map((entry) => entry.mood));
 export const ACTIVITIES = unique(DATASET.songActivity.map((entry) => entry.activityTag));
 export const USERS = DATASET.users.map((user) => ({

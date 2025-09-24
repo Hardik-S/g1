@@ -103,7 +103,7 @@ This plan outlines how to replace the mock playlist curator database with a Musi
 ## Deliverables Checklist
 - [x] MusicBrainz export spec drafted and approved.
 - [x] ETL prototype ingests initial dataset into staging.
-- [ ] Database schema migrated and documented.
+- [x] Database schema migrated and documented.
 - [ ] RA executor updated with provider abstraction and schema changes.
 - [ ] Frontend supports pagination, caching, and source toggling UI/flags.
 - [ ] Documentation updated (README, runbooks) with ingestion steps and configuration.
