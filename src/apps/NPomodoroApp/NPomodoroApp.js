@@ -1,14 +1,12 @@
 import React from 'react';
 import './NPomodoroApp.css';
+import TimerCard from './components/TimerCard';
 import {
   PomodoroTimerProvider,
   usePomodoroTimer
 } from '../n-pomodoro/state/PomodoroTimerProvider';
 
-const RING_RADIUS = 118;
-const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
-
-const TimerCard = ({ variant = 'default' }) => {
+const createTimerCardProps = (timerState) => {
   const {
     sessions,
     currentSessionIndex,
@@ -30,145 +28,51 @@ const TimerCard = ({ variant = 'default' }) => {
     isRunning,
     isPaused,
     isComplete
-  } = usePomodoroTimer();
+  } = timerState;
 
-  return (
-    <div
-      className={`timer-card ${variant === 'focus' ? 'focus-mode-card' : ''}`}
-      data-variant={variant}
-    >
-      <div className="timer-meta">
-        <span className="session-label">
-          Session {Math.min(currentSessionIndex + 1, sessions.length)} of {sessions.length}
-        </span>
-        <h2>{currentSession?.name || 'Create your first session'}</h2>
-        <p className="block-label">
-          {currentBlock?.name || 'Add blocks to begin your ritual'}
-        </p>
-      </div>
+  const sessionCount = sessions.length;
+  const sessionLabel = `Session ${Math.min(currentSessionIndex + 1, sessionCount)} of ${sessionCount}`;
+  const sessionName = currentSession?.name || 'Create your first session';
+  const blockLabel = currentBlock?.name || 'Add blocks to begin your ritual';
+  const currentBlockDurationLabel = currentBlock ? `${currentBlock.minutes} min` : '--';
+  const sessionTotalLabel = `${sessionMinutes} min`;
+  const ritualRemainingLabel = `${minutesRemaining} min`;
 
-      <div className="timer-visual">
-        <div className="time-display">{formatTime(timeLeft)}</div>
-        <svg className="progress-ring" viewBox="0 0 260 260">
-          <circle className="progress-ring-bg" cx="130" cy="130" r={RING_RADIUS} />
-          <circle
-            className="progress-ring-track"
-            cx="130"
-            cy="130"
-            r={RING_RADIUS}
-            style={{ stroke: softenedAccent }}
-          />
-          <circle
-            className="progress-ring-indicator"
-            cx="130"
-            cy="130"
-            r={RING_RADIUS}
-            style={{
-              stroke: accentColor,
-              strokeDasharray: RING_CIRCUMFERENCE,
-              strokeDashoffset: RING_CIRCUMFERENCE * (1 - blockProgress / 100)
-            }}
-          />
-        </svg>
-      </div>
+  let nextUpLabel;
+  if (nextBlockInfo) {
+    const prefix =
+      nextBlockInfo.session && nextBlockInfo.session !== currentSession?.name
+        ? `${nextBlockInfo.session}: `
+        : '';
+    nextUpLabel = `${prefix}${nextBlockInfo.label} (${nextBlockInfo.minutes} min)`;
+  } else if (currentBlock) {
+    nextUpLabel = 'Final block';
+  } else {
+    nextUpLabel = '--';
+  }
 
-      <div className="quick-stats">
-        <div className="stat-card">
-          <span className="stat-label">Current block</span>
-          <strong className="stat-value">
-            {currentBlock ? `${currentBlock.minutes} min` : '--'}
-          </strong>
-        </div>
-        <div className="stat-card">
-          <span className="stat-label">Session total</span>
-          <strong className="stat-value">{sessionMinutes} min</strong>
-        </div>
-        <div className="stat-card">
-          <span className="stat-label">Ritual remaining</span>
-          <strong className="stat-value">{minutesRemaining} min</strong>
-        </div>
-        <div className="stat-card">
-          <span className="stat-label">Next up</span>
-          <strong className="stat-value">
-            {nextBlockInfo
-              ? `${
-                  nextBlockInfo.session &&
-                  nextBlockInfo.session !== currentSession?.name
-                    ? `${nextBlockInfo.session}: `
-                    : ''
-                }${nextBlockInfo.label} (${nextBlockInfo.minutes} min)`
-              : currentBlock
-              ? 'Final block'
-              : '--'}
-          </strong>
-        </div>
-      </div>
-
-      <div className="timer-controls">
-        <button
-          type="button"
-          className="control-btn ghost"
-          onClick={skipBackward}
-          disabled={!currentBlock}
-        >
-          ⟲ Previous
-        </button>
-        {!isRunning && !isPaused && (
-          <button
-            type="button"
-            className="control-btn primary"
-            onClick={startTimer}
-            disabled={!currentBlock}
-          >
-            ▶ Start
-          </button>
-        )}
-        {isRunning && (
-          <button
-            type="button"
-            className="control-btn warning"
-            onClick={pauseTimer}
-          >
-            ⏸ Pause
-          </button>
-        )}
-        {isPaused && !isRunning && (
-          <button type="button" className="control-btn primary" onClick={startTimer}>
-            ▶ Resume
-          </button>
-        )}
-        <button
-          type="button"
-          className="control-btn ghost"
-          onClick={resetTimer}
-          disabled={!currentBlock}
-        >
-          ⟲ Reset
-        </button>
-        <button
-          type="button"
-          className="control-btn ghost"
-          onClick={skipForward}
-          disabled={!currentBlock}
-        >
-          Next ⟳
-        </button>
-      </div>
-
-      {isComplete && (
-        <div className="completion-banner">
-          <h3>Cycle complete ✨</h3>
-          <p>
-            You navigated every planned block. Feel free to adjust your sessions and launch a
-            fresh journey.
-          </p>
-          <button type="button" className="control-btn primary" onClick={resetTimer}>
-            Restart journey
-          </button>
-        </div>
-      )}
-    </div>
-  );
+  return {
+    sessionLabel,
+    sessionName,
+    blockLabel,
+    timeLabel: formatTime(timeLeft),
+    accentColor,
+    softenedAccent,
+    blockProgress,
+    currentBlockDurationLabel,
+    sessionTotalLabel,
+    ritualRemainingLabel,
+    nextUpLabel,
+    controlsDisabled: !currentBlock,
+    isRunning,
+    isPaused,
+    isComplete,
+    onStart: startTimer,
+    onPause: pauseTimer,
+    onReset: resetTimer,
+    onSkipBackward: skipBackward,
+    onSkipForward: skipForward
+  };
 };
 
 const PlannerPanel = () => {
@@ -270,12 +174,17 @@ const SessionTimeline = () => {
   );
 };
 
-const PlayPanel = () => (
-  <section className="play-panel">
-    <TimerCard />
-    <SessionTimeline />
-  </section>
-);
+const PlayPanel = () => {
+  const timerState = usePomodoroTimer();
+  const timerCardProps = createTimerCardProps(timerState);
+
+  return (
+    <section className="play-panel">
+      <TimerCard {...timerCardProps} />
+      <SessionTimeline />
+    </section>
+  );
+};
 
 const SessionEditorModal = () => {
   const {
@@ -446,11 +355,14 @@ const SessionEditorModal = () => {
 };
 
 const FocusModeOverlay = () => {
-  const { isFocusMode, currentSession, exitFocusMode } = usePomodoroTimer();
+  const timerState = usePomodoroTimer();
+  const { isFocusMode, currentSession, exitFocusMode } = timerState;
 
   if (!isFocusMode) {
     return null;
   }
+
+  const timerCardProps = createTimerCardProps(timerState);
 
   return (
     <div
@@ -470,7 +382,7 @@ const FocusModeOverlay = () => {
             Exit focus
           </button>
         </div>
-        <TimerCard variant="focus" />
+        <TimerCard variant="focus" {...timerCardProps} />
       </div>
     </div>
   );
