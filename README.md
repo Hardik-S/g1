@@ -1,96 +1,73 @@
-# Namecraft (MVP)
+# g1 React Micro Apps
 
-Namecraft is a deterministic, client-side heuristics workbench for graduate linguistics cohorts. It ships inside the `g1`
-launcher so researchers can create rooms, collect candidate names, add stress-test scenarios, and run a reproducible PLATO rubric
-without network dependencies or LLM calls. Everything runs in the browser—perfect for GitHub Pages deployments and offline-first
-studios.
+A modular collection of experimental React experiences bundled behind a shared launcher. Each app ships fully client-side so the entire workspace can run offline or be deployed to GitHub Pages without a backend.
 
-## Features
+## Highlights
 
-- **Room lifecycle**: create/list rooms, capture candidate names, log scenarios, and run deterministic tests in ≤4 clicks.
-- **Heuristics engine**: Goal Alignment, Discriminability, Imitation, Transparency, Pronounceability, and Robustness with
-  weighted scoring, deterministic rules, and diagnostics summarising any failed thresholds.
-- **Exports**: PLATO.md preview + clipboard copy, PDF (via jsPDF), JSON export/restore, and ≤2KB base64 share URLs compressed with
-  LZ-string.
-- **Collaboration**: import shared or JSON rooms with a merge dialog that resolves conflicts by keeping, replacing, or deduping
-  sections.
-- **Persistence**: rooms live in `localStorage` under the namespaced key `namecraft::rooms`.
-- **Keyboard shortcuts**: `N` focuses the candidate field, `T` runs the heuristics, `E` copies PLATO.md.
-- **Diagnostics**: single-line summaries for each heuristic failure plus rubric-driven refinements.
+- **Unified launcher** with search, categories, favourites, and Toronto time badge.
+- **Dozens of micro apps** spanning productivity tools, games, and interactive learning sandboxes.
+- **Workspace-friendly builds** with webpack powering the launcher and Vite-based sub-workspaces when a project needs its own toolchain.
+- **Offline-first exports** for experiences like Namecraft, Playlist Curator, and Cache Lab so researchers and students can collaborate without server dependencies.
+
+## Included apps
+
+### Productivity
+- **Day Switcher** – cycle through the week with animated transitions.
+- **CatPad** – cat-themed note editor with GitHub Gist syncing.
+- **Zen Do** – garden-inspired task planner with focus mode, gist sync, and pointer-driven drag & drop flows.
+- **N-Pomodoro** – orchestrate multi-activity pomodoro sessions with a synchronized pop-out mini timer.
+
+### Games
+- **Snake** – chase high scores across a responsive grid.
+- **Hexa-Snake (Bee Edition)** – guide a bee across a honeycomb board.
+- **Neon Pong** and **Pong Ring** – duel paddles across neon and circular arenas.
+- **CatNap Leap** – glide between dreamy pillows while keeping a sleepy cat alert.
+- **Sudoku Roast** – solve handcrafted puzzles in a cozy café setting.
+
+### Learning tools
+- **Cat Typing Speed Test** – practise timed drills with Kimchi, Rythm, and Siella.
+- **Quantum Playground** – design circuits, run a four-qubit simulator, and visualize measurements.
+- **Cache Lab** – explore cache mapping, replacement strategies, and assessments via `/cache-lab`.
+- **Cosmos Simulator** – orbit a scaled solar system with Newtonian physics and fly-to controls.
+- **LangMath** – convert natural-language arithmetic into validated expressions via Pyodide.
+- **Namecraft** – craft linguistics-focused candidate names and run deterministic PLATO heuristics with export tooling.
+- **Playlist Curator** – translate natural-language music prompts into relational algebra plans and execution timelines.
+- **Relational Algebra Playground** – compose relational algebra pipelines with drag-and-drop blocks, SQL translation, CSV import, and guided challenges.
 
 ## Getting started
 
 ```bash
+git clone https://github.com/Hardik-S/g1.git
+cd g1
 npm install
-npm start
+npm run dev
 ```
 
-This launches the existing webpack dev server on http://localhost:3000 with Namecraft available from the launcher grid (or
-`#/apps/namecraft`).
+`npm run dev` launches the webpack dev server for the launcher and the Cache Lab Vite dev server. Visit [http://localhost:3000](http://localhost:3000) for the launcher grid or switch the Cache Lab iframe with the `CACHE_LAB_DEV_URL` environment variable.
 
-### Tests
+### Common scripts
 
-```bash
-npm test -- src/apps/NamecraftApp
-```
+- `npm start` – start only the launcher webpack dev server.
+- `npm run dev` – run the launcher and Cache Lab dev servers together.
+- `npm run build` – build Cache Lab and emit the launcher bundle into `dist/`.
+- `npm run lint` – lint launcher JavaScript/JSX with React, accessibility, and Testing Library rules.
+- `npm test` – run the Jest suite for launcher React apps.
+- `npm run deploy` – publish `dist/` to the `gh-pages` branch (ensure `homepage` is set in `package.json`).
 
-The suite includes deterministic heuristics fixtures and the automated acceptance flow that creates a room, runs the engine, and
-asserts the PLATO.md headings.
+## Additional documentation
 
-### Build
+The `docs/` directory contains deeper guides:
 
-```bash
-npm run build
-```
+- [`docs/README.md`](docs/README.md) – expanded launcher overview and project structure.
+- [`docs/APPS.md`](docs/APPS.md) – catalog of bundled micro apps with behaviour notes.
+- [`docs/RelationalAlgebraPlayground.md`](docs/RelationalAlgebraPlayground.md) – quickstart and dataset format for the playground.
+- [`docs/namecraft.md`](docs/namecraft.md) – heuristics workbench documentation for the Namecraft experience.
+- [`docs/GITSTORY.md`](docs/GITSTORY.md) – chronological log of commits, merges, and design decisions.
 
-Webpack bundles the launcher into `dist/` and keeps Cache Lab’s sub-build in sync.
+## Contributing
 
-### Deploy
+Follow the guidelines in [`docs/AGENTS.md`](docs/AGENTS.md) for development conventions, required checks, and workspace-specific workflows. Pull requests that touch runtime code should run `npm test` and `npm run lint` before submission.
 
-```bash
-npm run deploy
-```
+## License
 
-This publishes `dist/` to the `gh-pages` branch. Update the `homepage` field in `package.json` if you fork the repo.
-
-## Data & exports
-
-- `examples/room-sample.json` contains a ready-made cohort room you can import through the sidebar.
-- PLATO exports always contain the headings `P`, `L`, `A`, `T`, `O` so documentation remains scannable.
-- Share URLs are generated via `lz-string` compression and target the `#/apps/namecraft?share=...` hash route. The share payload is
-  validated to stay under 2KB.
-- Optional PDF output is produced client-side with `jsPDF` and mirrors the PLATO sections.
-
-## Optional GitHub PAT export (disabled by default)
-
-The codebase includes comments in `src/apps/NamecraftApp/utils/exporters.js` describing how to wire a PAT-backed commit flow using
-GitHub’s REST API (`PUT /repos/{owner}/{repo}/contents/{path}`). To enable it safely:
-
-1. Generate a fine-grained PAT with “Contents: Read & Write” scope.
-2. Store it manually via the browser console: `localStorage.setItem('namecraft::gh-pat', '<token>')`.
-3. Build a custom handler that reads the token and POSTs commit payloads on explicit user action. The shipped UI intentionally
-   leaves this step commented out to keep deployments PAT-free by default.
-
-## Demo
-
-Run the quick-start flow to create a room, add a candidate name and scenario, execute the heuristics, and export PLATO.md—the
-same sequence covered by the automated acceptance test.
-
-## Keyboard reference
-
-| Key | Action                     |
-| --- | -------------------------- |
-| N   | Focus the add-candidate field |
-| T   | Run deterministic heuristics |
-| E   | Copy PLATO.md to clipboard   |
-
-## Storage
-
-- Rooms: `localStorage['namecraft::rooms']`
-- Optional PAT (off by default): `localStorage['namecraft::gh-pat']`
-
-Clear storage from the sidebar, or run `localStorage.removeItem('namecraft::rooms')` from the console.
-
-## Bonus experiences
-
-- **Snake 2.0** — A canvas-powered creative redesign of the classic snake, complete with Neon Grid, Organic Garden, and Minimal Elegance themes, Classic/Zen/Survival/Multiplayer modes, combo multipliers, and floating HUD overlays. Launch it from the g1 grid under 🌀 Snake 2.0 (`#/apps/snake-2`).
+This project is licensed under the terms of the [MIT License](LICENSE).
