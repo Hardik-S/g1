@@ -68,6 +68,9 @@ This plan outlines how to replace the mock playlist curator database with a Musi
 2. Provide configuration (env var, feature flag) to select provider at runtime.
 3. Ensure tests run against mock provider while allowing integration tests with MusicBrainz subset.
 
+> **Status:** `src/apps/playlist-curator/data/seed.js` exports `setActiveSource`, `getActiveSource`, and `listSources` so the
+> executor now reads provider-scoped relations. The canonical sources catalog remains available for toggles via `listSources()`.
+
 ## Schema Diff
 | Field | Mock Schema | MusicBrainz-Aligned Schema | Status |
 |-------|-------------|----------------------------|--------|
@@ -104,7 +107,7 @@ This plan outlines how to replace the mock playlist curator database with a Musi
 - [x] MusicBrainz export spec drafted and approved.
 - [x] ETL prototype ingests initial dataset into staging.
 - [x] Database schema migrated and documented.
-- [ ] RA executor updated with provider abstraction and schema changes.
+- [x] RA executor updated with provider abstraction and schema changes.
 - [ ] Frontend supports pagination, caching, and source toggling UI/flags.
 - [ ] Documentation updated (README, runbooks) with ingestion steps and configuration.
 - [ ] Monitoring plan ready for medium-term automation.

@@ -198,12 +198,91 @@ export const WIDE_VIEW = {
   rows: wideViewRows,
 };
 
+const sourceList = sources.map((source) => source.sourceId);
+let activeSourceId = sourceList.includes(defaultSourceId)
+  ? defaultSourceId
+  : sourceList[0] ?? 'mock';
+
+if (!sourceList.includes(activeSourceId)) {
+  sourceList.push(activeSourceId);
+}
+
+const providerCache = new Map();
+
+const withSongFilter = (rows, songIds, key = 'songId') => rows.filter((row) => songIds.has(row[key]));
+
+const buildProviderView = (sourceId) => {
+  if (providerCache.has(sourceId)) {
+    return providerCache.get(sourceId);
+  }
+
+  const providerSongs = relationData.Songs.filter((song) => song.source === sourceId);
+  const songIds = new Set(providerSongs.map((song) => song.songId));
+
+  const providerSongArtists = withSongFilter(relationData.SongArtists, songIds);
+  const artistIds = new Set(providerSongArtists.map((entry) => entry.artistId));
+  providerSongs.forEach((song) => {
+    if (song.primaryArtistId) {
+      artistIds.add(song.primaryArtistId);
+    }
+  });
+  const providerArtists = relationData.Artists.filter((artist) => artistIds.has(artist.artistId));
+
+  const releaseIds = new Set();
+  providerSongs.forEach((song) => {
+    if (song.releaseId) {
+      releaseIds.add(song.releaseId);
+    }
+  });
+  const providerReleases = relationData.Releases.filter((release) => releaseIds.has(release.releaseId));
+
+  const view = {
+    Songs: providerSongs,
+    SongWideView: relationData.SongWideView.filter((row) => row.source === sourceId),
+    SongArtists: providerSongArtists,
+    SongMood: withSongFilter(relationData.SongMood, songIds),
+    SongActivity: withSongFilter(relationData.SongActivity, songIds),
+    SongGenres: withSongFilter(relationData.SongGenres, songIds),
+    Likes: withSongFilter(relationData.Likes, songIds),
+    Artists: providerArtists,
+    Releases: providerReleases,
+    Genres: relationData.Genres,
+    Users: relationData.Users,
+  };
+
+  providerCache.set(sourceId, view);
+  return view;
+};
+
+const ensureSourceId = (sourceId) => {
+  if (!sourceList.includes(sourceId)) {
+    throw new Error(`Unknown source ${sourceId}`);
+  }
+  return sourceId;
+};
+
+const getSourcesForActiveProvider = () =>
+  sources.map((source) => ({
+    ...source,
+    isPrimary: source.sourceId === activeSourceId,
+  }));
+
+const getRowsForRelation = (name) => {
+  ensureSourceId(activeSourceId);
+  if (name === 'Sources') {
+    return getSourcesForActiveProvider();
+  }
+
+  const providerView = buildProviderView(activeSourceId);
+  return providerView[name] ?? relationData[name] ?? [];
+};
+
 export function getRelation(name) {
   const relation = RELATIONS[name];
   if (!relation) {
     throw new Error(`Unknown relation ${name}`);
   }
-  const rows = relationData[name] ?? [];
+  const rows = getRowsForRelation(name);
   return {
     name,
     columns: relation.columns,
@@ -213,6 +292,19 @@ export function getRelation(name) {
 
 export function getAllRelations() {
   return Object.fromEntries(Object.keys(RELATIONS).map((key) => [key, getRelation(key)]));
+}
+
+export function setActiveSource(sourceId) {
+  const normalized = ensureSourceId(sourceId);
+  activeSourceId = normalized;
+}
+
+export function getActiveSource() {
+  return getSourcesForActiveProvider().find((source) => source.isPrimary) ?? null;
+}
+
+export function listSources() {
+  return getSourcesForActiveProvider();
 }
 
 export const DATASET = {
