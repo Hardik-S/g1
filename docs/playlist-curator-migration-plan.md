@@ -104,7 +104,7 @@ This plan outlines how to replace the mock playlist curator database with a Musi
 - [x] MusicBrainz export spec drafted and approved.
 - [x] ETL prototype ingests initial dataset into staging.
 - [x] Database schema migrated and documented.
-- [ ] RA executor updated with provider abstraction and schema changes.
+- [x] RA executor updated with provider abstraction and schema changes.
 - [ ] Frontend supports pagination, caching, and source toggling UI/flags.
 - [ ] Documentation updated (README, runbooks) with ingestion steps and configuration.
 - [ ] Monitoring plan ready for medium-term automation.
@@ -114,6 +114,9 @@ This plan outlines how to replace the mock playlist curator database with a Musi
 - Add runbook for ETL execution and troubleshooting.
 - Maintain schema diagram reflecting MusicBrainz alignment.
 - Capture canonical table definitions and migration steps in [`docs/playlist-curator-schema.md`](playlist-curator-schema.md) and keep [`sql/playlist-curator/001_musicbrainz_schema.sql`](../sql/playlist-curator/001_musicbrainz_schema.sql) in sync with future changes.
+
+## Status Updates
+- Provider interface now exports helpers to query available sources and toggle the active catalog. The RA executor consumes these scoped relations so downstream planners only operate on rows from the selected provider.
 
 ## Next Steps
 1. Assign owners for Phase 1 deliverables and align on acceptance criteria.
