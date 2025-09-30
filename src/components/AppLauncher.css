@@ -5,6 +5,7 @@
   margin: 0 auto;
   width: 100%;
   position: relative;
+  --launcher-background-color: transparent;
 }
 
 .app-launcher::before {
@@ -14,12 +15,14 @@
   z-index: -2;
   background: radial-gradient(circle at top, rgba(148, 163, 184, 0.12), transparent 45%),
     radial-gradient(circle at bottom, rgba(94, 234, 212, 0.08), transparent 40%);
+  background-color: var(--launcher-background-color, transparent);
 }
 
 .app-launcher.mechanical-view {
   background: linear-gradient(140deg, #020617 0%, #0f172a 45%, #111827 100%);
   color: #e2e8f0;
   overflow: hidden;
+  --launcher-background-color: #020617;
 }
 
 .app-launcher.mechanical-view::after {
@@ -43,6 +46,7 @@
 .app-launcher.admin-view {
   background: linear-gradient(135deg, #f5f7fa 0%, #e4ecf5 100%);
   color: #1f2933;
+  --launcher-background-color: #f5f7fa;
 }
 
 .launcher-header {
@@ -1158,6 +1162,7 @@
 .app-launcher.mechanical-view.landing-theme-light {
   background: linear-gradient(135deg, #f8fafc 0%, #dbeafe 100%);
   color: #1e293b;
+  --launcher-background-color: #f8fafc;
 }
 
 .app-launcher.mechanical-view.landing-theme-light::after {
