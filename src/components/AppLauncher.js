@@ -284,10 +284,6 @@ const AppLauncher = () => {
     return favoriteApps.filter((app) => hiddenAppIdSet.has(app.id)).length;
   }, [favoriteApps, hiddenAppIdSet, isAdminView]);
 
-  const handleSelectLandingTheme = useCallback((nextTheme) => {
-    setLandingTheme(nextTheme === 'light' ? 'light' : 'dark');
-  }, []);
-
   const toggleLandingTheme = useCallback(() => {
     setLandingTheme((current) => (current === 'dark' ? 'light' : 'dark'));
   }, []);
@@ -359,7 +355,6 @@ const AppLauncher = () => {
 
           <AdminLandingThemeCard
             landingTheme={landingTheme}
-            onSelectTheme={handleSelectLandingTheme}
             onToggleTheme={toggleLandingTheme}
           />
 
