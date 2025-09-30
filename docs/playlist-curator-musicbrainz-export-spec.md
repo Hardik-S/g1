@@ -32,7 +32,7 @@ Produce a deterministic, reproducible extract from MusicBrainz that covers ~10k 
 - **Limit**: Target 10k tracks by ordering releases via a popularity proxy (e.g., MusicBrainz Ratings `rating.rating` when available, fallback to release date recency).
 
 ## Staging Schema (PostgreSQL)
-Load the MusicBrainz dump into a PostgreSQL instance using the official `InitDb.pl` script. Create the following staging views to simplify exports:
+Load the MusicBrainz dump into a PostgreSQL instance using the official `InitDb.pl` script. Create the following staging views to simplify exports. The project now ships [`sql/staging_musicbrainz/001_create_views.sql`](../sql/staging_musicbrainz/001_create_views.sql) which materialises these helpers and a 10k-record curated slice ranked by rating and release recency:
 
 ```sql
 -- Tracks with release + artist info
@@ -107,36 +107,31 @@ All exports should be UTF-8 encoded CSVs with headers. Consider providing Parque
 | `activity_tags` | n/a | Set empty array | Stub field. |
 | `cover_art_url` | Cover Art Archive API using `release_mbid` | Fetch best quality front cover; fallback to placeholder URL | Optional step; store `NULL` if not found. |
 
-## Export Script Outline
-Use Python with `psycopg2` or `asyncpg` to run the staging queries and emit CSV files.
+## Export Script
+[`scripts/export_musicbrainz_catalog.py`](../scripts/export_musicbrainz_catalog.py)
+now materialises the CSV exports directly from the staging views. The helper
+streams rows via server-side cursors so it can handle the ~10k record slice
+without loading everything into memory.
 
-```python
-import csv
-import psycopg2
-from pathlib import Path
+Run it with a PostgreSQL DSN that points at the MusicBrainz dump augmented by
+the staging helpers:
 
-OUTPUT_DIR = Path("exports/musicbrainz")
-
-QUERIES = {
-    "tracks": "SELECT recording_mbid, track_title, artist_name, release_title, release_group_title, release_date_year, release_country FROM curated_tracks",  # curated view filters applied
-    "artists": "SELECT DISTINCT artist_mbid, artist_name FROM curated_tracks",
-    "releases": "SELECT DISTINCT release_mbid, release_title, release_date_year, release_country FROM curated_tracks",
-    "track_genres": "SELECT recording_mbid, normalized_genre FROM curated_track_genres"
-}
-
-with psycopg2.connect(dsn) as conn:
-    for name, query in QUERIES.items():
-        with conn.cursor() as cur:
-            cur.execute(query)
-            headers = [col[0] for col in cur.description]
-            OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-            with (OUTPUT_DIR / f"{name}.csv").open("w", newline="", encoding="utf-8") as f:
-                writer = csv.writer(f)
-                writer.writerow(headers)
-                writer.writerows(cur)
+```sh
+python scripts/export_musicbrainz_catalog.py \
+  --dsn postgresql://musicbrainz:pass@localhost:5432/musicbrainz \
+  --output-dir exports/musicbrainz
 ```
 
-> **Note:** Replace `curated_tracks` with a final view that includes ranking/limiting logic (e.g., rating-based ordering + `LIMIT 10000`).
+Use `--dry-run` to print the files that would be produced. The script emits the
+following artifacts, matching the deliverables table:
+
+- `tracks.csv`: Ordered slice of curated tracks with recording/release metadata
+  and ranking information (`row_number`).
+- `artists.csv`: Distinct artist MBIDs/names observed in the curated slice.
+- `releases.csv`: Distinct releases with release group identifiers and
+  packaging/barcode hints for cover art lookups.
+- `track_genres.csv`: Normalised genre associations with their source type
+  (`genre` vs `tag`).
 
 ## Normalized Genre Dictionary
 Maintain a mapping table to standardize genres/tags.
@@ -171,4 +166,7 @@ During export, lower-case and strip punctuation before lookup. Unknown values sh
 - Python export script (`scripts/export_musicbrainz_catalog.py`)
 - Genre normalization CSV (`data/genre_mappings.csv`)
 
-The latter three artifacts will be implemented in subsequent subtasks. This specification unblocks the ETL prototype workstream and documents the requirements for the schema migration task.
+The staging SQL and export script are now checked in; the genre mapping CSV will
+follow in a later subtask. This specification continues to guide the ETL
+prototype workstream and documents the requirements for the schema migration
+task.
