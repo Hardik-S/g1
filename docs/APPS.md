@@ -78,6 +78,12 @@ Cat Connect Four stages a whimsical match inside a pastel cat café. Players pic
 - Offer weekly puzzle challenges where players solve near-win boards against each AI difficulty.
 - Expand cosmetics with unlockable paw trails, animated board frames, and seasonal café decor.
 
+## HTML Chess Lab
+HTML Chess Lab runs Stockfish 17 entirely in the browser, streaming stdout and stderr in a live console while automatically attaching bundled NNUE networks. A control surface exposes quick UCI macros, manual command entry, and asset diagnostics so analysts can rehearse engine workflows without a desktop binary.
+- Allow users to upload custom NNUE networks and keep per-profile presets.
+- Layer a lightweight board viewer that mirrors the last `position` command for visual context.
+- Surface depth, nodes, and evaluation charts by parsing `info` lines into structured telemetry panels.
+
 ## Sudoku Roast
 Sudoku Roast brings a cozy café vibe to the classic logic puzzle with parchment-inspired styling, smooth note-taking, and an original puzzle generator. Solvers can pencil in candidates, validate progress, and request handcrafted hints without breaking immersion.
 - Track solve statistics, streaks, and difficulty preferences for returning players.
