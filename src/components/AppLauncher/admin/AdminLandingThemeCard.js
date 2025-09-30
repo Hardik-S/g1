@@ -1,6 +1,6 @@
 import React from 'react';
 
-const AdminLandingThemeCard = ({ landingTheme, onSelectTheme, onToggleTheme }) => {
+const AdminLandingThemeCard = ({ landingTheme, onToggleTheme }) => {
   const isDarkTheme = landingTheme === 'dark';
 
   return (
@@ -10,39 +10,29 @@ const AdminLandingThemeCard = ({ landingTheme, onSelectTheme, onToggleTheme }) =
         Control whether the public launcher uses a light or dark mechanical theme.
       </p>
 
-      <fieldset className="landing-theme-selector">
-        <legend className="landing-theme-selector-label">Launcher appearance</legend>
-        <div className="landing-theme-options">
-          <label className={`landing-theme-option ${landingTheme === 'light' ? 'selected' : ''}`}>
-            <input
-              type="radio"
-              name="landing-theme"
-              value="light"
-              checked={landingTheme === 'light'}
-              onChange={() => onSelectTheme('light')}
-            />
-            <span>Light</span>
-          </label>
-          <label className={`landing-theme-option ${landingTheme === 'dark' ? 'selected' : ''}`}>
-            <input
-              type="radio"
-              name="landing-theme"
-              value="dark"
-              checked={landingTheme === 'dark'}
-              onChange={() => onSelectTheme('dark')}
-            />
-            <span>Dark</span>
-          </label>
-        </div>
-      </fieldset>
-
-      <button
-        type="button"
-        className="admin-action-btn landing-theme-toggle-btn"
-        onClick={onToggleTheme}
-      >
-        Toggle to {isDarkTheme ? 'Light' : 'Dark'} Mode
-      </button>
+      <label className={`landing-theme-toggle ${isDarkTheme ? 'active' : ''}`}>
+        <span className="landing-theme-toggle-copy">
+          <span className="landing-theme-toggle-label">Dark mode</span>
+          <span className="landing-theme-toggle-status">
+            {isDarkTheme
+              ? 'Visitors currently see the dark mechanical finish.'
+              : 'Visitors currently see the light mechanical finish.'}
+          </span>
+        </span>
+        <input
+          type="checkbox"
+          checked={isDarkTheme}
+          onChange={onToggleTheme}
+          aria-label={
+            isDarkTheme
+              ? 'Disable dark mode for the public launcher'
+              : 'Enable dark mode for the public launcher'
+          }
+        />
+        <span className="landing-theme-toggle-switch" aria-hidden="true">
+          <span className="landing-theme-toggle-knob" />
+        </span>
+      </label>
     </div>
   );
 };
