@@ -192,18 +192,109 @@ const wideViewRows = createWideView();
 
 relationData.SongWideView = wideViewRows;
 
+const sourcesIndex = new Map(sources.map((entry) => [entry.sourceId, entry]));
+const primarySourceId = (() => {
+  const primary = sources.find((entry) => entry.isPrimary);
+  if (primary && sourcesIndex.has(primary.sourceId)) {
+    return primary.sourceId;
+  }
+  if (sourcesIndex.has(defaultSourceId)) {
+    return defaultSourceId;
+  }
+  return sources[0]?.sourceId ?? defaultSourceId;
+})();
+
+let activeSourceId = primarySourceId;
+
+const scopedRelationCache = new Map();
+
+const buildSourcesRows = (selectedSourceId) =>
+  sources.map((entry) => ({
+    ...entry,
+    isPrimary: entry.sourceId === selectedSourceId,
+  }));
+
+const ensureSourceId = (sourceId) => {
+  if (!sourcesIndex.has(sourceId)) {
+    throw new Error(`Unknown playlist curator source: ${sourceId}`);
+  }
+};
+
+const buildScopedRelations = (sourceId) => {
+  ensureSourceId(sourceId);
+  if (scopedRelationCache.has(sourceId)) {
+    return scopedRelationCache.get(sourceId);
+  }
+
+  const songsForSource = relationData.Songs.filter((song) => song.source === sourceId);
+  const songIds = new Set(songsForSource.map((song) => song.songId));
+
+  const releaseIds = new Set();
+  songsForSource.forEach((song) => {
+    if (song.releaseId) {
+      releaseIds.add(song.releaseId);
+    }
+  });
+
+  const scopedSongArtists = relationData.SongArtists.filter((entry) => songIds.has(entry.songId));
+  const artistIds = new Set();
+  songsForSource.forEach((song) => {
+    if (song.primaryArtistId) {
+      artistIds.add(song.primaryArtistId);
+    }
+  });
+  scopedSongArtists.forEach((entry) => {
+    if (entry.artistId) {
+      artistIds.add(entry.artistId);
+    }
+  });
+
+  const scopedSongGenres = relationData.SongGenres.filter((entry) => songIds.has(entry.songId));
+  const genreIds = new Set(scopedSongGenres.map((entry) => entry.genreId));
+  if (genreIds.size === 0 && relationData.Genres.some((genre) => genre.genreId === 'unknown')) {
+    genreIds.add('unknown');
+  }
+
+  const scopedRelations = {
+    Songs: songsForSource,
+    Artists: relationData.Artists.filter((artist) => artistIds.has(artist.artistId)),
+    SongArtists: scopedSongArtists,
+    SongMood: relationData.SongMood.filter((entry) => songIds.has(entry.songId)),
+    SongActivity: relationData.SongActivity.filter((entry) => songIds.has(entry.songId)),
+    Likes: relationData.Likes.filter((entry) => songIds.has(entry.songId)),
+    Users: relationData.Users,
+    SongWideView: relationData.SongWideView.filter((entry) => songIds.has(entry.songId)),
+    Releases: relationData.Releases.filter((entry) => releaseIds.has(entry.releaseId)),
+    Genres: relationData.Genres.filter((entry) => genreIds.has(entry.genreId)),
+    SongGenres: scopedSongGenres,
+    Sources: buildSourcesRows(sourceId),
+  };
+
+  scopedRelationCache.set(sourceId, scopedRelations);
+  return scopedRelations;
+};
+
+const getScopedRelations = (sourceId = activeSourceId) => {
+  ensureSourceId(sourceId);
+  return buildScopedRelations(sourceId);
+};
+
 export const WIDE_VIEW = {
   name: 'SongWideView',
   columns: WIDE_VIEW_COLUMNS,
   rows: wideViewRows,
 };
 
-export function getRelation(name) {
+export function getRelation(name, options = {}) {
   const relation = RELATIONS[name];
   if (!relation) {
     throw new Error(`Unknown relation ${name}`);
   }
-  const rows = relationData[name] ?? [];
+
+  const sourceId = options.sourceId ?? activeSourceId;
+  const scoped = getScopedRelations(sourceId);
+  const rows = scoped[name] ?? [];
+
   return {
     name,
     columns: relation.columns,
@@ -211,8 +302,22 @@ export function getRelation(name) {
   };
 }
 
-export function getAllRelations() {
-  return Object.fromEntries(Object.keys(RELATIONS).map((key) => [key, getRelation(key)]));
+export function getAllRelations(options = {}) {
+  const sourceId = options.sourceId ?? activeSourceId;
+  return Object.fromEntries(Object.keys(RELATIONS).map((key) => [key, getRelation(key, { sourceId })]));
+}
+
+export function getActiveSourceId() {
+  return activeSourceId;
+}
+
+export function setActiveSourceId(sourceId) {
+  ensureSourceId(sourceId);
+  activeSourceId = sourceId;
+}
+
+export function getAvailableSources() {
+  return buildSourcesRows(activeSourceId);
 }
 
 export const DATASET = {
