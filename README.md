@@ -22,6 +22,7 @@ A modular collection of experimental React experiences bundled behind a shared l
 - **Hexa-Snake (Bee Edition)** – guide a bee across a honeycomb board.
 - **Neon Pong** and **Pong Ring** – duel paddles across neon and circular arenas.
 - **CatNap Leap** – glide between dreamy pillows while keeping a sleepy cat alert.
+- **HTML Chess Lab** – run Stockfish 17 + NNUE entirely in-browser with a live UCI console.
 - **Sudoku Roast** – solve handcrafted puzzles in a cozy café setting.
 
 ### Learning tools
