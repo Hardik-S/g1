@@ -1,11 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 
-const resolvePublicUrl = () => {
-  const rawPublicUrl = typeof process !== 'undefined' ? process.env.PUBLIC_URL : '';
-  return (rawPublicUrl ?? '').replace(/\/$/, '');
-};
-
-const PUBLIC_URL = resolvePublicUrl();
+const PUBLIC_URL = (process.env.PUBLIC_URL ?? '').replace(/\/$/, '');
 const STOCKFISH_RELATIVE_PATH = '/apps/htmlChess';
 
 export const STOCKFISH_BASE_PATH = `${PUBLIC_URL}${STOCKFISH_RELATIVE_PATH}`;
