@@ -28,7 +28,7 @@ Gif coming soon
 * **Neon Pong**: duel classic paddles with a neon glow.
 * **Pong Ring**: rally inside a circular quartz arena.
 * **CatNap Leap**: glide between dreamy pillows while keeping a sleepy cat alert.
-* **HTML Chess Lab**: stream Stockfish 17 + NNUE entirely in-browser with a live UCI console.
+* **HTML Chess Lab**: stream Stockfish 17 + NNUE entirely in-browser with a live UCI console. Serve it with `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp` headers (the `npm start` dev server already does) so SharedArrayBuffer-powered analysis boots.
 * **Sudoku Roast**: solve handcrafted puzzles in a cozy café setting.
 
 ### Learning Tools
