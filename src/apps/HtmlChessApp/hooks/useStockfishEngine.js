@@ -45,6 +45,12 @@ const useStockfishEngine = ({ onMessage, onError } = {}) => {
     setLoadedNetworks([]);
 
     try {
+      if (!globalThis.crossOriginIsolated || !('SharedArrayBuffer' in globalThis)) {
+        throw new Error(
+          'HtmlChess must be served with Cross-Origin-Opener-Policy: same-origin and Cross-Origin-Embedder-Policy: require-corp headers (for example via npm start).',
+        );
+      }
+
       const module = await import(
         /* webpackIgnore: true */ `${STOCKFISH_ENTRYPOINT}?cache=${Date.now()}`
       );

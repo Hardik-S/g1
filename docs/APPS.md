@@ -79,7 +79,7 @@ Cat Connect Four stages a whimsical match inside a pastel cat café. Players pic
 - Expand cosmetics with unlockable paw trails, animated board frames, and seasonal café decor.
 
 ## HTML Chess Lab
-HTML Chess Lab runs Stockfish 17 entirely in the browser, streaming stdout and stderr in a live console while automatically attaching bundled NNUE networks. A control surface exposes quick UCI macros, manual command entry, and asset diagnostics so analysts can rehearse engine workflows without a desktop binary.
+HTML Chess Lab runs Stockfish 17 entirely in the browser, streaming stdout and stderr in a live console while automatically attaching bundled NNUE networks. A control surface exposes quick UCI macros, manual command entry, and asset diagnostics so analysts can rehearse engine workflows without a desktop binary. Serve the launcher with `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp` headers—`npm start` configures them automatically—so the SharedArrayBuffer-powered engine boots successfully.
 - Allow users to upload custom NNUE networks and keep per-profile presets.
 - Layer a lightweight board viewer that mirrors the last `position` command for visual context.
 - Surface depth, nodes, and evaluation charts by parsing `info` lines into structured telemetry panels.
