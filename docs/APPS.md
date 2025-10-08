@@ -84,6 +84,12 @@ HTML Chess Lab runs Stockfish 17 entirely in the browser, streaming stdout and s
 - Layer a lightweight board viewer that mirrors the last `position` command for visual context.
 - Surface depth, nodes, and evaluation charts by parsing `info` lines into structured telemetry panels.
 
+## GrokChess
+GrokChess packages a Stockfish-powered board into a single static HTML page so it can live on GitHub Pages without build tooling. Chessboard.js renders the responsive board, Chess.js validates moves, and a bundled Stockfish WASM worker answers from the black side at depth 10, making it ideal for blitz skirmishes wherever the site is hosted.
+- Add more time controls, including classical presets and custom increments, with persistent preferences stored client-side.
+- Layer PGN export plus a move list that mirrors the live board so players can review games after the final move.
+- Offer difficulty scaling by adjusting Stockfish search depth or skill level for beginners wanting lighter resistance.
+
 ## Sudoku Roast
 Sudoku Roast brings a cozy café vibe to the classic logic puzzle with parchment-inspired styling, smooth note-taking, and an original puzzle generator. Solvers can pencil in candidates, validate progress, and request handcrafted hints without breaking immersion.
 - Track solve statistics, streaks, and difficulty preferences for returning players.
