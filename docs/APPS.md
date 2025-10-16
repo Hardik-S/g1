@@ -78,6 +78,12 @@ Cat Connect Four stages a whimsical match inside a pastel cat café. Players pic
 - Offer weekly puzzle challenges where players solve near-win boards against each AI difficulty.
 - Expand cosmetics with unlockable paw trails, animated board frames, and seasonal café decor.
 
+## Vibe Memory
+Vibe Memory transforms a classic card-matching puzzle into a vivid gradient playground. Players choose from sunset, ocean, forest, or neon themes, dial up the difficulty, and flip tiles while synthesized chimes celebrate matches and wins. A per-theme best score tracker, responsive layout, and accessibility-friendly controls make each run feel rewarding.
+- Persist best scores to local storage so favourite theme/difficulty pairings remember personal records between visits.
+- Introduce timed sprint and zen endless variants that remix pacing without sacrificing the tranquil vibe.
+- Layer subtle flip animations or 3D transforms to amplify the tactile satisfaction of every reveal.
+
 ## HTML Chess Lab
 HTML Chess Lab runs Stockfish 17 entirely in the browser, streaming stdout and stderr in a live console while automatically attaching bundled NNUE networks. A control surface exposes quick UCI macros, manual command entry, and asset diagnostics so analysts can rehearse engine workflows without a desktop binary. Serve the launcher with `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp` headers—`npm start` configures them automatically—so the SharedArrayBuffer-powered engine boots successfully.
 - Allow users to upload custom NNUE networks and keep per-profile presets.
