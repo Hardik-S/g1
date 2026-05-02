@@ -96,14 +96,28 @@ const Visualizer: React.FC<VisualizerProps> = ({
               <BarChart data={measurementData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                 <XAxis dataKey="outcome" stroke="#cbd5f5" />
-                <YAxis stroke="#cbd5f5" tickFormatter={(value) => value.toFixed(2)} />
+                <YAxis
+                  yAxisId="probability"
+                  stroke="#cbd5f5"
+                  domain={[0, 1]}
+                  tickFormatter={(value) => value.toFixed(2)}
+                />
+                <YAxis
+                  yAxisId="shots"
+                  orientation="right"
+                  stroke="#c4b5fd"
+                  allowDecimals={false}
+                  tickFormatter={(value) => value.toFixed(0)}
+                />
                 <Tooltip
                   contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', color: '#e2e8f0' }}
-                  formatter={(value: number, name) => (name === 'shots' ? value : value.toFixed(4))}
+                  formatter={(value: number, name) => (
+                    name === 'Sample Count' || name === 'shots' ? value.toFixed(0) : value.toFixed(4)
+                  )}
                 />
                 <Legend />
-                <Bar dataKey="probability" fill="#34d399" name="Probability" />
-                <Bar dataKey="shots" fill="#818cf8" name="Sample Count" />
+                <Bar yAxisId="probability" dataKey="probability" fill="#34d399" name="Probability" />
+                <Bar yAxisId="shots" dataKey="shots" fill="#818cf8" name="Sample Count" />
               </BarChart>
             </ResponsiveContainer>
           </div>
