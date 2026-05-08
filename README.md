@@ -23,6 +23,7 @@ A modular collection of experimental React experiences bundled behind a shared l
 - **Neon Pong** and **Pong Ring** – duel paddles across neon and circular arenas.
 - **CatNap Leap** – glide between dreamy pillows while keeping a sleepy cat alert.
 - **HTML Chess Lab** – run Stockfish 17 + NNUE entirely in-browser with a live UCI console.
+- **GrokChess** – static GitHub Pages chessboard that pits you against Stockfish with blitz clocks.
 - **Sudoku Roast** – solve handcrafted puzzles in a cozy café setting.
 
 ### Learning tools
