@@ -25,8 +25,18 @@
           <div class="toolbar-actions" role="group" aria-label="Primary actions">
             <button id="random-launch" type="button">Launch random app</button>
             <a id="open-launcher" href=".." class="ghost-link">Open legacy launcher</a>
+            <button id="clear-filters" type="button">Clear filters</button>
             <button id="theme-toggle" type="button" aria-pressed="false">Theme: dusk</button>
+            <button id="export-favorites" type="button">Export favorites</button>
+            <button id="import-favorites" type="button">Import favorites</button>
+            <input
+              id="import-favorites-file"
+              type="file"
+              accept="application/json"
+              hidden
+            />
           </div>
+          <p class="helper-text">Keyboard: / focus search, F favorites only, R random, C clear filters, Esc blur search.</p>
         </section>
 
         <section class="toolbar card metrics" aria-label="Quick metrics">
@@ -58,8 +68,16 @@
               <option value="list">List</option>
             </select>
           </div>
-          <label class="inline-check"><input id="hide-disabled" type="checkbox" checked="true" />
-            Hide disabled entries</label>
+          <label class="inline-check"
+            ><input id="hide-disabled" type="checkbox" checked="true" />
+            Hide disabled entries</label
+          >
+          <label class="inline-check"
+            ><input id="favorites-only" type="checkbox" />
+            Show favorites only</label
+          >
+          <button id="clear-favorites" class="danger" type="button">Clear favorites</button>
+          <button id="clear-recent" type="button">Clear recent list</button>
         </section>
 
         <section class="grid two-col" id="recently-opened" aria-live="polite"></section>

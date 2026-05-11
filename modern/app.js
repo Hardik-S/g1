@@ -1,12 +1,14 @@
-﻿const ROOT_STATE = {
+const ROOT_STATE = {
   catalog: [],
   favorites: new Set(),
   recent: [],
+  lastImport: null,
   query: '',
   category: 'All',
   viewMode: 'grid',
   hideDisabled: true,
   theme: 'dusk',
+  favoritesOnly: false,
 };
 
 const STORAGE = {
@@ -17,6 +19,8 @@ const STORAGE = {
   hide: 'g1-legacy-modern-hide-disabled',
   query: 'g1-legacy-modern-query',
   category: 'g1-legacy-modern-category',
+  favoritesOnly: 'g1-legacy-modern-favorites-only',
+  lastImport: 'g1-legacy-modern-last-import',
 };
 
 const state = {
@@ -35,9 +39,16 @@ const getElements = () => ({
   themeToggle: document.getElementById('theme-toggle'),
   viewModeSelect: document.getElementById('view-mode'),
   hideDisabledInput: document.getElementById('hide-disabled'),
+  favoritesOnlyInput: document.getElementById('favorites-only'),
   openLauncher: document.getElementById('open-launcher'),
   runtimeEvidence: document.getElementById('runtime-evidence'),
   recentlyOpened: document.getElementById('recently-opened'),
+  clearFiltersBtn: document.getElementById('clear-filters'),
+  clearFavoritesBtn: document.getElementById('clear-favorites'),
+  clearRecentBtn: document.getElementById('clear-recent'),
+  exportFavoritesBtn: document.getElementById('export-favorites'),
+  importFavoritesBtn: document.getElementById('import-favorites'),
+  importFavoritesFile: document.getElementById('import-favorites-file'),
 });
 
 const safeLoad = (key, fallback, reviver) => {
@@ -69,6 +80,8 @@ const saveState = () => {
   window.localStorage.setItem(STORAGE.hide, JSON.stringify(state.hideDisabled));
   window.localStorage.setItem(STORAGE.query, state.query);
   window.localStorage.setItem(STORAGE.category, state.category);
+  window.localStorage.setItem(STORAGE.favoritesOnly, JSON.stringify(state.favoritesOnly));
+  window.localStorage.setItem(STORAGE.lastImport, JSON.stringify(state.lastImport ?? null));
 };
 
 const catalogBase = () => {
@@ -78,7 +91,7 @@ const catalogBase = () => {
 
 const buildRoute = (path) => `${catalogBase()}${path}`;
 
-const iconList = (text) => text || '●';
+const iconList = (text) => text || '\u25CF';
 
 const renderHero = () => {
   const hero = document.getElementById('hero');
@@ -87,7 +100,7 @@ const renderHero = () => {
   hero.innerHTML = `
     <div class="hero-content">
       <h2>${appCount} apps indexed</h2>
-      <p>${featuredCount} featured · ${new Set(state.catalog.map((app) => app.category)).size} categories</p>
+      <p>${featuredCount} featured \u00B7 ${new Set(state.catalog.map((app) => app.category)).size} categories</p>
       <p>Legacy preservation: root app shell and routes are unchanged and still source of truth.</p>
     </div>`;
 };
@@ -159,7 +172,7 @@ const createCard = (app) => {
       <div>
         <h3><span class="favicon" aria-hidden="true">${iconList(app.icon)}</span> ${app.title}</h3>
       </div>
-      <button data-fav="${app.id}" type="button" aria-label="${favoriteLabel} ${app.title}">${favorite ? '★' : '☆'}</button>
+      <button data-fav="${app.id}" type="button" aria-label="${favoriteLabel} ${app.title}">${favorite ? '\u2605' : '\u2606'}</button>
     </div>
     <p>${app.description}</p>
     <div class="app-meta">
@@ -188,10 +201,65 @@ const createCard = (app) => {
   return article;
 };
 
+const withValidAppIds = (ids) => new Set(ids.filter(Boolean).map((id) => `${id}`));
+
+const syncFavoritesFromCatalog = () => {
+  const catalogIds = new Set(state.catalog.map((app) => `${app.id}`));
+  state.favorites = new Set([...state.favorites].filter((id) => catalogIds.has(id)));
+};
+
+const buildFavoritesPayload = () => ({
+  source: 'g1 modern dock',
+  generatedAt: new Date().toISOString(),
+  favorites: [...state.favorites],
+  metadata: {
+    catalogVersion: state.catalogMeta?.generatedAt,
+    visibleCatalogCount: state.catalog.length,
+    favoritesOnlyMode: state.favoritesOnly,
+    query: state.query,
+    category: state.category,
+  },
+});
+
+const applyImportedFavorites = (payload) => {
+  const incoming = Array.isArray(payload)
+    ? payload
+    : Array.isArray(payload?.favorites)
+      ? payload.favorites
+      : [];
+
+  const incomingIds = withValidAppIds(incoming);
+  const original = state.favorites.size;
+  syncFavoritesFromCatalog();
+  const next = new Set([...state.favorites].filter(Boolean));
+
+  for (const id of incomingIds) {
+    if (state.catalog.some((entry) => `${entry.id}` === `${id}`)) {
+      next.add(`${id}`);
+    }
+  }
+
+  state.favorites = next;
+  state.favoritesOnly = state.favorites.size > 0;
+  state.lastImport = {
+    requestSize: incoming.length,
+    imported: state.favorites.size,
+    skipped: Math.max(0, incoming.length - state.favorites.size),
+    receivedAt: new Date().toISOString(),
+    source: payload?.source || 'manual-import',
+  };
+
+  return {
+    applied: state.favorites.size - original,
+    skipped: incoming.length - (state.favorites.size - original),
+    requested: incoming.length,
+  };
+};
 const getFiltered = () => {
   const q = state.query.trim().toLowerCase();
   return state.catalog
     .filter((app) => !state.hideDisabled || app.id !== 'app-3')
+    .filter((app) => !state.favoritesOnly || state.favorites.has(app.id))
     .filter((app) => state.category === 'All' || app.category === state.category)
     .filter((app) => {
       if (!q) return true;
@@ -281,11 +349,149 @@ const renderEvidence = () => {
     generatedAt: state.catalogMeta.generatedAt,
     totalApps: state.catalog.length,
     favorites: state.favorites.size,
+    favoritesOnly: state.favoritesOnly,
     recentCount: state.recent.length,
+    lastImport: state.lastImport,
     timestamp: new Date().toISOString(),
   };
 
   document.getElementById('runtime-evidence').textContent = JSON.stringify(evidence, null, 2);
+};
+
+const launchRandom = () => {
+  const pool = getFiltered();
+  const list = pool.length > 0 ? pool : state.catalog;
+  const picked = list[Math.floor(Math.random() * list.length)];
+  if (!picked) return;
+
+  saveRecent(picked);
+  window.location.href = buildRoute(picked.path);
+};
+
+const clearFavorites = () => {
+  state.favorites = new Set();
+  state.favoritesOnly = false;
+  state.lastImport = {
+    requestSize: 0,
+    imported: 0,
+    skipped: 0,
+    receivedAt: new Date().toISOString(),
+    source: 'manual-clear',
+  };
+  rerender();
+};
+
+const clearRecent = () => {
+  state.recent = [];
+  rerender();
+};
+
+const exportFavorites = () => {
+  const payload = buildFavoritesPayload();
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {
+    type: 'application/json;charset=utf-8',
+  });
+  const anchor = document.createElement('a');
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  anchor.href = URL.createObjectURL(blob);
+  anchor.download = `g1-modern-favorites-${stamp}.json`;
+  anchor.style.display = 'none';
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+};
+
+const importFavorites = async (event) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  const text = await file.text();
+  let payload = null;
+  try {
+    payload = JSON.parse(text);
+  } catch (error) {
+    state.lastImport = {
+      requestSize: 0,
+      applied: 0,
+      skipped: 0,
+      source: 'file-import-invalid-json',
+      receivedAt: new Date().toISOString(),
+      reason: error.message,
+    };
+    rerender();
+    event.target.value = '';
+    return;
+  }
+
+  const result = applyImportedFavorites(payload);
+  state.lastImport = {
+    ...state.lastImport,
+    requested: result.requested,
+    applied: result.applied,
+    skipped: result.skipped,
+    source: 'file-import',
+    receivedAt: new Date().toISOString(),
+  };
+  event.target.value = '';
+  rerender();
+};
+
+const clearAllFilters = () => {
+  state.query = '';
+  state.category = 'All';
+  state.viewMode = 'grid';
+  state.favoritesOnly = false;
+  const elements = getElements();
+  elements.searchInput.value = '';
+  elements.categorySelect.value = 'All';
+  elements.viewModeSelect.value = 'grid';
+  elements.favoritesOnlyInput.checked = false;
+  rerender();
+};
+
+const bindShortcuts = () => {
+  const elements = getElements();
+
+  window.addEventListener('keydown', (event) => {
+    if (event.defaultPrevented) {
+      return;
+    }
+
+    if (event.metaKey || event.ctrlKey || event.altKey) return;
+
+    const target = event.target;
+    const targetTag = target?.tagName?.toLowerCase();
+
+    if (event.key === '/' && targetTag !== 'input' && targetTag !== 'textarea') {
+      event.preventDefault();
+      elements.searchInput.focus();
+      return;
+    }
+
+    if (event.key === 'f' || event.key === 'F') {
+      if (targetTag === 'input' || targetTag === 'textarea') return;
+      event.preventDefault();
+      state.favoritesOnly = !state.favoritesOnly;
+      elements.favoritesOnlyInput.checked = state.favoritesOnly;
+      rerender();
+      return;
+    }
+
+    if (event.key === 'r' || event.key === 'R') {
+      event.preventDefault();
+      launchRandom();
+      return;
+    }
+
+    if (event.key === 'c' || event.key === 'C') {
+      event.preventDefault();
+      clearAllFilters();
+      return;
+    }
+
+    if (event.key === 'Escape') {
+      elements.searchInput.blur();
+    }
+  });
 };
 
 function rerender() {
@@ -317,13 +523,7 @@ const bindEvents = () => {
   });
 
   elements.randomLaunch.addEventListener('click', () => {
-    const pool = getFiltered();
-    const list = pool.length > 0 ? pool : state.catalog;
-    const picked = list[Math.floor(Math.random() * list.length)];
-    if (!picked) return;
-
-    saveRecent(picked);
-    window.location.href = buildRoute(picked.path);
+    launchRandom();
   });
 
   elements.themeToggle.addEventListener('click', () => {
@@ -336,6 +536,18 @@ const bindEvents = () => {
     state.hideDisabled = Boolean(event.target.checked);
     rerender();
   });
+
+  elements.favoritesOnlyInput.addEventListener('change', (event) => {
+    state.favoritesOnly = Boolean(event.target.checked);
+    rerender();
+  });
+
+  elements.clearFiltersBtn.addEventListener('click', clearAllFilters);
+  elements.clearFavoritesBtn.addEventListener('click', clearFavorites);
+  elements.clearRecentBtn.addEventListener('click', clearRecent);
+  elements.exportFavoritesBtn.addEventListener('click', exportFavorites);
+  elements.importFavoritesBtn.addEventListener('click', () => elements.importFavoritesFile.click());
+  elements.importFavoritesFile.addEventListener('change', importFavorites);
 
   elements.openLauncher.addEventListener('click', () => {
     saveState();
@@ -350,6 +562,8 @@ const bootstrap = async () => {
   state.hideDisabled = safeLoad(STORAGE.hide, true, (value) => Boolean(value));
   state.query = safeLoad(STORAGE.query, '');
   state.category = safeLoad(STORAGE.category, 'All');
+  state.favoritesOnly = safeLoad(STORAGE.favoritesOnly, false, (value) => Boolean(value));
+  state.lastImport = safeLoad(STORAGE.lastImport, null);
 
   const response = await fetch('./apps-manifest.json', { cache: 'no-store' });
   if (!response.ok) {
@@ -359,13 +573,16 @@ const bootstrap = async () => {
   const payload = await response.json();
   state.catalog = payload.items || [];
   state.catalogMeta = { generatedAt: payload.generatedAt || new Date().toISOString() };
+  syncFavoritesFromCatalog();
 
   document.getElementById('search-input').value = state.query;
   document.getElementById('view-mode').value = state.viewMode;
   document.getElementById('hide-disabled').checked = state.hideDisabled;
+  document.getElementById('favorites-only').checked = state.favoritesOnly;
 
   setTheme();
   bindEvents();
+  bindShortcuts();
   rerender();
 };
 
