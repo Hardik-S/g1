@@ -1,0 +1,256 @@
+﻿{
+    "generatedAt":  "2026-05-11T03:54:20.1661015Z",
+    "total":  25,
+    "items":  [
+                  {
+                      "id":  "cache-lab",
+                      "title":  "Cache Lab",
+                      "description":  "Interactive cache memory learning lab with mapping, replacement, hierarchy, and assessments.",
+                      "icon":  "ðŸ’¾",
+                      "category":  "Education",
+                      "path":  "/cache-lab",
+                      "featured":  true,
+                      "version":  "1.44.00"
+                  },
+                  {
+                      "id":  "cat-connect-four",
+                      "title":  "Cat Connect Four",
+                      "description":  "Drop custom paws against friends or cafÃ© cats with animated sparkle wins.",
+                      "icon":  "ðŸ¾",
+                      "category":  "Games",
+                      "path":  "/apps/cat-connect-four",
+                      "featured":  true,
+                      "version":  "2.34.00"
+                  },
+                  {
+                      "id":  "cat-typing-speed-test",
+                      "title":  "Cat Typing Speed Test",
+                      "description":  "Sprint through cat-themed sentences to measure WPM, CPM, and accuracy.",
+                      "icon":  "âŒ¨ï¸",
+                      "category":  "Education",
+                      "path":  "/apps/cat-typing-speed-test",
+                      "featured":  true,
+                      "version":  "1.22.00"
+                  },
+                  {
+                      "id":  "catnap-leap",
+                      "title":  "CatNap Leap",
+                      "description":  "Guide a drowsy cat through floating pillows, chase scores, and sip dreamy powerups.",
+                      "icon":  "ðŸ±",
+                      "category":  "Games",
+                      "path":  "/apps/catnap-leap",
+                      "featured":  true,
+                      "version":  "3.28.00"
+                  },
+                  {
+                      "id":  "catpad",
+                      "title":  "CatPad",
+                      "description":  "Feline-themed notepad with cloud sync across every browser.",
+                      "icon":  "ðŸ—’ï¸",
+                      "category":  "Productivity",
+                      "path":  "/apps/catpad",
+                      "featured":  true,
+                      "version":  "4.15.00"
+                  },
+                  {
+                      "id":  "claude-chess",
+                      "title":  "Claude Chess",
+                      "description":  "Battle Stockfish inside a Claude-themed arena with glowing board highlights.",
+                      "icon":  "â™š",
+                      "category":  "Games",
+                      "path":  "/apps/claude-chess",
+                      "featured":  true,
+                      "version":  "1.0.0"
+                  },
+                  {
+                      "id":  "cosmos",
+                      "title":  "Cosmos Simulator",
+                      "description":  "Navigate a scaled solar system with Newtonian physics, trails, and teleport controls.",
+                      "icon":  "ðŸª",
+                      "category":  "Exploration",
+                      "path":  "/apps/cosmos",
+                      "featured":  true,
+                      "version":  "2.82.00"
+                  },
+                  {
+                      "id":  "day-switcher",
+                      "title":  "Day Switcher",
+                      "description":  "Switch between days of the week with beautiful animations",
+                      "icon":  "ðŸ“…",
+                      "category":  "Utilities",
+                      "path":  "/apps/day-switcher",
+                      "featured":  true,
+                      "version":  "3.12.00"
+                  },
+                  {
+                      "id":  "hexa-snake-bee",
+                      "title":  "Hexa-Snake (Bee Edition)",
+                      "description":  "Guide a bee through a honeycomb hex-grid and collect golden nectar",
+                      "icon":  "ðŸ",
+                      "category":  "Games",
+                      "path":  "/apps/hexa-snake",
+                      "featured":  true,
+                      "version":  "2.48.00"
+                  },
+                  {
+                      "id":  "html-chess",
+                      "title":  "HTML Chess Lab",
+                      "description":  "Stream Stockfish 17 in the browser, attach NNUE networks, and experiment with UCI commands.",
+                      "icon":  "â™ž",
+                      "category":  "Games",
+                      "path":  "/apps/html-chess",
+                      "featured":  true,
+                      "version":  "1.0.0"
+                  },
+                  {
+                      "id":  "lang-math",
+                      "title":  "LangMath",
+                      "description":  "Turn number words and operator phrases into live calculations using client-side Python.",
+                      "icon":  "ðŸ§®",
+                      "category":  "Education",
+                      "path":  "/apps/lang-math",
+                      "featured":  true,
+                      "version":  "2.56.00"
+                  },
+                  {
+                      "id":  "namecraft",
+                      "title":  "Namecraft",
+                      "description":  "Design rooms, craft candidate names, and run deterministic heuristics for linguistics cohorts.",
+                      "icon":  "ðŸ”¤",
+                      "category":  "Tools",
+                      "path":  "/apps/namecraft",
+                      "featured":  true,
+                      "version":  "1.0.0"
+                  },
+                  {
+                      "id":  "pong",
+                      "title":  "Neon Pong",
+                      "description":  "Fast-paced neon Pong with solo and versus modes plus session history",
+                      "icon":  "ðŸ“",
+                      "category":  "Games",
+                      "path":  "/apps/pong",
+                      "featured":  true,
+                      "version":  "5.36.00"
+                  },
+                  {
+                      "id":  "n-pomodoro",
+                      "title":  "N-Pomodoro Timer",
+                      "description":  "Customizable Pomodoro timer with N activities and deep space theme",
+                      "icon":  "ðŸ…",
+                      "category":  "Productivity",
+                      "path":  "/apps/n-pomodoro",
+                      "featured":  true,
+                      "version":  "3.42.00"
+                  },
+                  {
+                      "id":  "playlist-curator",
+                      "title":  "Playlist Curator",
+                      "description":  "Translate natural language music requests into relational algebra and inspect execution steps.",
+                      "icon":  "ðŸŽ¶",
+                      "category":  "Education",
+                      "path":  "/apps/playlist-curator",
+                      "featured":  true,
+                      "version":  "1.0.0"
+                  },
+                  {
+                      "id":  "pong-ring",
+                      "title":  "Pong Ring",
+                      "description":  "Circular quartz arena pong with marble glow and solo/versus modes",
+                      "icon":  "ðŸª©",
+                      "category":  "Games",
+                      "path":  "/apps/pong-ring",
+                      "featured":  true,
+                      "version":  "3.72.00"
+                  },
+                  {
+                      "id":  "quantum-playground",
+                      "title":  "Quantum Playground",
+                      "description":  "Design circuits, run a four-qubit simulator, and visualize state-vector measurements.",
+                      "icon":  "âš›ï¸",
+                      "category":  "Education",
+                      "path":  "/apps/quantum-playground",
+                      "featured":  true,
+                      "version":  "4.32.00"
+                  },
+                  {
+                      "id":  "relational-algebra-playground",
+                      "title":  "Relational Algebra Playground",
+                      "description":  "Build relational algebra pipelines, inspect intermediate tables, and translate to SQL in real time.",
+                      "icon":  "ðŸ§ ",
+                      "category":  "Education",
+                      "path":  "/apps/relational-algebra-playground",
+                      "featured":  true,
+                      "version":  "1.0.0"
+                  },
+                  {
+                      "id":  "snake-2",
+                      "title":  "Snake 2.0",
+                      "description":  "A lush creative redesign with neon, garden, and minimal themes plus new game modes.",
+                      "icon":  "ðŸŒ€",
+                      "category":  "Games",
+                      "path":  "/apps/snake-2",
+                      "featured":  true,
+                      "version":  "1.0.0"
+                  },
+                  {
+                      "id":  "snake",
+                      "title":  "Snake Game",
+                      "description":  "Classic Snake game with keyboard controls and modern design",
+                      "icon":  "ðŸ",
+                      "category":  "Games",
+                      "path":  "/apps/snake",
+                      "featured":  true,
+                      "version":  "1.26.00"
+                  },
+                  {
+                      "id":  "sudoku-coffee",
+                      "title":  "Sudoku Roast",
+                      "description":  "A cozy coffeehouse Sudoku with handcrafted generator, solver, and notes",
+                      "icon":  "â˜•",
+                      "category":  "Games",
+                      "path":  "/apps/sudoku-coffee",
+                      "featured":  true,
+                      "version":  "4.64.00"
+                  },
+                  {
+                      "id":  "vibe-memory",
+                      "title":  "Vibe Memory",
+                      "description":  "Flip cards across lush gradients, chase best scores, and enjoy synthesized chimes.",
+                      "icon":  "âœ¨",
+                      "category":  "Games",
+                      "path":  "/apps/vibe-memory",
+                      "featured":  true,
+                      "version":  "1.0.0"
+                  },
+                  {
+                      "id":  "zen-do",
+                      "title":  "Zen Do",
+                      "description":  "Minimalist to-do garden with weekly buckets, focus mode, and gist sync.",
+                      "icon":  "ðŸŒ¿",
+                      "category":  "Productivity",
+                      "path":  "/apps/zen-do",
+                      "featured":  true,
+                      "version":  "5.18.00"
+                  },
+                  {
+                      "id":  "zen-go",
+                      "title":  "Zen Go",
+                      "description":  "Play 9Ã—9 Go against a lightweight GNU Go engine with rank presets and handicaps.",
+                      "icon":  "âš«",
+                      "category":  "Games",
+                      "path":  "/apps/zen-go",
+                      "featured":  true,
+                      "version":  "5.54.00"
+                  },
+                  {
+                      "id":  "app-3",
+                      "title":  "Coming Soon",
+                      "description":  "This app is under development",
+                      "icon":  "ðŸš§",
+                      "category":  "Development",
+                      "path":  "/apps/app-3",
+                      "featured":  false,
+                      "version":  "0.0.1"
+                  }
+              ]
+}

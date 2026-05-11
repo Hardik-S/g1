@@ -1,0 +1,80 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>g1 Modern App Dock</title>
+    <meta
+      name="description"
+      content="Modern discovery surface for the g1 React micro-app launcher."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="frame" id="app-root">
+      <header class="hero" id="hero"></header>
+      <main>
+        <section class="toolbar card" aria-label="Discovery controls">
+          <div>
+            <h1>g1 Modern App Dock</h1>
+            <p>
+              A redesigned discovery layer that stays aligned with the legacy launcher,
+              with stronger filtering, local launch history, favorites, and quick access paths.
+            </p>
+          </div>
+          <div class="toolbar-actions" role="group" aria-label="Primary actions">
+            <button id="random-launch" type="button">Launch random app</button>
+            <a id="open-launcher" href=".." class="ghost-link">Open legacy launcher</a>
+            <button id="theme-toggle" type="button" aria-pressed="false">Theme: dusk</button>
+          </div>
+        </section>
+
+        <section class="toolbar card metrics" aria-label="Quick metrics">
+          <article>
+            <h2>Preserved behavior</h2>
+            <p>Root legacy launcher still serves all existing app routes and interactions.</p>
+            <p id="legacy-version">Catalog loaded from live registry metadata at runtime.</p>
+          </article>
+          <article>
+            <h2>Catalog quality</h2>
+            <p id="app-count">0 apps</p>
+            <p id="category-count">0 categories</p>
+          </article>
+        </section>
+
+        <section class="toolbar card filter-row" aria-label="Search and category filters">
+          <div class="field">
+            <label for="search-input">Search apps</label>
+            <input id="search-input" type="search" placeholder="Type title, description, or tag" />
+          </div>
+          <div class="field">
+            <label for="category-select">Category</label>
+            <select id="category-select"></select>
+          </div>
+          <div class="field">
+            <label for="view-mode">View mode</label>
+            <select id="view-mode">
+              <option value="grid">Grid</option>
+              <option value="list">List</option>
+            </select>
+          </div>
+          <label class="inline-check"><input id="hide-disabled" type="checkbox" checked="true" />
+            Hide disabled entries</label>
+        </section>
+
+        <section class="grid two-col" id="recently-opened" aria-live="polite"></section>
+        <section>
+          <h2>Apps</h2>
+          <div id="app-shell" class="app-grid"></div>
+          <p id="empty-state" class="empty" hidden>No matching apps found. Clear filters to continue.</p>
+        </section>
+
+        <section class="card" aria-live="polite" id="debug-panel">
+          <h2>Runtime evidence</h2>
+          <pre id="runtime-evidence"></pre>
+        </section>
+      </main>
+    </div>
+    <script src="app.js" defer></script>
+  </body>
+</html>
